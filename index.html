@@ -1,0 +1,36 @@
+<!-- index.html - Client-Side Canary Deployment with Session-Based Assignment -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client-Side Canary Deployment</title>
+  <script>
+    // Configuration
+    const configUrl = 'canary.json'; // Hosted on same GitHub Pages site
+    const defaultVersion = 'v1';
+    const canaryVersion = 'v2';
+
+    // Check sessionStorage for version assignment, if not assigned, assign one randomly
+    function getVersionFromSession() {
+      const version = sessionStorage.getItem('version');
+      if (version) return version;
+      return Math.random() < 0.5 ? canaryVersion : defaultVersion;
+    }
+
+    function setVersionInSession(version) {
+      sessionStorage.setItem('version', version);
+    }
+
+    async function init() {
+      const version = getVersionFromSession();
+      setVersionInSession(version);
+      window.location.replace(`${version}/index.html`);
+    }
+
+    window.onload = init;
+  </script>
+</head>
+<body>
+  <h1>Redirecting...</h1>
+</body>
+</html>
