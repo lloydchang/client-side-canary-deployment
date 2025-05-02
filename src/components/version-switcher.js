@@ -14,6 +14,7 @@ class VersionSwitcher {
             switcherContainerId: 'version-switcher',
             onVersionSwitch: null,
             position: 'bottom-right',
+            currentPage: null, // Can be 'home', 'stable', or 'canary'
             ...config
         };
         
@@ -44,9 +45,20 @@ class VersionSwitcher {
             canaryPercentage = window.canary._config.initialCanaryPercentage + '%';
         }
         
-        // Get current version
-        const currentVersion = window.canary && window.canary._assignment ? 
-            window.canary._assignment.version : 'unknown';
+        // Determine active button based on current page or assignment
+        let activePage = this.config.currentPage;
+        
+        // If no current page specified, determine from assignment
+        if (!activePage && window.canary && window.canary._assignment) {
+            activePage = window.canary._assignment.version;
+        }
+        
+        // If we're on the root path and no specific page is set, assume it's home
+        if (!activePage && window.location.pathname === '/' || 
+            window.location.pathname === '' || 
+            window.location.pathname.endsWith('/index.html')) {
+            activePage = 'home';
+        }
         
         container.innerHTML = `
             <style>
@@ -133,13 +145,13 @@ class VersionSwitcher {
                 <h4>Version Switcher</h4>
                 ${canaryPercentage ? `<div class="version-info">Canary distribution: ${canaryPercentage}</div>` : ''}
                 <div class="version-switcher-options">
-                    <button id="vs-home-btn">
+                    <button id="vs-home-btn" class="${activePage === 'home' ? 'active' : ''}">
                         Home
                     </button>
-                    <button id="vs-stable-btn" class="${currentVersion === 'stable' ? 'active' : ''}">
+                    <button id="vs-stable-btn" class="${activePage === 'stable' ? 'active' : ''}">
                         Stable
                     </button>
-                    <button id="vs-canary-btn" class="${currentVersion === 'canary' ? 'active' : ''}">
+                    <button id="vs-canary-btn" class="${activePage === 'canary' ? 'active' : ''}">
                         Canary
                     </button>
                 </div>

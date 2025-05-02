@@ -106,7 +106,7 @@
       </div>
       
       <div id="countdown" class="countdown">
-        Redirecting to your assigned version in <span id="countdown-number" class="countdown-number">10</span> seconds...
+        Redirecting to <span id="assigned-version-text">your assigned version</span> in <span id="countdown-number" class="countdown-number">10</span> seconds...
       </div>
     </div>
   </div>
@@ -120,11 +120,17 @@
       });
       
       // Initialize version switcher
-      new VersionSwitcher();
+      new VersionSwitcher({
+        currentPage: 'home' // Mark home as current page
+      });
       
       // Redirect to appropriate version based on assignment
       const assignment = window.canary._assignment;
       if (assignment && assignment.version) {
+        // Update the message to show which version was assigned
+        const assignedVersionText = document.getElementById('assigned-version-text');
+        assignedVersionText.textContent = assignment.version.toUpperCase() + ' version';
+        
         let secondsLeft = 10;
         const countdownElement = document.getElementById('countdown-number');
         
