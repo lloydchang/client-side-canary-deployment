@@ -127,7 +127,3 @@ canary.on('evaluationComplete', function(result) {
   }
 });
 ```
-
-## License
-
-[MIT License](LICENSE)
