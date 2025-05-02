@@ -224,15 +224,17 @@ class VersionSwitcher {
         // Get the base path for the application
         let basePath = this._getBasePath();
         
+        // Normalize path by ensuring no double slashes
+        // Remove trailing slash from basePath if it exists
+        if (basePath.endsWith('/')) {
+            basePath = basePath.slice(0, -1);
+        }
+        
         // Redirect to the appropriate version
         if (version === 'canary') {
-            if (!window.location.pathname.includes('/canary/')) {
-                window.location.href = `${basePath}/canary/`;
-            }
+            window.location.href = `${basePath}/canary/`;
         } else {
-            if (!window.location.pathname.includes('/stable/')) {
-                window.location.href = `${basePath}/stable/`;
-            }
+            window.location.href = `${basePath}/stable/`;
         }
     }
     
