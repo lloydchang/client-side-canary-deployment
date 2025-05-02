@@ -129,7 +129,7 @@
       if (assignment && assignment.version) {
         // Update the message to show which version was assigned
         const assignedVersionText = document.getElementById('assigned-version-text');
-        assignedVersionText.textContent = assignment.version.toUpperCase() + ' version';
+        assignedVersionText.textContent = assignment.version + ' version';
         
         let secondsLeft = 10;
         const countdownElement = document.getElementById('countdown-number');
