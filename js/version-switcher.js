@@ -25,7 +25,7 @@ class VersionSwitcher {
         this.currentVersion = this._getCurrentVersion();
         this._createSwitcher();
         
-        // Log version switch events if canary is available
+        // Log version switch events
         this._trackEvent('version_switcher_init', {
             currentVersion: this.currentVersion,
             referrer: document.referrer,
@@ -34,52 +34,73 @@ class VersionSwitcher {
     }
 
     /**
-     * Get the current version
+     * Get current version from localStorage
      * @private
-     * @returns {string} The current version
+     * @returns {string} Current version
      */
     _getCurrentVersion() {
-        const saved = localStorage.getItem(this.config.storageKey);
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                return data.version;
-            } catch (e) {
-                return this.config.stableVersion;
-            }
+        // If canary object is available, try to use its version first
+        if (window.canary && window.canary._assignment && window.canary._assignment.version) {
+            return window.canary._assignment.version;
         }
+        
+        // Otherwise use localStorage
+        try {
+            const stored = localStorage.getItem(this.config.storageKey);
+            if (stored) {
+                return stored;
+            }
+        } catch (e) {
+            console.error('Error accessing localStorage', e);
+        }
+        
+        // Default to stable if no version is found
         return this.config.stableVersion;
     }
 
     /**
-     * Switch to a specified version
+     * Switch to a different version
      * @param {string} version - Version to switch to
      */
     switchToVersion(version) {
-        if (version !== this.currentVersion) {
-            // Update state
-            this.currentVersion = version;
-            
-            // Store in localStorage
-            const data = { version, switchedAt: Date.now() };
-            localStorage.setItem(this.config.storageKey, JSON.stringify(data));
-            
-            // Update UI
-            this._updateButtons();
-            
-            // Track event
-            this._trackEvent('version_switched', {
-                previousVersion: this.currentVersion,
-                newVersion: version,
-                manual: true
-            });
-            
-            // Call callback if provided
-            if (typeof this.config.onVersionSwitch === 'function') {
-                this.config.onVersionSwitch(version);
-            }
-            
-            // Reload the page to apply the new version
+        if (this.currentVersion === version) {
+            return; // Already on this version
+        }
+
+        // Update localStorage
+        try {
+            localStorage.setItem(this.config.storageKey, version);
+        } catch (e) {
+            console.error('Error saving to localStorage', e);
+        }
+        
+        // Track the switch
+        this._trackEvent('version_switched', {
+            fromVersion: this.currentVersion,
+            toVersion: version
+        });
+        
+        // Update current version
+        this.currentVersion = version;
+        
+        // Update UI
+        if (document.getElementById('vs-btn-stable')) {
+            document.getElementById('vs-btn-stable').classList.toggle('active', version === this.config.stableVersion);
+        }
+        if (document.getElementById('vs-btn-canary')) {
+            document.getElementById('vs-btn-canary').classList.toggle('active', version === this.config.canaryVersion);
+        }
+        
+        // Call callback if provided
+        if (typeof this.config.onVersionSwitch === 'function') {
+            this.config.onVersionSwitch(version);
+        }
+        
+        // If canary object exists, update its assignment
+        if (window.canary && typeof window.canary.updateVersion === 'function') {
+            window.canary.updateVersion(version);
+        } else {
+            // Reload page to apply changes if canary isn't available
             window.location.reload();
         }
     }
@@ -104,20 +125,6 @@ class VersionSwitcher {
     }
 
     /**
-     * Update button states
-     * @private
-     */
-    _updateButtons() {
-        const stableBtn = document.getElementById('vs-btn-stable');
-        const canaryBtn = document.getElementById('vs-btn-canary');
-        
-        if (stableBtn && canaryBtn) {
-            stableBtn.className = this.currentVersion === this.config.stableVersion ? 'active' : '';
-            canaryBtn.className = this.currentVersion === this.config.canaryVersion ? 'active' : '';
-        }
-    }
-
-    /**
      * Create the version switcher UI
      * @private
      */
@@ -127,20 +134,20 @@ class VersionSwitcher {
         if (!container) {
             container = document.createElement('div');
             container.id = this.config.switcherContainerId;
+            container.className = 'version-switcher';
             document.body.appendChild(container);
         }
-
-        // Calculate canary percentage if config available
-        const canaryPercentage = this.canaryConfig ? 
-            `${this.canaryConfig.initialCanaryPercentage}%` : 'Unknown';
-
-        // Add CSS and HTML
-        container.className = 'version-switcher';
+        
+        let canaryPercentage = '';
+        if (this.canaryConfig && typeof this.canaryConfig.getCurrentCanaryPercentage === 'function') {
+            canaryPercentage = this.canaryConfig.getCurrentCanaryPercentage() + '%';
+        } else if (window.canary && window.canary._config) {
+            canaryPercentage = window.canary._config.initialCanaryPercentage + '%';
+        }
+        
         container.innerHTML = `
             <style>
                 #version-switcher.version-switcher {
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-                    box-sizing: border-box;
                     position: fixed;
                     bottom: 20px;
                     right: 20px;
@@ -168,36 +175,28 @@ class VersionSwitcher {
                     margin: 0 0 8px 0;
                     font-size: 14px;
                     color: #333;
-                    font-weight: 600;
-                    padding: 0;
-                    white-space: nowrap;
                 }
 
                 #version-switcher.version-switcher .version-info {
-                    font-size: 11px;
+                    font-size: 12px;
                     color: #666;
                     margin-bottom: 8px;
                 }
 
                 #version-switcher.version-switcher .version-switcher-options {
                     display: flex;
-                    width: 100%;
                     gap: 8px;
                 }
 
                 #version-switcher.version-switcher button {
                     flex: 1;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 5px 10px;
-                    height: 32px;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
                     background: #fff;
+                    border: 1px solid #ccc;
+                    border-radius: 3px;
+                    padding: 6px 10px;
                     cursor: pointer;
-                    font-size: 13px;
-                    font-weight: normal;
+                    font-size: 12px;
+                    font-weight: 500;
                     text-align: center;
                     color: #333;
                     margin: 0;
@@ -229,7 +228,7 @@ class VersionSwitcher {
             </style>
             <div>
                 <h4>Version Switcher</h4>
-                ${this.canaryConfig ? `<div class="version-info">Canary distribution: ${canaryPercentage}</div>` : ''}
+                ${canaryPercentage ? `<div class="version-info">Canary distribution: ${canaryPercentage}</div>` : ''}
                 <div class="version-switcher-options">
                     <button id="vs-btn-stable" class="${this.currentVersion === this.config.stableVersion ? 'active' : ''}">
                         Stable

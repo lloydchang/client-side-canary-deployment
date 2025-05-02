@@ -252,6 +252,41 @@
       return metrics;
     },
     
+    /**
+     * Update the user's version assignment directly
+     * This is used by the version-switcher to change versions manually
+     * @param {string} version - The version to switch to ('stable' or 'canary')
+     */
+    updateVersion: function(version) {
+      if (version !== 'stable' && version !== 'canary') {
+        console.error('Invalid version. Must be "stable" or "canary"');
+        return this;
+      }
+      
+      // Update assignment
+      this._assignment.version = version;
+      this._assignment.manuallyAssigned = true;
+      
+      // Save to localStorage
+      localStorage.setItem(this._config.storageKey, JSON.stringify(this._assignment));
+      
+      // Track the manual version change
+      this.trackEvent('manual_version_change', {
+        previousVersion: this._assignment.version,
+        newVersion: version
+      });
+      
+      // Reset feature assignments for the new version
+      this._assignment.features = {};
+      
+      // Re-evaluate all registered features
+      for (const featureName in this._features) {
+        this._evaluateFeature(featureName);
+      }
+      
+      return this;
+    },
+    
     // Internal methods
     
     /**
