@@ -149,7 +149,7 @@ class VersionSwitcher {
                 }
             </style>
             <div>
-                <h4>Version Switcher <span class="vs-tag ${this.currentVersion}">${this.currentVersion}</span></h4>
+                <h4>Version Switcher <span class="vs-tag ${this.currentVersion}">${this.currentVersion.toUpperCase()}</span></h4>
                 <div class="version-switcher-options">
                     <button id="vs-btn-stable" class="${this.currentVersion === this.config.stableVersion ? 'active' : ''}">
                         Stable
