@@ -64,7 +64,7 @@ graph TD
     end
 
     style GA fill:#fdd,stroke:#333
-    style LB fill:#f9a,stroke:#333
+    style RLB fill:#f9a,stroke:#333
     style SM fill:#fcf,stroke:#333
     style EP1 fill:#cff,stroke:#333
     style EP2 fill:#ccf,stroke:#333
