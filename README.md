@@ -52,8 +52,8 @@ graph LR
          G[User Request] --> H[Static Web Server]
          H --> I[index.html with JavaScript]
          I --> J{Client-Side Decision}
-         J -->|85% of users| K[Load Stable Version]
-         J -->|15% of users| L[Load Canary Version]
+         J -->|50% of users| K[Load Stable Version]
+         J -->|50% of users| L[Load Canary Version]
      end
      
      style B fill:#f9a,stroke:#333
