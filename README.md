@@ -45,8 +45,8 @@ graph TD
         GA --> RLB[Regional Load Balancer]
         RLB --> SM[Service Mesh - e.g. Istio or Linkerd]
         
-        SM -->|95% of traffic| EP1[Envoy Proxy or Linkerd2-proxy to Stable]
-        SM -->|5% of traffic| EP2[Envoy Proxy or Linkerd2-proxy to Canary]
+        SM -->|95% of users| EP1[Envoy Proxy or Linkerd2-proxy to Stable]
+        SM -->|5% of users| EP2[Envoy Proxy or Linkerd2-proxy to Canary]
 
         EP1 --> C[Stable Version Server]
         EP2 --> D[Canary Version Server]
