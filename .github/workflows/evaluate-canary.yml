@@ -1,0 +1,188 @@
+name: Evaluate Canary Metrics
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # Run every 4 hours
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  evaluate-canary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm install posthog-node dotenv
+          
+      - name: Evaluate metrics and update config
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          node -e "
+          const fs = require('fs');
+          const { PostHog } = require('posthog-node');
+          
+          // Initialize PostHog client
+          const client = new PostHog(
+            process.env.POSTHOG_API_KEY,
+            { host: 'https://app.posthog.com' }
+          );
+          
+          async function main() {
+            try {
+              console.log('Starting canary evaluation process...');
+              
+              // Read current config
+              const configPath = './config/canary-config.json';
+              const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+              
+              // Set time range for analysis (last 24 hours)
+              const now = new Date();
+              const yesterday = new Date(now);
+              yesterday.setDate(yesterday.getDate() - 1);
+              
+              const dateRange = {
+                from_date: yesterday.toISOString().split('T')[0],
+                to_date: now.toISOString().split('T')[0]
+              };
+              
+              console.log(`Analyzing metrics from ${dateRange.from_date} to ${dateRange.to_date}`);
+              
+              // Query error rates for stable vs canary
+              console.log('Querying error events...');
+              
+              const stableErrorEventsCount = await client.query({
+                kind: 'events',
+                select: ['count()'],
+                where: {
+                  event: 'error_occurred',
+                  properties: { version: 'stable' }
+                },
+                date_from: dateRange.from_date,
+                date_to: dateRange.to_date
+              });
+              
+              const canaryErrorEventsCount = await client.query({
+                kind: 'events',
+                select: ['count()'],
+                where: {
+                  event: 'error_occurred',
+                  properties: { version: 'canary' }
+                },
+                date_from: dateRange.from_date,
+                date_to: dateRange.to_date
+              });
+              
+              // Query pageview counts
+              console.log('Querying pageview events...');
+              
+              const stablePageviews = await client.query({
+                kind: 'events',
+                select: ['count()'],
+                where: {
+                  event: 'pageview',
+                  properties: { version: 'stable' }
+                },
+                date_from: dateRange.from_date,
+                date_to: dateRange.to_date
+              });
+              
+              const canaryPageviews = await client.query({
+                kind: 'events',
+                select: ['count()'],
+                where: {
+                  event: 'pageview',
+                  properties: { version: 'canary' }
+                },
+                date_from: dateRange.from_date,
+                date_to: dateRange.to_date
+              });
+              
+              // Calculate error rates
+              const stableErrors = stableErrorEventsCount.results[0];
+              const canaryErrors = canaryErrorEventsCount.results[0];
+              const stableViews = stablePageviews.results[0];
+              const canaryViews = canaryPageviews.results[0];
+              
+              const stableErrorRate = stableViews > 0 ? stableErrors / stableViews : 0;
+              const canaryErrorRate = canaryViews > 0 ? canaryErrors / canaryViews : 0;
+              
+              console.log(`Stable: ${stableErrors} errors / ${stableViews} views = ${stableErrorRate.toFixed(4)} error rate`);
+              console.log(`Canary: ${canaryErrors} errors / ${canaryViews} views = ${canaryErrorRate.toFixed(4)} error rate`);
+              
+              // Make decision based on metrics
+              let newPercentage = config.distribution.canaryPercentage;
+              let decision = 'MAINTAIN';
+              const minPercentage = config.distribution.safetyThreshold || 0;
+              
+              if (canaryViews < 10) {
+                console.log('Insufficient canary data for decision');
+                decision = 'INSUFFICIENT_DATA';
+              } 
+              // Rollback if canary has significantly higher error rate
+              else if (canaryErrors > 10 && canaryErrorRate > stableErrorRate * 1.5) {
+                newPercentage = minPercentage;
+                decision = 'ROLLBACK';
+                console.log('Rolling back canary due to high error rate');
+              } 
+              // Slow progression if there are some concerns
+              else if (canaryErrorRate > stableErrorRate * 1.2) {
+                newPercentage = Math.max(minPercentage, config.distribution.canaryPercentage);
+                decision = 'HOLD';
+                console.log('Holding canary percentage due to elevated error rate');
+              }
+              // Gradually increase percentage if canary is performing well
+              else if (canaryViews > 100 && canaryErrorRate <= stableErrorRate * 1.1) {
+                // Increment by 10% up to 100%
+                newPercentage = Math.min(100, config.distribution.canaryPercentage + 10);
+                decision = 'PROMOTE';
+                console.log(`Increasing canary percentage to ${newPercentage}%`);
+              }
+              
+              // Update config with new percentage and metadata
+              config.distribution.canaryPercentage = newPercentage;
+              config.lastUpdated = new Date().toISOString();
+              config.updateSource = 'github-action';
+              config.lastMetrics = {
+                stableErrorRate: stableErrorRate,
+                canaryErrorRate: canaryErrorRate,
+                stablePageviews: stableViews,
+                canaryPageviews: canaryViews,
+                decision: decision
+              };
+              
+              // Write updated config back to file
+              fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+              
+              console.log('Config file updated successfully');
+              
+              // If canary percentage is 100%, suggest promotion
+              if (newPercentage >= 90) {
+                console.log('NOTICE: Canary is performing well at high traffic percentage (90%+). Consider full promotion.');
+              }
+              
+            } catch (error) {
+              console.error('Error during canary evaluation:', error);
+              process.exit(1);
+            }
+          }
+          
+          main().then(() => {
+            client.shutdown(); // Close PostHog connection
+          });
+          "
+          
+      - name: Commit changes
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add ./config/canary-config.json
+          git commit -m "Update canary configuration based on metrics analysis [skip ci]" || echo "No changes to commit"
+          git push

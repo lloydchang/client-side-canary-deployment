@@ -328,6 +328,23 @@
   <script>
     // Initialize analytics with canary-specific configuration
     document.addEventListener('DOMContentLoaded', function() {
+      // Try to load remote configuration before initializing analytics
+      if (window.CanaryConfig && window.CanaryConfig.loadRemoteConfig) {
+        window.CanaryConfig.loadRemoteConfig('../config/canary-config.json').then(() => {
+          initializeAnalytics();
+        }).catch(() => {
+          // If loading fails, initialize with default config
+          initializeAnalytics();
+        });
+      } else {
+        initializeAnalytics();
+      }
+      
+      // Apply theme based on newDesign feature flag
+      applyTheme();
+    });
+    
+    function initializeAnalytics() {
       // Create analytics instance with version information
       window.analytics = new CanaryAnalytics({
         version: 'canary',
@@ -335,7 +352,9 @@
         endpoint: CanaryConfig.analytics.endpoint,
         sampleRate: 1.0, // Always collect 100% data for canary users
         storageKey: CanaryConfig.analytics.storageKey,
-        bufferInterval: CanaryConfig.analytics.bufferInterval
+        bufferInterval: CanaryConfig.analytics.bufferInterval,
+        posthogEnabled: true,
+        posthogApiKey: CanaryConfig.analytics.posthogApiKey
       });
       
       // Track page view with additional metadata
@@ -347,7 +366,12 @@
 
       // Track that this is a canary impression
       window.analytics.trackEvent('canary_impression', {
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        daysSinceDeployment: Math.floor(
+          (new Date().getTime() - new Date(CanaryConfig.distribution.initialDate).getTime()) 
+          / (1000 * 60 * 60 * 24)
+        ),
+        distribution: JSON.stringify(CanaryConfig.distribution)
       });
       
       // Initialize version switcher
@@ -363,7 +387,7 @@
       
       // Apply theme based on newDesign feature flag
       applyTheme();
-    });
+    }
     
     // Function to apply the appropriate theme based on the feature flag
     function applyTheme() {

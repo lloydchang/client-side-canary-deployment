@@ -2,7 +2,7 @@
  * Version Switcher Module
  * 
  * Allows users to manually switch between stable and canary versions
- * while maintaining analytics data integrity
+ * while maintaining analytics data integrity and reporting to PostHog
  */
 
 class VersionSwitcher {
@@ -12,19 +12,25 @@ class VersionSwitcher {
             canaryVersion: 'canary',
             switcherContainerId: 'version-switcher',
             storageKey: 'version',
+            posthogEnabled: true, // Whether to track version switching in PostHog
             onVersionSwitch: null, // Optional callback when version is switched
             ...config
         };
+
+        // Try to get CanaryConfig if available
+        if (window.CanaryConfig) {
+            this.canaryConfig = window.CanaryConfig;
+        }
 
         this.currentVersion = this._getCurrentVersion();
         this._createSwitcher();
         
         // Log version switch events if analytics is available
-        if (window.analytics) {
-            window.analytics.trackEvent('version_switcher_init', {
-                currentVersion: this.currentVersion
-            });
-        }
+        this._trackEvent('version_switcher_init', {
+            currentVersion: this.currentVersion,
+            referrer: document.referrer,
+            url: window.location.href
+        });
     }
 
     /**
@@ -34,6 +40,28 @@ class VersionSwitcher {
      */
     _getCurrentVersion() {
         return sessionStorage.getItem(this.config.storageKey) || this.config.stableVersion;
+    }
+
+    /**
+     * Track an event in the analytics system
+     * @private
+     * @param {string} eventName - Name of the event to track
+     * @param {Object} properties - Event properties
+     */
+    _trackEvent(eventName, properties = {}) {
+        // Track via CanaryAnalytics if available
+        if (window.analytics) {
+            window.analytics.trackEvent(eventName, properties);
+        }
+
+        // Track directly via PostHog if available and enabled
+        if (window.posthog && this.config.posthogEnabled) {
+            window.posthog.capture(eventName, {
+                ...properties,
+                source: 'version_switcher',
+                timestamp: new Date().toISOString()
+            });
+        }
     }
 
     /**
@@ -52,14 +80,14 @@ class VersionSwitcher {
             return false;
         }
 
-        // Track the switch event if analytics is available
-        if (window.analytics) {
-            window.analytics.trackEvent('version_switch', {
-                fromVersion: this.currentVersion,
-                toVersion: version,
-                timestamp: Date.now()
-            });
-        }
+        // Track the switch event
+        this._trackEvent('version_switch', {
+            fromVersion: this.currentVersion,
+            toVersion: version,
+            userInitiated: true,
+            // Include feature flags if available
+            featureFlags: window.CanaryConfig ? window.CanaryConfig.featureFlags : null
+        });
 
         // Update session storage
         sessionStorage.setItem(this.config.storageKey, version);
@@ -88,6 +116,12 @@ class VersionSwitcher {
             container.id = this.config.switcherContainerId;
             container.className = 'version-switcher';
             document.body.appendChild(container);
+        }
+
+        // Get canary percentage if available
+        let canaryPercentage = 'N/A';
+        if (this.canaryConfig) {
+            canaryPercentage = this.canaryConfig.getCurrentCanaryPercentage() + '%';
         }
 
         // Create styled container with more specific and consistent styling
@@ -128,6 +162,12 @@ class VersionSwitcher {
                     font-weight: 600;
                     padding: 0;
                     white-space: nowrap;
+                }
+
+                #version-switcher.version-switcher .version-info {
+                    font-size: 11px;
+                    color: #666;
+                    margin-bottom: 8px;
                 }
 
                 #version-switcher.version-switcher .version-switcher-options {
@@ -195,6 +235,7 @@ class VersionSwitcher {
             </style>
             <div>
                 <h4>Version Switcher <span class="vs-tag ${this.currentVersion}">${this.currentVersion.toUpperCase()}</span></h4>
+                ${this.canaryConfig ? `<div class="version-info">Canary distribution: ${canaryPercentage}</div>` : ''}
                 <div class="version-switcher-options">
                     <button id="vs-btn-stable" class="${this.currentVersion === this.config.stableVersion ? 'active' : ''}">
                         Stable

@@ -1,0 +1,50 @@
+{
+  "canaryVersion": "1.0.0",
+  "distribution": {
+    "canaryPercentage": 15,
+    "gradualRollout": true,
+    "rolloutPeriod": 7,
+    "initialDate": "2025-05-01",
+    "safetyThreshold": 5,
+    "lastEvaluationDate": "2025-05-01T12:00:00Z",
+    "status": "ACTIVE"
+  },
+  "featureFlags": {
+    "newDesign": true,
+    "betaFeatures": false,
+    "performanceOptimizations": true
+  },
+  "analytics": {
+    "sampleRate": 1.0,
+    "debug": false,
+    "posthogApiKey": "ph_YOUR_KEY_HERE",
+    "posthogProjectId": "YOUR_PROJECT_ID"
+  },
+  "thresholds": {
+    "minSampleSize": {
+      "pageViews": 100,
+      "uniqueUsers": 20,
+      "hoursOfData": 6
+    }
+  },
+  "lastUpdated": "2025-05-01T12:00:00Z",
+  "updateSource": "manual",
+  "insights": {
+    "recentEvaluation": {
+      "date": "2025-05-01T12:00:00Z",
+      "decision": "PROCEED",
+      "confidence": 0.8,
+      "details": "Initial deployment metrics look good"
+    },
+    "stableVersion": {
+      "errorRate": 0.005,
+      "avgPageLoad": 1200,
+      "userSatisfaction": 0.92
+    },
+    "canaryVersion": {
+      "errorRate": 0.006,
+      "avgPageLoad": 1250,
+      "userSatisfaction": 0.91
+    }
+  }
+}

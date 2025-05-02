@@ -5,16 +5,23 @@
  * - Configuration for canary distribution
  * - Thresholds for metrics
  * - Decision logic for rollback/rollforward
+ * - Remote configuration loading
+ * - PostHog integration for analytics
  */
 
 const CanaryConfig = {
+    // Canary version identifier
+    canaryVersion: '1.0.0',           // Current canary version
+    
     // Canary distribution settings
     distribution: {
         canaryPercentage: 20,           // Percentage of users to receive canary version (0-100)
         gradualRollout: true,           // Whether to increase canary percentage over time
         rolloutPeriod: 7,               // Days to reach 100% rollout if gradualRollout is true
         initialDate: '2025-05-01',      // Date when canary deployment started
-        safetyThreshold: 5              // Minimum percentage to maintain even on rollback
+        safetyThreshold: 5,             // Minimum percentage to maintain even on rollback
+        lastEvaluationDate: null,       // Last time the canary metrics were evaluated
+        status: 'ACTIVE'                // Current status: ACTIVE, PAUSED, ROLLED_BACK
     },
 
     // Feature flags for canary version
@@ -32,6 +39,8 @@ const CanaryConfig = {
         storageKey: 'canary_analytics',
         bufferInterval: 30000,          // Send data every 30 seconds if endpoint is defined
         maxEventsStored: 100,           // Maximum events to store locally
+        posthogApiKey: 'ph_YOUR_KEY_HERE', // Replace with your actual PostHog API key
+        posthogProjectId: 'YOUR_PROJECT_ID' // Your PostHog project ID for API requests
     },
 
     // Metrics thresholds for rollback decisions
@@ -72,6 +81,92 @@ const CanaryConfig = {
             minScrollDepth: 30,         // Minimum average scroll depth percentage
             minSessionDuration: 60,     // Minimum average session duration (seconds)
             bounceRateThreshold: 0.6    // Maximum acceptable bounce rate
+        },
+        
+        // Minimum required data points for reliable decision
+        minSampleSize: {
+            pageViews: 100,             // Minimum page views needed
+            uniqueUsers: 20,            // Minimum unique users required
+            hoursOfData: 6              // Minimum hours of data collection
+        }
+    },
+
+    /**
+     * Load remote configuration from a JSON file
+     * 
+     * @param {string} url - URL to the configuration file
+     * @returns {Promise<boolean>} - Success status
+     */
+    async loadRemoteConfig(url = 'config/canary-config.json') {
+        try {
+            // Add cache buster to avoid stale configuration
+            const cacheBuster = new Date().getTime();
+            const response = await fetch(`${url}?_=${cacheBuster}`);
+            
+            if (response.ok) {
+                const remoteConfig = await response.json();
+                
+                // Update version identifier
+                if (remoteConfig.canaryVersion) {
+                    this.canaryVersion = remoteConfig.canaryVersion;
+                }
+                
+                // Update distribution settings
+                if (remoteConfig.distribution) {
+                    this.distribution = {
+                        ...this.distribution,
+                        ...remoteConfig.distribution
+                    };
+                }
+                
+                // Update feature flags
+                if (remoteConfig.featureFlags) {
+                    this.featureFlags = {
+                        ...this.featureFlags,
+                        ...remoteConfig.featureFlags
+                    };
+                }
+                
+                // Update analytics configuration
+                if (remoteConfig.analytics) {
+                    // Only update specific fields that should be changeable remotely
+                    if (remoteConfig.analytics.sampleRate !== undefined) {
+                        this.analytics.sampleRate = remoteConfig.analytics.sampleRate;
+                    }
+                    
+                    if (remoteConfig.analytics.debug !== undefined) {
+                        this.analytics.debug = remoteConfig.analytics.debug;
+                    }
+                    
+                    if (remoteConfig.analytics.bufferInterval !== undefined) {
+                        this.analytics.bufferInterval = remoteConfig.analytics.bufferInterval;
+                    }
+                }
+                
+                // Update thresholds if provided
+                if (remoteConfig.thresholds) {
+                    this.thresholds = {
+                        ...this.thresholds,
+                        ...remoteConfig.thresholds
+                    };
+                }
+                
+                console.log('[CanaryConfig] Remote config loaded successfully');
+                
+                // Dispatch event for config update
+                window.dispatchEvent(new CustomEvent('canaryconfig:updated', {
+                    detail: { config: this }
+                }));
+                
+                return true;
+            }
+            
+            console.warn('[CanaryConfig] Failed to load remote config, using defaults');
+            return false;
+            
+        } catch (error) {
+            console.error('[CanaryConfig] Error loading remote config:', error);
+            return false;
         }
     },
 
@@ -81,7 +176,17 @@ const CanaryConfig = {
      * @returns {number} Current canary percentage
      */
     getCurrentCanaryPercentage: function() {
-        const { canaryPercentage, gradualRollout, rolloutPeriod, initialDate } = this.distribution;
+        const { canaryPercentage, gradualRollout, rolloutPeriod, initialDate, status } = this.distribution;
+        
+        // If rolled back, return safety threshold
+        if (status === 'ROLLED_BACK') {
+            return this.distribution.safetyThreshold;
+        }
+        
+        // If paused, return current percentage
+        if (status === 'PAUSED') {
+            return canaryPercentage;
+        }
         
         if (!gradualRollout) {
             return canaryPercentage;
@@ -136,6 +241,15 @@ const CanaryConfig = {
             };
         }
         
+        // Check if we have enough data
+        if (!this._hasEnoughData(stableMetrics, canaryMetrics)) {
+            return {
+                decision: 'NEED_MORE_DATA',
+                confidence: 0.3,
+                reason: 'Insufficient sample size for reliable decision'
+            };
+        }
+        
         // Track issues found
         const issues = [];
         let criticalIssues = 0;
@@ -152,8 +266,26 @@ const CanaryConfig = {
                 }
             }
             
-            // Check other performance metrics similarly
-            // ...
+            // LCP check
+            if (canaryMetrics.performance.lcp && stableMetrics.performance.lcp) {
+                if (canaryMetrics.performance.lcp > stableMetrics.performance.lcp * 1.25) {
+                    issues.push('LCP degraded by more than 25%');
+                }
+            }
+            
+            // FID check
+            if (canaryMetrics.performance.fid && stableMetrics.performance.fid) {
+                if (canaryMetrics.performance.fid > stableMetrics.performance.fid * 1.3) {
+                    issues.push('FID (interaction delay) degraded by more than 30%');
+                }
+            }
+            
+            // CLS check
+            if (canaryMetrics.performance.cls && stableMetrics.performance.cls) {
+                if (canaryMetrics.performance.cls > stableMetrics.performance.cls * 1.5) {
+                    issues.push('CLS (layout shift) increased by more than 50%');
+                }
+            }
         }
         
         // Check error rates
@@ -173,13 +305,25 @@ const CanaryConfig = {
             }
         }
         
+        // Check engagement metrics if available
+        if (canaryMetrics.engagement && stableMetrics.engagement) {
+            if (canaryMetrics.engagement.scrollDepth < stableMetrics.engagement.scrollDepth * 0.8) {
+                issues.push('Scroll depth decreased by more than 20%');
+            }
+            
+            if (canaryMetrics.engagement.duration < stableMetrics.engagement.duration * 0.8) {
+                issues.push('Session duration decreased by more than 20%');
+            }
+        }
+        
         // Make decision based on findings
         if (criticalIssues > 0) {
             return {
                 decision: 'ROLLBACK',
                 confidence: 0.9,
                 reason: 'Critical issues detected',
-                issues
+                issues,
+                recommendation: 'Roll back to stable version immediately'
             };
         } 
         
@@ -188,7 +332,8 @@ const CanaryConfig = {
                 decision: 'SLOW_DOWN',
                 confidence: 0.7,
                 reason: 'Multiple issues detected',
-                issues
+                issues,
+                recommendation: 'Pause rollout and investigate issues'
             };
         }
         
@@ -197,7 +342,8 @@ const CanaryConfig = {
                 decision: 'CAUTION',
                 confidence: 0.5,
                 reason: 'Some issues detected',
-                issues
+                issues,
+                recommendation: 'Continue rollout but monitor closely'
             };
         }
         
@@ -205,8 +351,45 @@ const CanaryConfig = {
         return {
             decision: 'PROCEED',
             confidence: 0.8,
-            reason: 'No significant issues detected'
+            reason: 'No significant issues detected',
+            recommendation: 'Continue with normal rollout schedule'
         };
+    },
+    
+    /**
+     * Check if we have enough data for reliable decision making
+     * 
+     * @private
+     * @param {Object} stableMetrics - Metrics from stable version
+     * @param {Object} canaryMetrics - Metrics from canary version
+     * @returns {boolean} True if enough data is available
+     */
+    _hasEnoughData: function(stableMetrics, canaryMetrics) {
+        const { pageViews, uniqueUsers } = this.thresholds.minSampleSize;
+        
+        // Check stable metrics
+        if (!stableMetrics.engagement || 
+            !stableMetrics.engagement.pageViews || 
+            stableMetrics.engagement.pageViews < pageViews) {
+            return false;
+        }
+        
+        // Check canary metrics
+        if (!canaryMetrics.engagement || 
+            !canaryMetrics.engagement.pageViews || 
+            canaryMetrics.engagement.pageViews < pageViews) {
+            return false;
+        }
+        
+        // Check unique users if available
+        if (stableMetrics.engagement.uniqueUsers && canaryMetrics.engagement.uniqueUsers) {
+            if (stableMetrics.engagement.uniqueUsers < uniqueUsers || 
+                canaryMetrics.engagement.uniqueUsers < uniqueUsers) {
+                return false;
+            }
+        }
+        
+        return true;
     },
     
     /**
@@ -231,6 +414,34 @@ const CanaryConfig = {
         // Simple calculation - can be enhanced with more sophisticated logic
         const pageviews = metrics.engagement ? metrics.engagement.pageViews || 1 : 1;
         return relevantErrors.length / pageviews;
+    },
+
+    /**
+     * Fetch metrics from PostHog for analysis
+     * 
+     * @param {string} timeRange - Time range for metrics (e.g. '24h', '7d')
+     * @returns {Promise<Object>} Object with metrics for canary and stable versions
+     */
+    async fetchPostHogMetrics(timeRange = '24h', apiKey = null) {
+        // If no API key provided, use the configured one
+        const key = apiKey || this.analytics.posthogApiKey;
+        if (!key || key === 'ph_YOUR_KEY_HERE') {
+            console.error('[CanaryConfig] No PostHog API key provided');
+            return null;
+        }
+
+        try {
+            // Demo implementation - in production, use proper server-side API calls
+            // This is just a placeholder for the GitHub Actions workflow
+            console.log('[CanaryConfig] Fetching PostHog metrics');
+            return {
+                stableMetrics: { /* This would be actual metrics */ },
+                canaryMetrics: { /* This would be actual metrics */ }
+            };
+        } catch (error) {
+            console.error('[CanaryConfig] Error fetching PostHog metrics:', error);
+            return null;
+        }
     }
 };
 
