@@ -17,8 +17,8 @@ graph LR
     A[User Visits Site] --> B{First Visit?}
     B -->|Yes| C{Assign Version}
     B -->|No| D[Load Saved Assignment]
-    C -->|50%| E[Stable Experience]
-    C -->|50%| F[Canary Experience]
+    C -->|95%| E[Stable Experience]
+    C -->|5%| F[Canary Experience]
     D --> G[Consistent Experience]
     E --> H[Collect Metrics]
     F --> H
@@ -42,8 +42,8 @@ graph LR
  graph TD
      subgraph "Server-Side Canary Deployment"
          A[User Request] --> B[Load Balancer]
-         B -->|50% of traffic| C[Stable Version Server]
-         B -->|50% of traffic| D[Canary Version Server]
+         B -->|95% of traffic| C[Stable Version Server]
+         B -->|5% of traffic| D[Canary Version Server]
          C --> E[Response with Stable Version]
          D --> F[Response with Canary Version]
      end
@@ -52,8 +52,8 @@ graph LR
          G[User Request] --> H[Static Web Server]
          H --> I[index.html with JavaScript]
          I --> J{Client-Side Decision}
-         J -->|50% of users| K[Load Stable Version]
-         J -->|50% of users| L[Load Canary Version]
+         J -->|95% of users| K[Load Stable Version]
+         J -->|5% of users| L[Load Canary Version]
      end
      
      style B fill:#f9a,stroke:#333
