@@ -1,9 +1,23 @@
 # Client-Side Canary Deployment
 
-Deploy new features to a percentage of your users with a single line of code.
+## Installation
+
+### Option 1: One-line installation (recommended)
 
 ```html
-<script src="canary.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/yourusername/client-side-canary-deployment@main/dist/canary.js"></script>
+```
+
+### Option 2: Separate components
+
+Load the core system:
+```html
+<script src="https://cdn.jsdelivr.net/gh/yourusername/client-side-canary-deployment@main/src/canary.js"></script>
+```
+
+Optionally, add the version switcher UI:
+```html
+<script src="https://cdn.jsdelivr.net/gh/yourusername/client-side-canary-deployment@main/js/version-switcher.js"></script>
 ```
 
 ## Usage

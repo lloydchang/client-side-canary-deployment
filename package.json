@@ -1,0 +1,27 @@
+{
+  "name": "client-side-canary-deployment",
+  "version": "1.0.0",
+  "description": "One-line solution for client-side canary deployments and feature flags",
+  "main": "dist/canary.js",
+  "module": "src/index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "canary",
+    "feature-flags",
+    "ab-testing",
+    "deployment"
+  ],
+  "author": "",
+  "license": "MIT",
+  "files": [
+    "dist/",
+    "src/",
+    "js/",
+    "README.md",
+    "ADVANCED.md",
+    "LICENSE"
+  ]
+}
