@@ -110,7 +110,7 @@ This library consists of two main components:
 <script>
   // Initialize canary first
   canary.init({
-    initialCanaryPercentage: 10
+    initialCanaryPercentage: 5
   });
   
   // Then initialize the switcher
