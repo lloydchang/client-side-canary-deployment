@@ -48,15 +48,26 @@ class VersionSwitcher {
         // Determine active button based on current page or assignment
         let activePage = this.config.currentPage;
         
-        // If no current page specified, determine from assignment
+        // If no current page specified, determine from the URL path first
+        if (!activePage) {
+            // Check if URL contains /canary/ or /stable/
+            const path = window.location.pathname;
+            if (path.includes('/canary/')) {
+                activePage = 'canary';
+            } else if (path.includes('/stable/')) {
+                activePage = 'stable';
+            }
+        }
+        
+        // If still not determined, check assignment
         if (!activePage && window.canary && window.canary._assignment) {
             activePage = window.canary._assignment.version;
         }
         
         // If we're on the root path and no specific page is set, assume it's home
-        if (!activePage && window.location.pathname === '/' || 
+        if (!activePage && (window.location.pathname === '/' || 
             window.location.pathname === '' || 
-            window.location.pathname.endsWith('/index.html')) {
+            window.location.pathname.endsWith('/index.html'))) {
             activePage = 'home';
         }
         
