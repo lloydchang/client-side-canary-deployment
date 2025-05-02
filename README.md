@@ -4,7 +4,7 @@ A lightweight implementation of client-side canary deployments using vanilla Jav
 
 ## Overview
 
-This project demonstrates how to implement canary deployments for static web applications entirely on the client side. It allows you to gradually roll out new features to a subset of users without requiring server-side configuration, while collecting analytics data to make informed decisions about rollbacks or rollouts.
+This project demonstrates how to implement canary deployments for static web applications mostly on the client side. It allows you to gradually roll out new features to a subset of users without requiring server-side configuration, while collecting analytics data to make informed decisions about rollbacks or rollouts.
 
 ## How It Works
 
