@@ -31,7 +31,7 @@ jobs:
       - name: Commit and push if changes detected
         run: |
           git config --local user.email "canary-bot@example.com"
-          git config --local user.name "Canary Automation Bot"
+          git config --local user.name "Canary Bot"
           git add config/canary-config.json
           git commit -m "Auto-update canary configuration based on analytics" || echo "No changes to commit"
           git push
