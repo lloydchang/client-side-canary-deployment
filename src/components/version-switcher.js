@@ -133,6 +133,9 @@ class VersionSwitcher {
                 <h4>Version Switcher</h4>
                 ${canaryPercentage ? `<div class="version-info">Canary distribution: ${canaryPercentage}</div>` : ''}
                 <div class="version-switcher-options">
+                    <button id="vs-home-btn">
+                        Home
+                    </button>
                     <button id="vs-stable-btn" class="${currentVersion === 'stable' ? 'active' : ''}">
                         Stable
                     </button>
@@ -149,13 +152,27 @@ class VersionSwitcher {
      * @private
      */
     _addEventListeners() {
+        const homeBtn = document.getElementById('vs-home-btn');
         const stableBtn = document.getElementById('vs-stable-btn');
         const canaryBtn = document.getElementById('vs-canary-btn');
         
-        if (stableBtn && canaryBtn) {
+        if (homeBtn && stableBtn && canaryBtn) {
+            homeBtn.addEventListener('click', () => this._goHome());
             stableBtn.addEventListener('click', () => this._switchVersion('stable'));
             canaryBtn.addEventListener('click', () => this._switchVersion('canary'));
         }
+    }
+    
+    /**
+     * Navigate to the home page
+     * @private
+     */
+    _goHome() {
+        // Get the base path for the application
+        let basePath = this._getBasePath();
+        
+        // Navigate to the home page
+        window.location.href = `${basePath}/`;
     }
     
     /**
