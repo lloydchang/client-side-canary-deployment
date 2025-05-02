@@ -5,7 +5,7 @@
 
 // Import core components
 import './canary.js';
-import '../js/version-switcher.js';
+import './components/version-switcher.js';
 
 // Re-export for module systems (if used with bundlers)
 export default window.canary;
