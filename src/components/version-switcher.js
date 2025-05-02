@@ -183,15 +183,58 @@ class VersionSwitcher {
             this.config.onVersionSwitch(version);
         }
         
+        // Get the base path for the application
+        let basePath = this._getBasePath();
+        
         // Redirect to the appropriate version
         if (version === 'canary') {
             if (!window.location.pathname.includes('/canary/')) {
-                window.location.href = '/canary/';
+                window.location.href = `${basePath}/canary/`;
             }
         } else {
             if (!window.location.pathname.includes('/stable/')) {
-                window.location.href = '/stable/';
+                window.location.href = `${basePath}/stable/`;
             }
+        }
+    }
+    
+    /**
+     * Determine the base path for the application
+     * @returns {string} The base path
+     * @private
+     */
+    _getBasePath() {
+        // Get the current path
+        const path = window.location.pathname;
+        
+        // If we're at the root of the domain
+        if (path === '/' || path === '') {
+            return '';
+        }
+        
+        // If we're in /stable/ or /canary/ directly under domain root
+        if (path === '/stable/' || path === '/canary/') {
+            return '';
+        }
+        
+        // For GitHub Pages or any other subdirectory deployment
+        // Extract the base path by removing the '/stable/' or '/canary/' part
+        if (path.includes('/stable/')) {
+            return path.substring(0, path.indexOf('/stable/'));
+        } else if (path.includes('/canary/')) {
+            return path.substring(0, path.indexOf('/canary/'));
+        } else {
+            // If neither stable nor canary is in the path, assume we're at the repo root
+            // Remove any trailing file names (like index.html)
+            const lastSlashIndex = path.lastIndexOf('/');
+            if (lastSlashIndex !== -1) {
+                const potentialFilePath = path.substring(lastSlashIndex);
+                if (potentialFilePath.includes('.')) {
+                    // This is likely a file, so return the directory portion
+                    return path.substring(0, lastSlashIndex);
+                }
+            }
+            return path;
         }
     }
     
