@@ -20,6 +20,34 @@ Optionally, add the version switcher UI:
 <script src="https://cdn.jsdelivr.net/gh/yourusername/client-side-canary-deployment@main/js/version-switcher.js"></script>
 ```
 
+## Components
+
+This library consists of two main components:
+
+1. **Core Canary System** (`src/canary.js`): Handles feature flagging, metrics tracking, and version assignments
+2. **Version Switcher** (`src/components/version-switcher.js`): Optional UI component that allows users to manually switch between versions
+
+### Using the Version Switcher
+
+```html
+<!-- First include the main canary library -->
+<script src="src/canary.js"></script>
+
+<!-- Then include the version switcher -->
+<script src="src/components/version-switcher.js"></script>
+
+<!-- Initialize both components -->
+<script>
+  // Initialize canary first
+  canary.init({
+    initialCanaryPercentage: 10
+  });
+  
+  // Then initialize the switcher
+  new VersionSwitcher();
+</script>
+```
+
 ## Usage
 
 ### Basic Feature Flags

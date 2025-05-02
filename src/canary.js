@@ -288,6 +288,30 @@
     },
     
     /**
+     * Manually set the version for this user
+     * @param {string} version - 'stable' or 'canary'
+     * @returns {Object} - The canary object for chaining
+     */
+    setVersion: function(version) {
+      if (version !== 'stable' && version !== 'canary') {
+        console.error('Invalid version. Must be "stable" or "canary"');
+        return this;
+      }
+      
+      // Update the assignment
+      this._assignment.version = version;
+      this._assignment.assignedAt = Date.now();
+      this._assignment.manuallySet = true;
+      
+      // Save to localStorage
+      localStorage.setItem(this._config.storageKey, JSON.stringify(this._assignment));
+      
+      this._debug && console.log(`Version manually set to ${version}`);
+      
+      return this;
+    },
+    
+    /**
      * Get the current canary percentage
      * @returns {number} The current canary percentage
      */
