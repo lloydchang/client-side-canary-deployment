@@ -7,6 +7,7 @@
   <!-- Analytics Scripts -->
   <script src="../js/analytics.js"></script>
   <script src="../js/canary-config.js"></script>
+  <script src="../js/version-switcher.js"></script>
   <script>
     // Initialize analytics
     document.addEventListener('DOMContentLoaded', function() {
@@ -24,6 +25,16 @@
       window.analytics.trackEvent('page_view', {
         page: 'default_home'
       });
+      
+      // Initialize version switcher
+      window.versionSwitcher = new VersionSwitcher({
+        onVersionSwitch: function(newVersion) {
+          window.analytics.trackEvent('manual_version_switch', {
+            fromVersion: 'default',
+            toVersion: newVersion
+          });
+        }
+      });
     });
   </script>
 </head>
@@ -33,6 +44,7 @@
   <div id="app-info">
     <h2>Default Version Information</h2>
     <p>You are currently viewing the stable version of the application.</p>
+    <p>You can switch to the canary version using the Version Switcher in the bottom right corner.</p>
     <button id="track-click">Click me for testing</button>
   </div>
 

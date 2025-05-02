@@ -7,6 +7,7 @@
   <!-- Analytics Scripts -->
   <script src="../js/analytics.js"></script>
   <script src="../js/canary-config.js"></script>
+  <script src="../js/version-switcher.js"></script>
   <script>
     // Initialize analytics with canary-specific configuration
     document.addEventListener('DOMContentLoaded', function() {
@@ -31,6 +32,17 @@
       window.analytics.trackEvent('canary_impression', {
         timestamp: Date.now()
       });
+      
+      // Initialize version switcher
+      window.versionSwitcher = new VersionSwitcher({
+        onVersionSwitch: function(newVersion) {
+          window.analytics.trackEvent('manual_version_switch', {
+            fromVersion: 'canary',
+            toVersion: newVersion,
+            userTriggered: true
+          });
+        }
+      });
     });
   </script>
 </head>
@@ -41,6 +53,7 @@
     <h2>Canary Version Information</h2>
     <p>You are currently viewing the experimental version of the application.</p>
     <p>This version includes the latest features and improvements that are being tested.</p>
+    <p>You can switch back to the default version using the Version Switcher in the bottom right corner.</p>
     <button id="track-click">Click me for testing</button>
     <button id="simulate-error">Simulate Error</button>
     <div id="feature-status">
