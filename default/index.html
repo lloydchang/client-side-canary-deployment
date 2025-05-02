@@ -4,8 +4,49 @@
 <head>
   <meta charset="UTF-8">
   <title>Default Version</title>
+  <!-- Analytics Scripts -->
+  <script src="../js/analytics.js"></script>
+  <script src="../js/canary-config.js"></script>
+  <script>
+    // Initialize analytics
+    document.addEventListener('DOMContentLoaded', function() {
+      // Create analytics instance with version information
+      window.analytics = new CanaryAnalytics({
+        version: 'default',
+        debug: CanaryConfig.analytics.debug,
+        endpoint: CanaryConfig.analytics.endpoint,
+        sampleRate: CanaryConfig.analytics.sampleRate,
+        storageKey: CanaryConfig.analytics.storageKey,
+        bufferInterval: CanaryConfig.analytics.bufferInterval
+      });
+      
+      // Track page view
+      window.analytics.trackEvent('page_view', {
+        page: 'default_home'
+      });
+    });
+  </script>
 </head>
 <body>
   <p>This is the default version of the app.</p>
+  
+  <div id="app-info">
+    <h2>Default Version Information</h2>
+    <p>You are currently viewing the stable version of the application.</p>
+    <button id="track-click">Click me for testing</button>
+  </div>
+
+  <script>
+    // Add some interaction for testing
+    document.getElementById('track-click').addEventListener('click', function() {
+      if (window.analytics) {
+        window.analytics.trackEvent('button_click', {
+          button_id: 'track-click',
+          button_text: 'Click me for testing'
+        });
+        alert('Event tracked!');
+      }
+    });
+  </script>
 </body>
 </html>

@@ -4,40 +4,78 @@
 <head>
   <meta charset="UTF-8">
   <title>Client-Side Canary Deployment</title>
+  <script src="js/canary-config.js"></script>
   <script>
     // Configuration
-    const configUrl = 'config.json'; // Hosted on same GitHub Pages site
+    const configUrl = 'config.json';
     const defaultVersion = 'default';
     const canaryVersion = 'canary';
 
-    // Check sessionStorage for version assignment, if not assigned, assign one randomly
+    // Check sessionStorage for version assignment, if not assigned, assign one based on configuration
     function getVersionFromSession() {
       const version = sessionStorage.getItem('version');
       if (version) return version;
-      // In a real-world scenario, you might want to use a more sophisticated method
-      // to determine the version assignment, such as A/B testing or user segmentation.
-      //
-      // For simplicity, we are using a random assignment here.
-      //
-      // This is where you would fetch the config from the server if needed
-      // fetch(configUrl)
-      //   .then(response => response.json())
-      //   .then(data => {
-      //     // Use the data to determine the version assignment
-      //   });
-      //
-      // For now, we will just randomly assign
-      // the canary or default version at 50% for demonstration purposes.
+      
+      // Use CanaryConfig for more intelligent decision making
+      if (window.CanaryConfig && window.CanaryConfig.shouldUseCanary) {
+        return window.CanaryConfig.shouldUseCanary() ? canaryVersion : defaultVersion;
+      }
+      
+      // Fallback to random assignment if config is not available
       return Math.random() < 0.5 ? canaryVersion : defaultVersion;
     }
 
     function setVersionInSession(version) {
       sessionStorage.setItem('version', version);
+      // Track version assignment timing for performance analysis
+      sessionStorage.setItem('version_assigned_at', Date.now().toString());
+    }
+
+    // Try to fetch the actual configuration from server
+    async function fetchConfig() {
+      try {
+        const response = await fetch(configUrl);
+        if (response.ok) {
+          const config = await response.json();
+          return config;
+        }
+      } catch (e) {
+        console.error('Error fetching configuration:', e);
+      }
+      return null;
     }
 
     async function init() {
+      // Try to load server-side config (optional)
+      const serverConfig = await fetchConfig();
+      
+      // Merge server config with client config if available
+      if (serverConfig && window.CanaryConfig) {
+        if (serverConfig.defaultVersion) window.CanaryConfig.defaultVersion = serverConfig.defaultVersion;
+        if (serverConfig.canaryVersion) window.CanaryConfig.canaryVersion = serverConfig.canaryVersion;
+        if (serverConfig.distribution && serverConfig.distribution.canaryPercentage !== undefined) {
+          window.CanaryConfig.distribution.canaryPercentage = serverConfig.distribution.canaryPercentage;
+        }
+      }
+      
+      // Get and set version in session
       const version = getVersionFromSession();
       setVersionInSession(version);
+      
+      // Store metadata about assignment
+      if (window.CanaryConfig) {
+        sessionStorage.setItem('canary_assignment_data', JSON.stringify({
+          timestamp: Date.now(),
+          currentPercentage: window.CanaryConfig.getCurrentCanaryPercentage(),
+          gradualRollout: window.CanaryConfig.distribution.gradualRollout,
+          daysSinceDeployment: Math.floor(
+            (new Date().getTime() - new Date(window.CanaryConfig.distribution.initialDate).getTime()) 
+            / (1000 * 60 * 60 * 24)
+          )
+        }));
+      }
+      
+      // Redirect to appropriate version
       window.location.replace(`${version}/index.html`);
     }
 
@@ -46,5 +84,10 @@
 </head>
 <body>
   <h1>Redirecting...</h1>
+  <p>You're being directed to the appropriate version of the application.</p>
+  <noscript>
+    <p>JavaScript is required for this application. Please enable JavaScript and reload the page.</p>
+    <p>You can manually access the <a href="default/index.html">default version</a>.</p>
+  </noscript>
 </body>
 </html>

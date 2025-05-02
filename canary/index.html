@@ -4,8 +4,112 @@
 <head>
   <meta charset="UTF-8">
   <title>Canary Version</title>
+  <!-- Analytics Scripts -->
+  <script src="../js/analytics.js"></script>
+  <script src="../js/canary-config.js"></script>
+  <script>
+    // Initialize analytics with canary-specific configuration
+    document.addEventListener('DOMContentLoaded', function() {
+      // Create analytics instance with version information
+      window.analytics = new CanaryAnalytics({
+        version: 'canary',
+        debug: CanaryConfig.analytics.debug || true, // Enable debug for canary by default
+        endpoint: CanaryConfig.analytics.endpoint,
+        sampleRate: 1.0, // Always collect 100% data for canary users
+        storageKey: CanaryConfig.analytics.storageKey,
+        bufferInterval: CanaryConfig.analytics.bufferInterval
+      });
+      
+      // Track page view with additional metadata
+      window.analytics.trackEvent('page_view', {
+        page: 'canary_home',
+        canaryPercentage: CanaryConfig.getCurrentCanaryPercentage(),
+        featureFlags: JSON.stringify(CanaryConfig.featureFlags)
+      });
+
+      // Track that this is a canary impression
+      window.analytics.trackEvent('canary_impression', {
+        timestamp: Date.now()
+      });
+    });
+  </script>
 </head>
 <body>
   <p>This is the canary version of the app.</p>
+  
+  <div id="app-info">
+    <h2>Canary Version Information</h2>
+    <p>You are currently viewing the experimental version of the application.</p>
+    <p>This version includes the latest features and improvements that are being tested.</p>
+    <button id="track-click">Click me for testing</button>
+    <button id="simulate-error">Simulate Error</button>
+    <div id="feature-status">
+      <h3>Feature Status:</h3>
+      <ul id="feature-list">
+        <!-- Feature flags will be populated here -->
+      </ul>
+    </div>
+    <div id="metrics-display">
+      <h3>Analytics Data:</h3>
+      <button id="show-metrics">Show Current Metrics</button>
+      <pre id="metrics-output" style="display: none; background: #f5f5f5; padding: 10px; border: 1px solid #ccc; max-height: 300px; overflow: auto;"></pre>
+    </div>
+  </div>
+
+  <script>
+    // Add interaction testing for analytics
+    document.getElementById('track-click').addEventListener('click', function() {
+      if (window.analytics) {
+        window.analytics.trackEvent('button_click', {
+          button_id: 'track-click',
+          button_text: 'Click me for testing',
+          version: 'canary'
+        });
+        alert('Event tracked in canary version!');
+      }
+    });
+
+    // Add error simulation for testing rollback logic
+    document.getElementById('simulate-error').addEventListener('click', function() {
+      if (window.analytics) {
+        window.analytics.trackEvent('simulated_error_triggered', {
+          type: 'user_initiated'
+        });
+        try {
+          // Deliberately cause an error
+          throw new Error('Simulated canary testing error');
+        } catch (error) {
+          alert('Simulated error tracked! Check the console.');
+          console.error('Simulated error for canary testing:', error);
+        }
+      }
+    });
+
+    // Display feature flags
+    function displayFeatureFlags() {
+      const featureList = document.getElementById('feature-list');
+      for (const [feature, enabled] of Object.entries(CanaryConfig.featureFlags)) {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${feature}</strong>: ${enabled ? '✅ Enabled' : '❌ Disabled'}`;
+        featureList.appendChild(li);
+      }
+    }
+
+    // Display current metrics
+    document.getElementById('show-metrics').addEventListener('click', function() {
+      const output = document.getElementById('metrics-output');
+      if (window.analytics) {
+        const metrics = window.analytics.getMetrics();
+        output.textContent = JSON.stringify(metrics, null, 2);
+        output.style.display = output.style.display === 'none' ? 'block' : 'none';
+      } else {
+        output.textContent = 'Analytics not available';
+        output.style.display = 'block';
+      }
+    });
+
+    // Initialize feature display
+    displayFeatureFlags();
+  </script>
 </body>
 </html>
