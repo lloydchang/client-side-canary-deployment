@@ -18,13 +18,13 @@ This project demonstrates how to implement canary deployments for static web app
 ## Files
 
 - [index.html](index.html): Entry point that handles version assignment and redirection
-- [canary.json](canary.json): Configuration file defining default and canary versions
+- [config.json](config.json): Configuration file defining default and canary versions
 - [default/index.html](default/index.html): The default version of the application
 - [canary/index.html](canary/index.html): The canary (new) version of the application
 
 ## Customization
 
-You can modify the [canary.json](canary.json) file to change the version names or update the probability distribution in the JavaScript code to control the percentage of users who receive the canary version.
+You can modify the [config.json](config.json) file to change the version names or update the probability distribution in the JavaScript code to control the percentage of users who receive the canary version.
 
 ## Benefits
 
