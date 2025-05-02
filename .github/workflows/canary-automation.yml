@@ -1,8 +1,8 @@
 name: Canary Deployment Automation
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'  # Run every 6 hours
+  # schedule:
+  #   - cron: '0 */6 * * *'  # Run every 6 hours
   workflow_dispatch:        # Allow manual triggering
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
           
       - name: Install dependencies
         run: |
@@ -30,8 +30,8 @@ jobs:
           
       - name: Commit and push if changes detected
         run: |
-          git config --local user.email "canary-bot@example.com"
-          git config --local user.name "Canary Automation Bot"
+          git config --local user.email "canary.deployment@example.com"
+          git config --local user.name "Canary Deployment"
           git add config/canary-config.json
           git commit -m "Auto-update canary configuration based on analytics" || echo "No changes to commit"
           git push

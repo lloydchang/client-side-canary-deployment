@@ -1,0 +1,7 @@
+# Ignore files with actual API keys
+config/keys.json
+
+# Environment files with actual keys
+.env
+.env.local
+.env.production
