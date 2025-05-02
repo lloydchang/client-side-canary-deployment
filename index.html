@@ -14,6 +14,20 @@
     function getVersionFromSession() {
       const version = sessionStorage.getItem('version');
       if (version) return version;
+      // In a real-world scenario, you might want to use a more sophisticated method
+      // to determine the version assignment, such as A/B testing or user segmentation.
+      //
+      // For simplicity, we are using a random assignment here.
+      //
+      // This is where you would fetch the config from the server if needed
+      // fetch(configUrl)
+      //   .then(response => response.json())
+      //   .then(data => {
+      //     // Use the data to determine the version assignment
+      //   });
+      //
+      // For now, we will just randomly assign
+      // the canary or default version at 50% for demonstration purposes.
       return Math.random() < 0.5 ? canaryVersion : defaultVersion;
     }
 
