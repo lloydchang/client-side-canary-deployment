@@ -42,8 +42,8 @@ graph LR
 graph TD
     subgraph "Server-Side Canary Deployment"
         A[User Request] --> GA[Global Accelerator]
-        GA --> LB[Load Balancer]
-        LB --> SM[Service Mesh - e.g. Istio or Linkerd]
+        GA --> RLB[Regional Load Balancer]
+        RLB --> SM[Service Mesh - e.g. Istio or Linkerd]
         
         SM -->|95% of traffic| EP1[Envoy Proxy or Linkerd2-proxy to Stable]
         SM -->|5% of traffic| EP2[Envoy Proxy or Linkerd2-proxy to Canary]
