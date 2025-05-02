@@ -25,7 +25,7 @@ class VersionSwitcher {
         this.currentVersion = this._getCurrentVersion();
         this._createSwitcher();
         
-        // Log version switch events if analytics is available
+        // Log version switch events if canary is available
         this._trackEvent('version_switcher_init', {
             currentVersion: this.currentVersion,
             referrer: document.referrer,
@@ -34,73 +34,87 @@ class VersionSwitcher {
     }
 
     /**
-     * Get the current version from session storage
+     * Get the current version
      * @private
-     * @returns {string} Current version
+     * @returns {string} The current version
      */
     _getCurrentVersion() {
-        return sessionStorage.getItem(this.config.storageKey) || this.config.stableVersion;
+        const saved = localStorage.getItem(this.config.storageKey);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                return data.version;
+            } catch (e) {
+                return this.config.stableVersion;
+            }
+        }
+        return this.config.stableVersion;
     }
 
     /**
-     * Track an event in the analytics system
-     * @private
-     * @param {string} eventName - Name of the event to track
-     * @param {Object} properties - Event properties
-     */
-    _trackEvent(eventName, properties = {}) {
-        // Track via CanaryAnalytics if available
-        if (window.analytics) {
-            window.analytics.trackEvent(eventName, properties);
-        }
-
-        // Track directly via PostHog if available and enabled
-        if (window.posthog && this.config.posthogEnabled) {
-            window.posthog.capture(eventName, {
-                ...properties,
-                source: 'version_switcher',
-                timestamp: new Date().toISOString()
-            });
-        }
-    }
-
-    /**
-     * Switch to a specific version
-     * @param {string} version Version to switch to
-     * @returns {boolean} Success status
+     * Switch to a specified version
+     * @param {string} version - Version to switch to
      */
     switchToVersion(version) {
-        if (version !== this.config.stableVersion && version !== this.config.canaryVersion) {
-            console.error(`Invalid version: ${version}`);
-            return false;
+        if (version !== this.currentVersion) {
+            // Update state
+            this.currentVersion = version;
+            
+            // Store in localStorage
+            const data = { version, switchedAt: Date.now() };
+            localStorage.setItem(this.config.storageKey, JSON.stringify(data));
+            
+            // Update UI
+            this._updateButtons();
+            
+            // Track event
+            this._trackEvent('version_switched', {
+                previousVersion: this.currentVersion,
+                newVersion: version,
+                manual: true
+            });
+            
+            // Call callback if provided
+            if (typeof this.config.onVersionSwitch === 'function') {
+                this.config.onVersionSwitch(version);
+            }
+            
+            // Reload the page to apply the new version
+            window.location.reload();
         }
+    }
 
-        // Don't switch if already on this version
-        if (version === this.currentVersion) {
-            return false;
+    /**
+     * Track an event (uses canary if available, otherwise tries PostHog directly)
+     * @private
+     * @param {string} eventName - Event name
+     * @param {object} data - Event data
+     */
+    _trackEvent(eventName, data = {}) {
+        // Try to use canary object if available
+        if (window.canary && typeof window.canary.trackEvent === 'function') {
+            window.canary.trackEvent(eventName, data);
+            return;
         }
-
-        // Track the switch event
-        this._trackEvent('version_switch', {
-            fromVersion: this.currentVersion,
-            toVersion: version,
-            userInitiated: true,
-            // Include feature flags if available
-            featureFlags: window.CanaryConfig ? window.CanaryConfig.featureFlags : null
-        });
-
-        // Update session storage
-        sessionStorage.setItem(this.config.storageKey, version);
-        this.currentVersion = version;
-
-        // Execute callback if provided
-        if (this.config.onVersionSwitch && typeof this.config.onVersionSwitch === 'function') {
-            this.config.onVersionSwitch(version);
+        
+        // Fall back to PostHog if enabled
+        if (this.config.posthogEnabled && window.posthog) {
+            window.posthog.capture(eventName, data);
         }
+    }
 
-        // Redirect to the new version
-        window.location.href = `../${version}/index.html`;
-        return true;
+    /**
+     * Update button states
+     * @private
+     */
+    _updateButtons() {
+        const stableBtn = document.getElementById('vs-btn-stable');
+        const canaryBtn = document.getElementById('vs-btn-canary');
+        
+        if (stableBtn && canaryBtn) {
+            stableBtn.className = this.currentVersion === this.config.stableVersion ? 'active' : '';
+            canaryBtn.className = this.currentVersion === this.config.canaryVersion ? 'active' : '';
+        }
     }
 
     /**
@@ -108,28 +122,23 @@ class VersionSwitcher {
      * @private
      */
     _createSwitcher() {
-        // Find or create the container
+        // Create container if it doesn't exist
         let container = document.getElementById(this.config.switcherContainerId);
-        
         if (!container) {
             container = document.createElement('div');
             container.id = this.config.switcherContainerId;
-            container.className = 'version-switcher';
             document.body.appendChild(container);
         }
 
-        // Get canary percentage if available
-        let canaryPercentage = 'N/A';
-        if (this.canaryConfig) {
-            canaryPercentage = this.canaryConfig.getCurrentCanaryPercentage() + '%';
-        }
+        // Calculate canary percentage if config available
+        const canaryPercentage = this.canaryConfig ? 
+            `${this.canaryConfig.initialCanaryPercentage}%` : 'Unknown';
 
-        // Create styled container with more specific and consistent styling
+        // Add CSS and HTML
+        container.className = 'version-switcher';
         container.innerHTML = `
             <style>
-                /* Reset and isolate version switcher styles to prevent external influence */
                 #version-switcher.version-switcher {
-                    all: initial; /* Reset all properties */
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
                     box-sizing: border-box;
                     position: fixed;
@@ -210,31 +219,16 @@ class VersionSwitcher {
                 }
 
                 #version-switcher.version-switcher .vs-tag {
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
+                    display: inline-block;
+                    padding: 2px 4px;
                     font-size: 10px;
-                    padding: 2px 5px;
+                    font-weight: 600;
                     border-radius: 3px;
-                    margin-left: 5px;
-                    min-width: 42px;
-                    text-align: center;
-                    text-transform: uppercase;
-                    font-weight: bold;
-                }
-
-                #version-switcher.version-switcher .vs-tag.stable {
-                    background: #28a745;
-                    color: white;
-                }
-
-                #version-switcher.version-switcher .vs-tag.canary {
-                    background: #f9c513;
-                    color: black;
+                    margin-left: 4px;
                 }
             </style>
             <div>
-                <h4>Version Switcher <span class="vs-tag ${this.currentVersion}">${this.currentVersion.toUpperCase()}</span></h4>
+                <h4>Version Switcher</h4>
                 ${this.canaryConfig ? `<div class="version-info">Canary distribution: ${canaryPercentage}</div>` : ''}
                 <div class="version-switcher-options">
                     <button id="vs-btn-stable" class="${this.currentVersion === this.config.stableVersion ? 'active' : ''}">

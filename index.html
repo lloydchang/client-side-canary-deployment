@@ -1,105 +1,31 @@
-<!-- index.html - Client-Side Canary Deployment with Session-Based Assignment -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Client-Side Canary Deployment</title>
-  <script>
-    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init me ys Ss gs ws capture je Di xs register register_once register_for_session unregister unregister_for_session Rs getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Is ks createPersonProfile Ps bs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing $s debug Es getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-    posthog.init('phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR', {
-        api_host: 'https://us.i.posthog.com',
-        person_profiles: 'always', // or 'always' to create profiles for anonymous users as well
-    })
-  </script>
-  <script src="js/canary-config.js"></script>
-  <script>
-    // Configuration
-    const configUrl = 'config/canary-config.json';
-    const stableVersion = 'stable';
-    const canaryVersion = 'canary';
-
-    // Check sessionStorage for version assignment, if not assigned, assign one based on configuration
-    function getVersionFromSession() {
-      const version = sessionStorage.getItem('version');
-      if (version) return version;
-      
-      // Use CanaryConfig for more intelligent decision making
-      if (window.CanaryConfig && window.CanaryConfig.shouldUseCanary) {
-        return window.CanaryConfig.shouldUseCanary() ? canaryVersion : stableVersion;
-      }
-      
-      // Fallback to random assignment if config is not available
-      return Math.random() < 0.5 ? canaryVersion : stableVersion;
-    }
-
-    function setVersionInSession(version) {
-      sessionStorage.setItem('version', version);
-      // Track version assignment timing for performance analysis
-      sessionStorage.setItem('version_assigned_at', Date.now().toString());
-    }
-
-    // Try to fetch the actual configuration from server
-    async function fetchConfig() {
-      try {
-        const response = await fetch(configUrl);
-        if (response.ok) {
-          const config = await response.json();
-          return config;
-        }
-      } catch (e) {
-        console.error('Error fetching configuration:', e);
-      }
-      return null;
-    }
-
-    async function init() {
-      // First, try to load remote configuration
-      if (window.CanaryConfig && window.CanaryConfig.loadRemoteConfig) {
-        await window.CanaryConfig.loadRemoteConfig('config/canary-config.json');
-      } else {
-        // Try legacy config loading (fallback)
-        const serverConfig = await fetchConfig();
-        
-        // Merge server config with client config if available
-        if (serverConfig && window.CanaryConfig) {
-          if (serverConfig.stableVersion) window.CanaryConfig.stableVersion = serverConfig.stableVersion;
-          if (serverConfig.canaryVersion) window.CanaryConfig.canaryVersion = serverConfig.canaryVersion;
-          if (serverConfig.distribution && serverConfig.distribution.canaryPercentage !== undefined) {
-            window.CanaryConfig.distribution.canaryPercentage = serverConfig.distribution.canaryPercentage;
-          }
-        }
-      }
-      
-      // Get and set version in session
-      const version = getVersionFromSession();
-      setVersionInSession(version);
-      
-      // Store metadata about assignment
-      if (window.CanaryConfig) {
-        sessionStorage.setItem('canary_assignment_data', JSON.stringify({
-          timestamp: Date.now(),
-          currentPercentage: window.CanaryConfig.getCurrentCanaryPercentage(),
-          gradualRollout: window.CanaryConfig.distribution.gradualRollout,
-          daysSinceDeployment: Math.floor(
-            (new Date().getTime() - new Date(window.CanaryConfig.distribution.initialDate).getTime()) 
-            / (1000 * 60 * 60 * 24)
-          )
-        }));
-      }
-      
-      // Redirect to appropriate version
-      window.location.replace(`${version}/index.html`);
-    }
-
-    window.onload = init;
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CanaryJS Demo</title>
+    
+    <!-- Include the core canary.js script -->
+    <script src="src/canary.js"></script>
+    
+    <!-- Include the optional version-switcher.js for UI control -->
+    <script src="js/version-switcher.js"></script>
+    
+    <script>
+        // Initialize canary with PostHog analytics
+        document.addEventListener('DOMContentLoaded', () => {
+            // Basic canary initialization
+            canary.init({
+                posthogApiKey: 'YOUR_POSTHOG_API_KEY',  // Replace with your real key
+                posthogEnabled: true
+            });
+            
+            // Optional: Initialize version switcher
+            new VersionSwitcher();
+        });
+    </script>
 </head>
 <body>
-  <h1>Redirecting...</h1>
-  <p>You're being directed to the appropriate version of the application.</p>
-  <noscript>
-    <p>JavaScript is required for this application. Please enable JavaScript and reload the page.</p>
-    <p>Alternatively, you can <a href="stable/index.html">access the stable version directly</a>.</p>
-  </noscript>
+    <!-- Your page content here -->
 </body>
 </html>

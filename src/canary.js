@@ -19,7 +19,8 @@
       evaluationInterval: 3600000,     // Evaluate every hour (in milliseconds)
       errorThreshold: 1.5,             // Rollback if error rate 1.5x stable version
       posthogEnabled: false,           // PostHog disabled by default (localStorage fallback)
-      posthogApiKey: null              // PostHog API key (if enabled)
+      posthogApiKey: null,             // PostHog API key (if enabled)
+      sessionStorageKey: 'canary_session' // Add session storage key for session-specific data
     },
     
     // Features registry
@@ -187,12 +188,7 @@
       });
       
       // Send to PostHog if enabled
-      if (this._config.posthogEnabled && window.posthog) {
-        window.posthog.capture(eventName, {
-          ...properties, 
-          version: this._assignment.version
-        });
-      }
+      this._sendToPostHog(eventName, properties);
       
       // Save metrics
       this._saveMetrics();
@@ -219,13 +215,7 @@
       });
       
       // Send to PostHog if enabled
-      if (this._config.posthogEnabled && window.posthog) {
-        window.posthog.capture('error', {
-          message,
-          stack,
-          version: this._assignment.version
-        });
-      }
+      this._sendToPostHog('error', { message, stack });
       
       // Save metrics
       this._saveMetrics();
@@ -470,9 +460,67 @@
         return;
       }
       
-      // Load PostHog script
-      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document, window.posthog||[]);
-      posthog.init(apiKey, { api_host: 'https://app.posthog.com' });
+      try {
+        // Load PostHog script
+        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document, window.posthog||[]);
+        
+        posthog.init(apiKey, {
+          api_host: 'https://app.posthog.com',
+          persistence: 'localStorage',
+          capture_pageview: false, // We'll handle this manually
+          loaded: (ph) => {
+            // Register the version as a persistent property
+            ph.register({
+              version: this._assignment.version,
+              sessionId: this._getSessionId()
+            });
+            this._debug && console.log('PostHog initialized');
+          }
+        });
+        
+        // Track initial page view
+        this._sendToPostHog('pageview', {
+          version: this._assignment.version
+        });
+      } catch (error) {
+        this._debug && console.log(`Error initializing PostHog: ${error.message}`);
+      }
+    },
+    
+    /**
+     * Send event to PostHog
+     * @private
+     * @param {string} eventName - Event name
+     * @param {object} properties - Event properties
+     */
+    _sendToPostHog: function(eventName, properties = {}) {
+      if (!this._config.posthogEnabled || !window.posthog) {
+        return;
+      }
+      
+      try {
+        window.posthog.capture(eventName, {
+          ...properties,
+          version: this._assignment.version
+        });
+        this._debug && console.log(`Sent to PostHog: ${eventName}`);
+      } catch (error) {
+        this._debug && console.log(`Error sending to PostHog: ${error.message}`);
+      }
+    },
+    
+    /**
+     * Get the current session ID
+     * @private
+     * @returns {string} The current session ID
+     */
+    _getSessionId: function() {
+      const data = JSON.parse(sessionStorage.getItem(this._config.sessionStorageKey) || '{}');
+      if (!data.sessionId) {
+        data.sessionId = 'session_' + Math.random().toString(36).substring(2, 15);
+        sessionStorage.setItem(this._config.sessionStorageKey, JSON.stringify(data));
+      }
+      return data.sessionId;
     },
     
     /**

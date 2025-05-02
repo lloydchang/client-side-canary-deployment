@@ -6,8 +6,13 @@
     "rolloutPeriod": 7,
     "initialDate": "2025-05-01",
     "safetyThreshold": 5,
-    "lastEvaluationDate": "2025-05-01T12:00:00Z",
-    "status": "ACTIVE"
+    "lastEvaluationDate": "2025-05-02T19:23:28.526Z",
+    "status": "ACTIVE",
+    "lastEvaluationResult": {
+      "status": "ERROR",
+      "confidence": 0,
+      "reason": "Error fetching data: PostHog project ID not found in environment"
+    }
   },
   "featureFlags": {
     "newDesign": true,
@@ -15,7 +20,7 @@
     "performanceOptimizations": true
   },
   "analytics": {
-    "sampleRate": 1.0,
+    "sampleRate": 1,
     "debug": false,
     "posthogApiKey": "__POSTHOG_PUBLIC_KEY__",
     "posthogProjectId": "__POSTHOG_PROJECT_ID__"
