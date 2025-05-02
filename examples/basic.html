@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CanaryJS Basic Example</title>
+  <style>
+    body { font-family: system-ui, sans-serif; line-height: 1.5; padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .new-design { background-color: #f0f9ff; border-radius: 8px; padding: 1rem; border-left: 4px solid #0ea5e9; }
+    .card { border: 1px solid #ddd; border-radius: 4px; padding: 1rem; margin-bottom: 1rem; }
+    .btn { background: #0ea5e9; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+    .info { background-color: #f8fafc; padding: 1rem; border-radius: 4px; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>CanaryJS Basic Example</h1>
+  
+  <p>This page demonstrates the basic usage of CanaryJS for client-side canary deployments.</p>
+  
+  <!-- Feature flag controlled content -->
+  <div id="content"></div>
+  
+  <!-- Controls -->
+  <div class="card">
+    <h3>Controls</h3>
+    <button class="btn" onclick="simulateError()">Simulate Error</button>
+    <button class="btn" onclick="showResults()">Show Results</button>
+  </div>
+  
+  <!-- Results will be displayed here -->
+  <pre id="results" class="info" style="display: none;"></pre>
+  
+  <!-- Include CanaryJS from CDN (in a real app) -->
+  <!-- <script src="https://cdn.jsdelivr.net/gh/yourusername/canaryjs/dist/canary.min.js"></script> -->
+  
+  <!-- For this example, include the local file -->
+  <script src="../src/canary.js"></script>
+  
+  <script>
+    // Initialize canary with simple configuration
+    canary.config({
+      initialCanaryPercentage: 50  // Set to 50% for demo purposes
+    });
+    
+    // Define features
+    canary.defineFeatures({
+      'newDesign': { description: 'Modern UI design' },
+      'enhancedContent': { description: 'Rich content with images' }
+    });
+    
+    // Apply features based on canary flags
+    function renderContent() {
+      const contentDiv = document.getElementById('content');
+      
+      if (canary.isEnabled('newDesign')) {
+        // New design version
+        contentDiv.innerHTML = `
+          <div class="new-design">
+            <h2>Welcome to the New Design!</h2>
+            <p>You're seeing the canary version with our modernized UI.</p>
+            ${canary.isEnabled('enhancedContent') ? 
+              '<p>✨ You also have access to enhanced content features!</p>' : 
+              ''}
+          </div>
+        `;
+      } else {
+        // Traditional design
+        contentDiv.innerHTML = `
+          <div class="card">
+            <h2>Welcome</h2>
+            <p>You're seeing the stable version of the site.</p>
+          </div>
+        `;
+      }
+      
+      // Display assignment info
+      const info = canary.getResults();
+      const assignmentInfo = document.createElement('div');
+      assignmentInfo.className = 'info';
+      assignmentInfo.innerHTML = `
+        <strong>Your assignment:</strong> ${info.currentAssignment.version}<br>
+        <strong>Features enabled:</strong> ${
+          Object.entries(info.currentAssignment.features)
+            .filter(([name, enabled]) => enabled)
+            .map(([name]) => name)
+            .join(', ') || 'None'
+        }
+      `;
+      contentDiv.appendChild(assignmentInfo);
+    }
+    
+    // Simulate an error for testing
+    function simulateError() {
+      try {
+        throw new Error('Simulated test error');
+      } catch (error) {
+        alert('Error simulated! Check the results to see the impact.');
+      }
+    }
+    
+    // Show canary results
+    function showResults() {
+      const results = document.getElementById('results');
+      results.textContent = JSON.stringify(canary.getResults(), null, 2);
+      results.style.display = results.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    // Render the content when the page loads
+    document.addEventListener('DOMContentLoaded', renderContent);
+  </script>
+</body>
+</html>
