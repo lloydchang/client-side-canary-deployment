@@ -137,7 +137,7 @@ class VersionSwitcher {
                         Stable
                     </button>
                     <button id="vs-canary-btn" class="${currentVersion === 'canary' ? 'active' : ''}">
-                        Canary <span class="vs-tag" style="background: #ffc107; color: #333;">BETA</span>
+                        Canary <span class="vs-tag" style="background: #f00; color: #fff;">BETA</span>
                     </button>
                 </div>
             </div>
