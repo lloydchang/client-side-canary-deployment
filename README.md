@@ -4,7 +4,50 @@ A lightweight implementation of client-side canary deployments using vanilla Jav
 
 ## Overview
 
-This project demonstrates how to implement canary deployments for static web applications entirely on the client side. It allows you to gradually roll out new features to a subset of users without requiring server-side configuration, while collecting analytics data to make informed decisions about rollbacks or rollouts.
+This project demonstrates how to implement canary deployments for static web applications entirely on the client side. It allows you to gradually roll out new features to a subset of users without requiring server-side infrastructure like load balancers or proxies. The traffic shaping decisions are made directly in the user's browser using JavaScript, while collecting analytics data to make informed decisions about rollbacks or rollouts.
+
+## Client-Side vs. Server-Side Canary Deployments
+
+### What is a Client-Side Canary Deployment?
+
+In this approach, the traffic shaping decision (which version a user receives) happens entirely in the user's browser:
+
+- **No server infrastructure required**: No need for load balancers, proxies, or service meshes
+- **Works with static hosting**: Compatible with GitHub Pages, Netlify, Vercel, or any static hosting
+- **JavaScript-based assignment**: Uses browser's sessionStorage and JavaScript for user assignment
+- **Analytics-driven**: Collects metrics to evaluate canary performance vs. stable version
+
+### How It Differs From Traditional Server-Side Approaches
+
+```mermaid
+graph TD
+    subgraph "Server-Side Canary Deployment"
+        A[User Request] --> B[Load Balancer]
+        B -->|85% of traffic| C[Stable Version Server]
+        B -->|15% of traffic| D[Canary Version Server]
+        C --> E[Response with Stable Version]
+        D --> F[Response with Canary Version]
+    end
+    
+    subgraph "Client-Side Canary Deployment"
+        G[User Request] --> H[Static Web Server]
+        H --> I[index.html with JavaScript]
+        I --> J{Client-Side Decision}
+        J -->|85% of users| K[Load Stable Version]
+        J -->|15% of users| L[Load Canary Version]
+    end
+    
+    style B fill:#f9a,stroke:#333
+    style J fill:#af9,stroke:#333
+```
+
+**Key Differences:**
+- **Server-side**: Routing decision made by infrastructure before content reaches the user
+- **Client-side**: Routing decision made in the user's browser after initial page load
+- **Server-side**: Requires specialized infrastructure and deployment configuration
+- **Client-side**: Works with simple static file hosting without special server configuration
+- **Server-side**: Traffic percentage managed by infrastructure configuration
+- **Client-side**: Traffic percentage controlled by configuration file loaded by the client
 
 ## How It Works
 
