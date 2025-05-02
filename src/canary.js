@@ -54,6 +54,12 @@
       features: {}        // Enabled features for this user
     },
     
+    // Debug mode flag
+    _debug: false,
+    
+    // Event listeners
+    _eventListeners: {},
+    
     /**
      * Initialize canary system
      * @param {Object} options - Optional configuration
@@ -75,8 +81,13 @@
       
       // Set up PostHog if API key is provided
       if (this._config.posthogApiKey) {
-        this._initPostHog(this._config.posthogApiKey);
-        this._config.posthogEnabled = true;
+        // Use the external PostHog integration instead of embedding the code
+        if (typeof this._initPostHog === 'function') {
+          this._initPostHog(this._config.posthogApiKey);
+          this._config.posthogEnabled = true;
+        } else {
+          console.warn('PostHog integration not available. Include analytics.js for PostHog support.');
+        }
       }
       
       // Set up auto-evaluation if enabled
@@ -107,9 +118,21 @@
      * @param {string} apiKey - PostHog API key
      */
     analytics: function(apiKey) {
+      if (!apiKey) {
+        console.error('Analytics API key is required');
+        return this;
+      }
+      
       this._config.posthogApiKey = apiKey;
-      this._config.posthogEnabled = true;
-      this._initPostHog(apiKey);
+      
+      // Load PostHog integration if available
+      if (typeof this._initPostHog === 'function') {
+        this._initPostHog(apiKey);
+        this._config.posthogEnabled = true;
+      } else {
+        console.warn('PostHog integration not available. Include analytics.js for PostHog support.');
+      }
+      
       return this;
     },
     
@@ -319,6 +342,45 @@
       return this._calculateCurrentPercentage();
     },
     
+    /**
+     * Enable debug mode
+     * @param {boolean} enabled - Whether to enable debug mode
+     */
+    debug: function(enabled = true) {
+      this._debug = enabled;
+      return this;
+    },
+    
+    /**
+     * Register an event listener
+     * @param {string} event - Event name
+     * @param {function} callback - Callback function
+     */
+    on: function(event, callback) {
+      if (!this._eventListeners[event]) {
+        this._eventListeners[event] = [];
+      }
+      this._eventListeners[event].push(callback);
+      return this;
+    },
+    
+    /**
+     * Trigger an event
+     * @param {string} event - Event name
+     * @param {object} data - Event data
+     */
+    _trigger: function(event, data) {
+      if (this._eventListeners[event]) {
+        this._eventListeners[event].forEach(callback => {
+          try {
+            callback(data);
+          } catch (error) {
+            console.error(`Error in event listener for ${event}:`, error);
+          }
+        });
+      }
+    },
+    
     // Internal methods
     
     /**
@@ -517,62 +579,23 @@
     },
     
     /**
-     * Initialize PostHog for analytics
-     * @private
+     * Set up PostHog analytics with provided API key
+     * This method will be overridden by analytics.js if included
      * @param {string} apiKey - PostHog API key
      */
     _initPostHog: function(apiKey) {
-      // Only load PostHog once
-      if (window.posthog) {
-        return;
-      }
-      
-      try {
-        // Load PostHog script
-        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document, window.posthog||[]);
-        
-        posthog.init(apiKey, {
-          api_host: 'https://app.posthog.com',
-          persistence: 'localStorage',
-          capture_pageview: false, // We'll handle this manually
-          loaded: (ph) => {
-            // Register the version as a persistent property
-            ph.register({
-              version: this._assignment.version,
-              sessionId: this._getSessionId()
-            });
-            this._debug && console.log('PostHog initialized');
-          }
-        });
-        
-        // Track initial page view
-        this._sendToPostHog('pageview', {
-          version: this._assignment.version
-        });
-      } catch (error) {
-        this._debug && console.log(`Error initializing PostHog: ${error.message}`);
-      }
+      console.warn('PostHog integration loaded but not initialized. Include analytics.js before canary.js.');
     },
     
     /**
      * Send event to PostHog
-     * @private
+     * This method will be overridden by analytics.js if included
      * @param {string} eventName - Event name
      * @param {object} properties - Event properties
      */
     _sendToPostHog: function(eventName, properties = {}) {
-      if (!this._config.posthogEnabled || !window.posthog) {
-        return;
-      }
-      
-      try {
-        window.posthog.capture(eventName, {
-          ...properties,
-          version: this._assignment.version
-        });
-        this._debug && console.log(`Sent to PostHog: ${eventName}`);
-      } catch (error) {
-        this._debug && console.log(`Error sending to PostHog: ${error.message}`);
+      if (this._debug) {
+        console.log('PostHog not initialized. Event not sent:', eventName, properties);
       }
     },
     
@@ -709,7 +732,6 @@
     }
   };
   
-  // Initialize with defaults
-  window.canary = canary.init();
-  
+  // Export to global scope
+  window.canary = canary;
 })(window);

@@ -10,15 +10,25 @@
 
 ### Option 2: Separate components
 
-Load the core system:
+Add the following script tags to your HTML:
+
 ```html
-<script src="https://cdn.jsdelivr.net/gh/yourusername/client-side-canary-deployment@main/src/canary.js"></script>
+<!-- Core canary functionality -->
+<script src="https://cdn.example.com/canary.js"></script>
+
+<!-- Optional: PostHog analytics integration -->
+<script src="https://cdn.example.com/analytics.js"></script>
+
+<!-- Optional: Version switcher UI component -->
+<script src="https://cdn.example.com/version-switcher.js"></script>
+
+<!-- Initialize canary -->
+<script>
+  canary.init();
+</script>
 ```
 
-Optionally, add the version switcher UI:
-```html
-<script src="https://cdn.jsdelivr.net/gh/yourusername/client-side-canary-deployment@main/js/version-switcher.js"></script>
-```
+> **Important**: Make sure to load the scripts in the correct order as shown above.
 
 ## Components
 
@@ -102,6 +112,8 @@ graph LR
 Add PostHog analytics with one extra line:
 
 ```html
+<!-- Make sure analytics.js is loaded -->
+<script src="https://cdn.example.com/analytics.js"></script>
 <script>
   canary.analytics('ph_YOUR_KEY_HERE');
 </script>
