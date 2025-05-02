@@ -31,7 +31,7 @@ graph LR
  
  In this approach, the traffic shaping decision (which version a user receives) happens mostly in the user's browser:
  
- - **No server infrastructure required**: No need for load balancers, service meshes, or global accelerators
+ - **No server infrastructure required**: No need for global accelerators, load balancers, service meshes
  - **Works with static hosting**: Compatible with GitHub Pages, Netlify, Vercel, or any static hosting
  - **JavaScript-based assignment**: Uses browser's localStorage (not server-side sessions) and JavaScript for user assignment
  - **Analytics-driven**: Collects metrics to evaluate canary performance vs. stable version
@@ -41,7 +41,7 @@ graph LR
 ```mermaid
 graph TD
     subgraph "Server-Side Canary Deployment"
-        A[User Request] --> GA[Global Accelerator or CDN Edge]
+        A[User Request] --> GA[Global Accelerator]
         GA --> LB[Load Balancer]
         LB --> SM[Service Mesh - e.g. Istio or Linkerd]
         
