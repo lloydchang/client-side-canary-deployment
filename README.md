@@ -36,8 +36,6 @@ Deploy new features to a percentage of your users with a single line of code.
 
 ## How It Works
 
-CanaryJS automatically:
-
 1. Assigns users to either stable or canary groups based on configurable percentages
 2. Tracks errors, performance, and user engagement
 3. Gradually increases canary percentage when metrics look good
