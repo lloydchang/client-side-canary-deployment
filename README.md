@@ -1,4 +1,4 @@
-# CanaryJS - One-Line Canary Deployments
+# Client-Side Canary Deployment
 
 Deploy new features to a percentage of your users with a single line of code.
 
