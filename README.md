@@ -63,7 +63,7 @@ To get started with this project:
 - [config/canary-config.json](config/canary-config.json): Configuration file for canary distribution and feature flags
 - [stable/index.html](stable/index.html): The stable version of the application
 - [canary/index.html](canary/index.html): The canary version with new features and designs
-- [default/index.html](default/index.html): A fallback version for users without version assignment
+- [stable/index.html](stable/index.html): The stable version
 
 ### JavaScript Libraries
 - [js/analytics.js](js/analytics.js): Analytics implementation with metrics collection
