@@ -10,7 +10,7 @@ This project demonstrates how to implement canary deployments for static web app
 2. Tracks errors, performance, and user engagement
 3. Gradually increases canary percentage when metrics look good
 4. Rolls back features if error rates increase
-5. Persists user assignments in localStorage
+5. Persists user assignments in sessionStorage
 
 ```mermaid
 graph LR
@@ -33,7 +33,7 @@ graph LR
  
  - **No server infrastructure required**: No need for load balancers, proxies, or service meshes
  - **Works with static hosting**: Compatible with GitHub Pages, Netlify, Vercel, or any static hosting
- - **JavaScript-based assignment**: Uses browser's sessionStorage and JavaScript for user assignment
+ - **JavaScript-based assignment**: Uses browser's sessionStorage (not server-side sessions) and JavaScript for user assignment
  - **Analytics-driven**: Collects metrics to evaluate canary performance vs. stable version
  
  ### How It Differs From Traditional Server-Side Approaches
@@ -174,7 +174,9 @@ Add PostHog analytics with one extra line:
 
 ## Viewing Results
 
-Results are automatically collected and stored. View them anytime:
+Results are automatically collected and stored in-memory or in localStorage (depending on setup).
+
+View them anytime:
 
 ```html
 <button onclick="console.table(canary.getResults())">Show Canary Results</button>
@@ -182,4 +184,4 @@ Results are automatically collected and stored. View them anytime:
 
 ## Want More Control?
 
-The one-line approach works for most cases, but you can [view advanced options](ADVANCED.md) if needed.
+The one-line approach works for most cases, but you can [view advanced options in ADVANCED.md](ADVANCED.md).
