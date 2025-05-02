@@ -171,6 +171,15 @@ class VersionSwitcher {
         // Get the base path for the application
         let basePath = this._getBasePath();
         
+        // Update the active button in the UI
+        this._updateActiveButton('home');
+        
+        // Update assignment if needed
+        if (window.canary && window.canary._assignment) {
+            // We don't change the assignment version here, just update the UI
+            // This ensures we return to the same version if the user navigates back
+        }
+        
         // Navigate to the home page
         window.location.href = `${basePath}/`;
     }
@@ -257,20 +266,27 @@ class VersionSwitcher {
     
     /**
      * Update the active button in the UI
-     * @param {string} version - The active version ('stable' or 'canary')
+     * @param {string} version - The active version ('stable', 'canary', or 'home')
      * @private
      */
     _updateActiveButton(version) {
+        const homeBtn = document.getElementById('vs-home-btn');
         const stableBtn = document.getElementById('vs-stable-btn');
         const canaryBtn = document.getElementById('vs-canary-btn');
         
-        if (stableBtn && canaryBtn) {
+        if (homeBtn && stableBtn && canaryBtn) {
+            // Remove active class from all buttons first
+            homeBtn.classList.remove('active');
+            stableBtn.classList.remove('active');
+            canaryBtn.classList.remove('active');
+            
+            // Add active class to the correct button
             if (version === 'stable') {
                 stableBtn.classList.add('active');
-                canaryBtn.classList.remove('active');
-            } else {
+            } else if (version === 'canary') {
                 canaryBtn.classList.add('active');
-                stableBtn.classList.remove('active');
+            } else if (version === 'home') {
+                homeBtn.classList.add('active');
             }
         }
     }
