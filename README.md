@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project demonstrates how to implement canary deployments for static web applications primarily on the client side. It enables gradual feature rollouts to a subset of users without requiring server-side infrastructure such as load balancers, service meshes, or global accelerators. Traffic-shaping decisions—such as whether a user sees the new or old version—are made directly in the user's browser using JavaScript, potentially based on client-side session storage, cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
+This project demonstrates how to implement canary deployments for static web applications primarily on the client side. It enables gradual feature rollouts to a subset of users without requiring server-side infrastructure such as load balancers, service meshes, or global accelerators. Traffic-shaping decisions—such as whether a user sees the new or old version—are made directly in the user's browser using JavaScript, potentially based on client-side cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
 
 ## How It Works
 
@@ -10,7 +10,7 @@ This project demonstrates how to implement canary deployments for static web app
 2. Tracks errors, performance, and user engagement
 3. Gradually increases canary percentage when metrics look good
 4. Rolls back features if error rates increase
-5. Persists user assignments in sessionStorage
+5. Persists user assignments in localStorage
 
 ```mermaid
 graph LR
@@ -33,7 +33,7 @@ graph LR
  
  - **No server infrastructure required**: No need for load balancers, service meshes, or global accelerators
  - **Works with static hosting**: Compatible with GitHub Pages, Netlify, Vercel, or any static hosting
- - **JavaScript-based assignment**: Uses browser's sessionStorage (not server-side sessions) and JavaScript for user assignment
+ - **JavaScript-based assignment**: Uses browser's localStorage (not server-side sessions) and JavaScript for user assignment
  - **Analytics-driven**: Collects metrics to evaluate canary performance vs. stable version
  
  ### How It Differs From Traditional Server-Side Approaches
