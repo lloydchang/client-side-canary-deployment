@@ -208,8 +208,8 @@ class VersionSwitcher {
             stableBtn.classList.add('active');
             canaryBtn.classList.remove('active');
         } else {
-            stableBtn.classList.remove('active');
             canaryBtn.classList.add('active');
+            stableBtn.classList.remove('active');
         }
     }
 }

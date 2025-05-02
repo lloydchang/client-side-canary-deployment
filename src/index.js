@@ -3,8 +3,9 @@
  * Main entry point - exports all components
  */
 
-// Import core components
+// Use relative paths for imports
 import './canary.js';
+import './analytics.js';
 import './components/version-switcher.js';
 
 // Re-export for module systems (if used with bundlers)

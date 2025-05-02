@@ -21,598 +21,569 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Modern design styles inspired by Shadcn UI -->
+  
   <style>
     :root {
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      --foreground: #020817;
-      --card: #ffffff;20817;
-      --card-foreground: #020817;
-      --popover: #ffffff;#020817;
-      --popover-foreground: #020817;
-      --primary: #0f172a;d: #020817;
+      --background: #ffffff;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --card-foreground: #0f172a;
+      --popover: #ffffff;
+      --popover-foreground: #0f172a;
+      --primary: #0f172a;
       --primary-foreground: #f8fafc;
-      --secondary: #f1f5f9; #f8fafc;
+      --secondary: #f1f5f9;
       --secondary-foreground: #0f172a;
-      --muted: #f1f5f9;round: #0f172a;
+      --muted: #f1f5f9;
       --muted-foreground: #64748b;
-      --accent: #f1f5f9;: #64748b;
+      --accent: #f1f5f9;
       --accent-foreground: #0f172a;
-      --destructive: #ef4444;f172a;
+      --destructive: #ef4444;
       --destructive-foreground: #f8fafc;
-      --border: #e2e8f0;ground: #f8fafc;
-      --input: #e2e8f0;;
-      --ring: #94a3b8;;
+      --border: #e2e8f0;
+      --input: #e2e8f0;
+      --ring: #94a3b8;
       --radius: 0.5rem;
-    } --radius: 0.5rem;
     }
+    
     @media (prefers-color-scheme: dark) {
-      :root {refers-color-scheme: dark) {
+      :root {
         --background: #020817;
         --foreground: #f8fafc;
-        --card: #0f172a;8fafc;
+        --card: #0f172a;
         --card-foreground: #f8fafc;
-        --popover: #0f172a;#f8fafc;
+        --popover: #0f172a;
         --popover-foreground: #f8fafc;
-        --primary: #f8fafc;d: #f8fafc;
+        --primary: #f8fafc;
         --primary-foreground: #0f172a;
-        --secondary: #1e293b; #0f172a;
+        --secondary: #1e293b;
         --secondary-foreground: #f8fafc;
-        --muted: #1e293b;round: #f8fafc;
+        --muted: #1e293b;
         --muted-foreground: #94a3b8;
-        --accent: #1e293b;: #94a3b8;
+        --accent: #1e293b;
         --accent-foreground: #f8fafc;
-        --destructive: #7f1d1d;8fafc;
+        --destructive: #7f1d1d;
         --destructive-foreground: #f8fafc;
-        --border: #1e293b;ground: #f8fafc;
-        --input: #1e293b;;
-        --ring: #1e293b;;
-      } --ring: #1e293b;
-    } }
+        --border: #1e293b;
+        --input: #1e293b;
+        --ring: #1e293b;
+      }
     }
+    
     /* Base styles applied to all versions */
-    body {e styles applied to all versions */
+    body {
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      line-height: 1.6;le-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      color: #333; 1.6;
+      line-height: 1.6;
+      color: #333;
       background-color: #f9f9f9;
-    } background-color: #f9f9f9;
     }
+    
     /* Classic styles (used when newDesign is disabled) */
-    .classic-theme {s (used when newDesign is disabled) */
+    .classic-theme {
       padding: 20px;
-    } padding: 20px;
     }
+    
     .classic-theme h2 {
-      color: #333; h2 {
+      color: #333;
       margin-bottom: 1rem;
-    } margin-bottom: 1rem;
     }
+    
     .classic-theme button {
       background-color: #0366d6;
-      color: white;lor: #0366d6;
+      color: white;
       border: none;
       padding: 8px 16px;
       border-radius: 4px;
-      cursor: pointer;px;
+      cursor: pointer;
       margin-right: 8px;
       margin-bottom: 8px;
-    } margin-bottom: 8px;
     }
+    
     .classic-theme button:hover {
-      background-color: #0255b3;{
-    } background-color: #0255b3;
+      background-color: #0255b3;
     }
+    
     /* Modern Shadcn UI inspired styles (used when newDesign is enabled) */
-    .shadcn-theme {n UI inspired styles (used when newDesign is enabled) */
+    .shadcn-theme {
       font-family: var(--font-sans);
       background-color: var(--background);
-      color: var(--foreground);ackground);
-      min-height: 100vh;round);
-      display: flex;0vh;
+      color: var(--foreground);
+      min-height: 100vh;
+      display: flex;
       flex-direction: column;
-      padding: 0;ion: column;
-    } padding: 0;
+      padding: 0;
     }
+    
     .container {
       width: 100%;
       max-width: 1100px;
-      margin: 0 auto;px;
-      padding: 1rem;;
-    } padding: 1rem;
+      margin: 0 auto;
+      padding: 1rem;
     }
-    .shadcn-theme header {
-      border-bottom: 1px solid var(--border);
-      background-color: var(--card);-border);
-      padding: 1rem 0;: var(--card);
-    } padding: 1rem 0;
-    }
+    
     .shadcn-theme .navbar {
-      display: flex;avbar {
+      display: flex;
       justify-content: space-between;
-      align-items: center;ce-between;
-    } align-items: center;
-    }
-    .shadcn-theme .logo {
-      font-weight: 700; {
-      font-size: 1.3rem;
-      color: var(--primary);
-      display: flex;rimary);
       align-items: center;
-      gap: 0.5rem; center;
-    } gap: 0.5rem;
+      padding: 0.5rem 0;
+      margin-bottom: 1rem;
     }
-    .shadcn-theme .logo svg {
-      width: 24px;.logo svg {
-      height: 24px;
-    } height: 24px;
+    
+    .shadcn-theme .logo {
+      display: flex;
+      align-items: center;
+      font-weight: 600;
+      font-size: 1.25rem;
+      gap: 0.5rem;
     }
-    .shadcn-theme main {
-      flex: 1;eme main {
-      padding: 2rem 0;
-    } padding: 2rem 0;
+    
+    .shadcn-theme .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: var(--radius);
+      font-size: 0.75rem;
+      font-weight: 500;
+      height: 1.25rem;
+      padding: 0 0.5rem;
+      margin-left: 0.5rem;
+      background-color: var(--muted);
+      color: var(--muted-foreground);
     }
+    
+    .shadcn-theme .badge-warning {
+      background-color: rgb(234, 179, 8);
+      color: rgb(254, 252, 232);
+    }
+    
+    .shadcn-theme .badge-info {
+      background-color: rgb(14, 165, 233);
+      color: rgb(240, 249, 255);
+    }
+    
+    .shadcn-theme .badge-success {
+      background-color: rgb(34, 197, 94);
+      color: rgb(240, 253, 244);
+    }
+    
     .shadcn-theme h1 {
       font-size: 2.5rem;
-      font-weight: 700;;
+      font-weight: 700;
       margin-bottom: 1rem;
-      line-height: 1.2;em;
-    } line-height: 1.2;
+      line-height: 1.2;
     }
+    
     .shadcn-theme h2 {
       font-size: 1.75rem;
-      font-weight: 600;m;
+      font-weight: 600;
       margin-top: 1.5rem;
       margin-bottom: 0.75rem;
-      line-height: 1.3;75rem;
-    } line-height: 1.3;
+      line-height: 1.3;
     }
+    
     .shadcn-theme h3 {
       font-size: 1.25rem;
-      font-weight: 600;m;
+      font-weight: 600;
       margin-top: 1.25rem;
       margin-bottom: 0.5rem;
-    } margin-bottom: 0.5rem;
     }
+    
     .shadcn-theme p {
       margin-bottom: 1rem;
       color: var(--muted-foreground);
-      max-width: 65ch;ed-foreground);
-    } max-width: 65ch;
+      max-width: 65ch;
     }
+    
+    .shadcn-theme main {
+      flex: 1;
+      margin-top: 1rem;
+    }
+    
     .shadcn-theme .card {
       background-color: var(--card);
       color: var(--card-foreground);
-      border-radius: var(--radius);;
+      border-radius: var(--radius);
       border: 1px solid var(--border);
-      padding: 1.5rem;d var(--border);
+      padding: 1.5rem;
       margin-bottom: 1.5rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      transition: all 0.2s ease;(0,0,0,0.05);
-    } transition: all 0.2s ease;
+      transition: all 0.2s ease;
     }
+    
     .shadcn-theme .card:hover {
       box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-    } box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
     }
+    
     .shadcn-theme .grid {
-      display: grid;rid {
+      display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;e-columns: repeat(auto-fill, minmax(300px, 1fr));
-    } gap: 1.5rem;
+      gap: 1.5rem;
     }
+    
     .shadcn-theme button {
       display: inline-flex;
-      align-items: center;;
+      align-items: center;
       justify-content: center;
       border-radius: var(--radius);
-      font-weight: 500;r(--radius);
+      font-weight: 500;
       font-size: 0.875rem;
-      height: 2.5rem;5rem;
+      height: 2.5rem;
       padding: 0 1rem;
       transition: all 0.2s ease;
-      cursor: pointer;0.2s ease;
+      cursor: pointer;
       border: 1px solid transparent;
-    } border: 1px solid transparent;
     }
+    
     .shadcn-theme .btn-primary {
       background-color: var(--primary);
       color: var(--primary-foreground);
-    } color: var(--primary-foreground);
     }
+    
     .shadcn-theme .btn-primary:hover {
-      opacity: 0.9;btn-primary:hover {
-    } opacity: 0.9;
+      opacity: 0.9;
     }
+    
     .shadcn-theme .btn-secondary {
       background-color: var(--secondary);
       color: var(--secondary-foreground);
-    } color: var(--secondary-foreground);
     }
+    
     .shadcn-theme .btn-secondary:hover {
-      background-color: var(--accent); {
-    } background-color: var(--accent);
+      background-color: var(--accent);
     }
+    
     .shadcn-theme .btn-destructive {
       background-color: var(--destructive);
       color: var(--destructive-foreground);
-    } color: var(--destructive-foreground);
     }
+    
     .shadcn-theme .btn-destructive:hover {
-      opacity: 0.9;btn-destructive:hover {
-    } opacity: 0.9;
+      opacity: 0.9;
     }
+    
     .shadcn-theme .tag {
       display: inline-flex;
-      align-items: center;;
+      align-items: center;
       border-radius: var(--radius);
       background-color: var(--muted);
       color: var(--muted-foreground);
-      padding: 0 0.5rem;-foreground);
-      height: 1.5rem;em;
-      font-size: 0.75rem;
-      font-weight: 500;m;
-      margin-right: 0.5rem;
-      margin-bottom: 0.5rem;
-    } margin-bottom: 0.5rem;
-    }
-    .shadcn-theme .badge {
-      display: inline-flex;
-      align-items: center;;
-      gap: 0.25rem;center;
-      border-radius: 10rem;
-      padding: 0.125rem 0.5rem;
-      font-weight: 500; 0.5rem;
-      font-size: 0.75rem;
-      line-height: 1;rem;
-      white-space: nowrap;
-    } white-space: nowrap;
-    }
-    .shadcn-theme .badge-success {
-      background-color: rgba(34, 197, 94, 0.1);
-      color: rgb(34, 197, 94);4, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.2);
-    } border: 1px solid rgba(34, 197, 94, 0.2);
-    }
-    .shadcn-theme .badge-info {
-      background-color: rgba(59, 130, 246, 0.1);
-      color: rgb(59, 130, 246);, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-    } border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-    .shadcn-theme .badge-warning {
-      background-color: rgba(245, 158, 11, 0.1);
-      color: rgb(245, 158, 11);5, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.2);
-    } border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-    .shadcn-theme .feature-item {
-      display: flex;eature-item {
-      align-items: center;
-      gap: 0.5rem; center;
-      padding: 0.5rem 0;
-    } padding: 0.5rem 0;
-    }
-    .shadcn-theme .feature-icon {
-      display: inline-flex;icon {
-      align-items: center;;
-      justify-content: center;
-      width: 1.5rem;t: center;
+      padding: 0 0.5rem;
       height: 1.5rem;
-      border-radius: 50%;
-    } border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-right: 0.5rem;
     }
-    .shadcn-theme .feature-enabled {
-      background-color: rgba(34, 197, 94, 0.1);
-      color: rgb(34, 197, 94);4, 197, 94, 0.1);
-    } color: rgb(34, 197, 94);
-    }
-    .shadcn-theme .feature-disabled {
-      background-color: rgba(239, 68, 68, 0.1);
-      color: rgb(239, 68, 68);39, 68, 68, 0.1);
-    } color: rgb(239, 68, 68);
-    }
-    .shadcn-theme .metrics-output {
-      background-color: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);r);
-      padding: 1rem; var(--radius);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.875rem;space, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      overflow-x: auto;em;
-      line-height: 1.5;
-      color: var(--foreground);
-    } color: var(--foreground);
-    }
+    
     .shadcn-theme footer {
       border-top: 1px solid var(--border);
-      background-color: var(--card);rder);
-      padding: 1.5rem 0;var(--card);
+      padding: 1.5rem 0;
+      margin-top: 2rem;
       color: var(--muted-foreground);
-    } color: var(--muted-foreground);
+      font-size: 0.875rem;
+    }
+    
+    .shadcn-theme .features {
+      margin-top: 1rem;
+    }
+    
+    .shadcn-theme .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .shadcn-theme .feature-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0;
+    }
+    
+    .shadcn-theme .feature-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+    }
+    
+    .shadcn-theme .feature-enabled {
+      background-color: rgba(34, 197, 94, 0.1);
+      color: rgb(34, 197, 94);
+    }
+    
+    .shadcn-theme .feature-disabled {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: rgb(239, 68, 68);
+    }
+    
+    .shadcn-theme .metrics-output {
+      background-color: var(--muted);
+      color: var(--muted-foreground);
+      padding: 1rem;
+      border-radius: var(--radius);
+      font-family: monospace;
+      font-size: 0.875rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
   </style>
-  <script>
-    // Initialize analytics with canary-specific configuration
-    document.addEventListener('DOMContentLoaded', function() {
-      // Try to load remote configuration before initializing analytics
-      if (window.CanaryConfig && window.CanaryConfig.loadRemoteConfig) {
-        window.CanaryConfig.loadRemoteConfig('../config/canary-config.json').then(() => {
-          initializeAnalytics();RemoteConfig('../config/canary-config.json').then(() => {
-        }).catch(() => {ytics();
-          // If loading fails, initialize with default config
-          initializeAnalytics();nitialize with default config
-        });nitializeAnalytics();
-      } else {
-        initializeAnalytics();
-      } initializeAnalytics();
-      }
-      // Apply theme based on newDesign feature flag
-      applyTheme();e based on newDesign feature flag
-    });pplyTheme();
-    });
-    function initializeAnalytics() {
-      // Create analytics instance with version information
-      window.canary = new CanaryAnalytics({n information
-        version: 'canary',ew CanaryAnalytics({
-        debug: CanaryConfig.analytics.debug || true, // Enable debug for canary by default
-        endpoint: CanaryConfig.analytics.endpoint,e, // Enable debug for canary by default
-        sampleRate: 1.0, // Always collect 100% data for canary users
-        storageKey: CanaryConfig.analytics.storageKey,or canary users
-        bufferInterval: CanaryConfig.analytics.bufferInterval,
-        posthogEnabled: true,yConfig.analytics.bufferInterval,
-        posthogApiKey: CanaryConfig.analytics.posthogApiKey
-      });osthogApiKey: CanaryConfig.analytics.posthogApiKey
-      });
-      // Track page view with additional metadata
-      window.canary.trackEvent('page_view', {data
-        page: 'canary_home',nt('page_view', {
-        canaryPercentage: CanaryConfig.getCurrentCanaryPercentage(),
-        featureFlags: JSON.stringify(CanaryConfig.featureFlags)ge(),
-      });eatureFlags: JSON.stringify(CanaryConfig.featureFlags)
-      });
-      // Track that this is a canary impression
-      window.canary.trackEvent('canary_impression', {
-        timestamp: Date.now(),('canary_impression', {
-        daysSinceDeployment: Math.floor(
-          (new Date().getTime() - new Date(CanaryConfig.distribution.initialDate).getTime()) 
-          / (1000 * 60 * 60 * 24) new Date(CanaryConfig.distribution.initialDate).getTime()) 
-        ),/ (1000 * 60 * 60 * 24)
-        distribution: JSON.stringify(CanaryConfig.distribution)
-      });istribution: JSON.stringify(CanaryConfig.distribution)
-      });
-      // Initialize version switcher
-      window.versionSwitcher = new VersionSwitcher({
-        onVersionSwitch: function(newVersion) {her({
-          window.canary.trackEvent('manual_version_switch', {
-            fromVersion: 'canary',('manual_version_switch', {
-            toVersion: newVersion,
-          });oVersion: newVersion,
-        } });
-      });
-      });
-      // Apply theme based on newDesign feature flag
-      applyTheme();e based on newDesign feature flag
-    } applyTheme();
-    }
-    // Function to apply the appropriate theme based on the feature flag
-    function applyTheme() {e appropriate theme based on the feature flag
-      const isNewDesignEnabled = CanaryConfig.featureFlags.newDesign;
-      const body = document.body;CanaryConfig.featureFlags.newDesign;
-      const body = document.body;
-      if (isNewDesignEnabled) {
-        body.classList.add('shadcn-theme');
-        body.classList.remove('classic-theme');
-        body.classList.remove('classic-theme');
-        // Track analytics for theme usage
-        window.canary.trackEvent('theme_applied', {theme usage
-          theme: 'shadcn',
-          newDesignEnabled: truekEvent('theme_applied', {
-        });
-      } else {ewDesignEnabled: true
-        body.classList.add('classic-theme'); });
-        body.classList.remove('shadcn-theme');
-        
-        // Track analytics for theme usage
-        window.canary.trackEvent('theme_applied', {body.classList.remove('shadcn-theme');
-          theme: 'classic',
-          newDesignEnabled: falsetheme usage
-        });
-      }Event('theme_applied', {
-    }
-  </script>ewDesignEnabled: false
-</head> });
-<body> }
-  <!-- Content will be wrapped in the appropriate containers based on the theme --> }
+</head>
+<body>
+  <!-- Content will be wrapped in the appropriate containers based on the theme -->
   <div id="content-wrapper">
-    <!-- Content will be injected here via JavaScript -->ipt>
-  </div>>
+    <!-- Content will be injected here via JavaScript -->
+  </div>
   
-  <script>ed in the appropriate containers based on the theme -->
+  <script>
     // Function to render the content based on the current theme
-    function renderContent() { Content will be injected here via JavaScript -->
-      const isNewDesignEnabled = CanaryConfig.featureFlags.newDesign;</div>
+    function renderContent() {
+      const isNewDesignEnabled = CanaryConfig.featureFlags.newDesign;
       const wrapper = document.getElementById('content-wrapper');
       
-      if (isNewDesignEnabled) {content based on the current theme
+      if (isNewDesignEnabled) {
         // Modern Shadcn UI inspired layout
-        wrapper.innerHTML = `ign;
-          <header>const wrapper = document.getElementById('content-wrapper');
+        wrapper.innerHTML = `
+          <header>
             <div class="container">
               <div class="navbar">
-                <div class="logo">nspired layout
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">nerHTML = `
+                <div class="logo">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
                     <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
-                    <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9" />>
+                    <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9" />
                     <path d="M12 3v6" />
                   </svg>
-                  This is the canary version of the app." fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  This is the canary version of the app.
                 </div>
-                <div class="badge badge-warning">CANARY</div>.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9" />
-              </div>h d="M12 3v6" />
+                <div class="badge badge-warning">CANARY</div>
+              </div>
             </div>
-          </header> is the canary version of the app.
-          
-          <main> class="badge badge-warning">CANARY</div>
-            <div class="container">v>
-              <p>You're currently viewing the experimental version with our newest features and improvements.</p>
-              </header>
+          </header>
+          <main>
+            <div class="container">
               <div class="grid">
                 <div class="card">
-                  <h2>Feature Status</h2>
-                  <div id="feature-list-modern"><p>You're currently viewing the experimental version with our newest features and improvements.</p>
-                    <!-- Feature flags will be populated here -->
+                  <h2>About This Demo</h2>
+                  <p>This is the canary version of the app, featuring the new design system. You can see the feature flags in action below.</p>
+                  <div class="features">
+                    <h3>Enabled Features</h3>
+                    <div id="feature-list-modern"></div>
                   </div>
                 </div>
                 
                 <div class="card">
-                  <h2>Test Actions</h2> Feature flags will be populated here -->
-                  <p>Use these buttons to test analytics and error tracking.</p>v>
-                  <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;"></div>
-                    <button id="track-click-modern" class="btn-primary">Track Event</button>
+                  <h2>Testing Controls</h2>
+                  <p>Use these buttons to test the analytics integration.</p>
+                  <div>
+                    <button id="track-click-modern" class="btn-primary">Track Click</button>
                     <button id="simulate-error-modern" class="btn-destructive">Simulate Error</button>
                   </div>
                   <p>You can switch to the stable version using the Version Switcher in the bottom right corner.</p>
                 </div>
-              </div>
-              ton id="simulate-error-modern" class="btn-destructive">Simulate Error</button>
-              <div class="card">
-                <h2>Analytics Data</h2>ou can switch to the stable version using the Version Switcher in the bottom right corner.</p>
-                <button id="show-metrics-modern" class="btn-secondary">Show/Hide Metrics</button>v>
-                <div style="margin-top: 1rem;"></div>
-                  <pre id="metrics-output-modern" class="metrics-output" style="display: none;"></pre>
+              
+                <div class="card">
+                  <h2>Analytics Data</h2>
+                  <button id="show-metrics-modern" class="btn-secondary">Show/Hide Metrics</button>
+                  <div style="margin-top: 1rem;">
+                    <pre id="metrics-output-modern" class="metrics-output" style="display: none;"></pre>
+                  </div>
                 </div>
               </div>
-            </div>" class="btn-secondary">Show/Hide Metrics</button>
+            </div>
           </main>
-           id="metrics-output-modern" class="metrics-output" style="display: none;"></pre>
-          <footer>v>
-            <div class="container">v>
-              <p>Client-Side Canary Deployment</p>>
-            </div></main>
+          
+          <footer>
+            <div class="container">
+              <p>Client-Side Canary Deployment</p>
+            </div>
           </footer>
         `;
         
-        // Set up event listeners for the modern UIlient-Side Canary Deployment</p>
+        // Set up event listeners for the modern UI
         document.getElementById('track-click-modern').addEventListener('click', trackEvent);
-        document.getElementById('simulate-error-modern').addEventListener('click', simulateError);</footer>
-        document.getElementById('show-metrics-modern').addEventListener('click', function() {`;
+        document.getElementById('simulate-error-modern').addEventListener('click', simulateError);
+        document.getElementById('show-metrics-modern').addEventListener('click', function() {
           const output = document.getElementById('metrics-output-modern');
           toggleMetrics(output);
         });
-        ror);
-        // Display feature flags in the modern stylelick', function() {
-        displayFeatureFlagsModern();t.getElementById('metrics-output-modern');
-        oggleMetrics(output);
-      } else {});
+        
+        // Display feature flags in the modern style
+        displayFeatureFlagsModern();
+      } else {
         // Classic UI layout
-        wrapper.innerHTML = `the modern style
-          <p>This is the canary version of the app.</p>displayFeatureFlagsModern();
+        wrapper.innerHTML = `
+          <p>This is the canary version of the app.</p>
           
           <div id="app-info">
             <h2>Canary Version Information</h2>
             <p>You are currently viewing the experimental version of the application.</p>
-            <p>This version includes the latest features and improvements that are being tested.</p><p>This is the canary version of the app.</p>
-            <p>You can switch back to the stable version using the Version Switcher in the bottom right corner.</p>
-            <button id="track-click">Click me for testing</button>
-            <button id="simulate-error">Simulate Error</button>
-            <div id="feature-status">
-              <h3>Feature Status:</h3>
-              <ul id="feature-list"> Version Switcher in the bottom right corner.</p>
-                <!-- Feature flags will be populated here -->on>
-              </ul>r">Simulate Error</button>
+            
+            <div class="feature-section">
+              <h3>Feature Flags:</h3>
+              <ul id="feature-list"></ul>
             </div>
-            <div id="metrics-display">3>
-              <h3>Analytics Data:</h3>
-              <button id="show-metrics">Show Current Metrics</button>- Feature flags will be populated here -->
-              <pre id="metrics-output" style="display: none; background: #f5f5f5; padding: 10px; border: 1px solid #ccc; max-height: 300px; overflow: auto;"></pre>>
+            
+            <div class="test-controls">
+              <h3>Test Controls:</h3>
+              <button id="track-click">Track Click</button>
+              <button id="simulate-error">Simulate Error</button>
+              <button id="show-metrics">Show Metrics</button>
             </div>
+            
+            <pre id="metrics-output" style="display: none; background: #f5f5f5; padding: 10px; border: 1px solid #ccc; max-height: 300px; overflow: auto;"></pre>
           </div>
         `;
         
-        // Set up event listeners for the classic UI id="metrics-output" style="display: none; background: #f5f5f5; padding: 10px; border: 1px solid #ccc; max-height: 300px; overflow: auto;"></pre>
-        document.getElementById('track-click').addEventListener('click', trackEvent);v>
-        document.getElementById('simulate-error').addEventListener('click', simulateError);</div>
-        document.getElementById('show-metrics').addEventListener('click', function() {`;
+        // Set up event listeners for the classic UI
+        document.getElementById('track-click').addEventListener('click', trackEvent);
+        document.getElementById('simulate-error').addEventListener('click', simulateError);
+        document.getElementById('show-metrics').addEventListener('click', function() {
           const output = document.getElementById('metrics-output');
           toggleMetrics(output);
         });
-        ror);
-        // Display feature flags in the classic stylelick', function() {
-        displayFeatureFlags();t.getElementById('metrics-output');
-      }oggleMetrics(output);
-    }});
+        
+        // Display feature flags in the classic style
+        displayFeatureFlags();
+      }
+    }
     
-    // Function to display feature flags in modern stylegs in the classic style
-    function displayFeatureFlagsModern() { displayFeatureFlags();
-      const featureList = document.getElementById('feature-list-modern'); }
-      for (const [feature, enabled] of Object.entries(CanaryConfig.featureFlags)) {}
+    // Function to display feature flags in modern style
+    function displayFeatureFlagsModern() {
+      const featureList = document.getElementById('feature-list-modern');
+      for (const [feature, enabled] of Object.entries(CanaryConfig.featureFlags)) {
         const featureItem = document.createElement('div');
-        featureItem.className = 'feature-item';n modern style
+        featureItem.className = 'feature-item';
         featureItem.innerHTML = `
           <span class="feature-icon ${enabled ? 'feature-enabled' : 'feature-disabled'}">
-            ${enabled ? '✓' : '✗'}ryConfig.featureFlags)) {
-          </span>ent('div');
-          <span>${feature}</span>feature-item';
+            ${enabled ? '✓' : '✗'}
+          </span>
+          <span>${feature}</span>
           <span class="badge ${enabled ? 'badge-success' : 'badge-info'}" style="margin-left: auto;">
-            ${enabled ? 'Enabled' : 'Disabled'}n ${enabled ? 'feature-enabled' : 'feature-disabled'}">
-          </span>bled ? '✓' : '✗'}
+            ${enabled ? 'Enabled' : 'Disabled'}
+          </span>
         `;
         featureList.appendChild(featureItem);
-      }-success' : 'badge-info'}" style="margin-left: auto;">
-    }bled ? 'Enabled' : 'Disabled'}
-    </span>
+      }
+    }
+    
     // Display feature flags in classic style
-    function displayFeatureFlags() { featureList.appendChild(featureItem);
-      const featureList = document.getElementById('feature-list'); }
-      for (const [feature, enabled] of Object.entries(CanaryConfig.featureFlags)) {}
+    function displayFeatureFlags() {
+      const featureList = document.getElementById('feature-list');
+      for (const [feature, enabled] of Object.entries(CanaryConfig.featureFlags)) {
         const li = document.createElement('li');
-        li.innerHTML = `<strong>${feature}</strong>: ${enabled ? '✅ Enabled' : '❌ Disabled'}`;sic style
+        li.innerHTML = `<strong>${feature}</strong>: ${enabled ? '✅ Enabled' : '❌ Disabled'}`;
         featureList.appendChild(li);
       }
-    }tries(CanaryConfig.featureFlags)) {
+    }
     
-    // Track event functionature}</strong>: ${enabled ? '✅ Enabled' : '❌ Disabled'}`;
-    function trackEvent() { featureList.appendChild(li);
-      window.canary.trackEvent('button_click', { }
-        button_id: 'track-click',}
+    // Track event function
+    function trackEvent() {
+      window.canary.trackEvent('button_click', {
+        button_id: 'track-click',
         button_text: 'Click me for testing',
         version: 'canary'
       });
       alert('Event tracked in canary version!');
-    }utton_click', {
+    }
     
-    // Simulate error functionck me for testing',
-    function simulateError() {ersion: 'canary'
+    // Simulate error function
+    function simulateError() {
       window.canary.trackEvent('simulated_error_triggered', {
-        type: 'user_initiated' alert('Event tracked in canary version!');
-      }); }
-      try {}
+        type: 'user_initiated'
+      });
+      try {
         // Deliberately cause an error
         throw new Error('Simulated canary testing error');
-      } catch (error) {{
+      } catch (error) {
         alert('Simulated error tracked! Check the console.');
-        console.error('Simulated error for canary testing:', error);('simulated_error_triggered', {
-      }ype: 'user_initiated'
+        console.error('Simulated error for canary testing:', error);
+      }
     }
     
     // Toggle metrics display
-    function toggleMetrics(outputElement) {('Simulated canary testing error');
+    function toggleMetrics(outputElement) {
       if (window.canary) {
         const metrics = window.canary._metrics;
-        outputElement.textContent = JSON.stringify(metrics, null, 2); console.error('Simulated error for canary testing:', error);
-        outputElement.style.display = outputElement.style.display === 'none' ? 'block' : 'none'; }
-      } else { }
-        outputElement.textContent = 'Analytics not available';}
+        outputElement.textContent = JSON.stringify(metrics, null, 2);
+        outputElement.style.display = outputElement.style.display === 'none' ? 'block' : 'none';
+      } else {
+        outputElement.textContent = 'Analytics not available';
         outputElement.style.display = 'block';
       }
-    }tputElement) {
+    }
     
     // Initialize content
     document.addEventListener('DOMContentLoaded', function() {
-      renderContent();Element.style.display = outputElement.style.display === 'none' ? 'block' : 'none';
+      renderContent();
+      
+      // Initialize canary with analytics
+      window.canary.init({
+        storageKey: CanaryConfig.analytics.storageKey,
+        sampleRate: 1.0, // Always collect 100% data for canary users
+        storageKey: CanaryConfig.analytics.storageKey,
+        bufferInterval: CanaryConfig.analytics.bufferInterval,
+        posthogEnabled: true,
+        posthogApiKey: CanaryConfig.analytics.posthogApiKey
+      });
+      
+      // Track page view with additional metadata
+      window.canary.trackEvent('page_view', {
+        page: 'canary_home',
+        canaryPercentage: CanaryConfig.getCurrentCanaryPercentage(),
+        featureFlags: JSON.stringify(CanaryConfig.featureFlags)
+      });
+      
+      // Track that this is a canary impression
+      window.canary.trackEvent('canary_impression', {
+        timestamp: Date.now(),
+        daysSinceDeployment: Math.floor(
+          (new Date().getTime() - new Date(CanaryConfig.distribution.initialDate).getTime()) 
+          / (1000 * 60 * 60 * 24)
+        ),
+        distribution: JSON.stringify(CanaryConfig.distribution)
+      });
+      
+      // Initialize version switcher
+      window.versionSwitcher = new VersionSwitcher({
+        onVersionSwitch: function(newVersion) {
+          window.canary.trackEvent('manual_version_switch', {
+            fromVersion: 'canary',
+            toVersion: newVersion,
+          });
+        }
+      });
+      
+      // Apply theme based on newDesign feature flag
+      applyTheme();
     });
-  </script> not available';
-</body> outputElement.style.display = 'block';
-</html> }
+    
+    // Function to apply the appropriate theme based on the feature flag
+    function applyTheme() {
+      const isNewDesignEnabled = CanaryConfig.featureFlags.newDesign;
+      const body = document.body;
+      
+      if (isNewDesignEnabled) {
+        body.classList.add('shadcn-theme');
+        body.classList.remove('classic-theme');
+        
+        // Track analytics for theme usage
+        window.canary.trackEvent('theme_applied', {
+          theme: 'shadcn',
+          newDesignEnabled: true
+        });
+      } else {
+        body.classList.add('classic-theme');
+        body.classList.remove('shadcn-theme');
+        
+        // Track analytics for theme usage
+        window.canary.trackEvent('theme_applied', {
+          theme: 'classic',
+          newDesignEnabled: false
+        });
+      }
+    }
+  </script>
+</body>
+</html>
