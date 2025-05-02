@@ -38,17 +38,18 @@ graph LR
  
 ### How It Differs From Traditional Server-Side Approaches
 
-### How It Differs From Traditional Server-Side Approaches
-
 ```mermaid
 graph TD
     subgraph "Server-Side Canary Deployment"
         A[User Request] --> GA[Global Accelerator or CDN Edge]
         GA --> LB[Load Balancer]
         LB --> SM[Service Mesh - e.g. Istio or Linkerd]
+        
+        SM -->|95% of traffic| EP1[Envoy Proxy or Linkerd2-proxy to Stable]
+        SM -->|5% of traffic| EP2[Envoy Proxy or Linkerd2-proxy to Canary]
 
-        SM -->|95% of traffic| C[Stable Version Server]
-        SM -->|5% of traffic| D[Canary Version Server]
+        EP1 --> C[Stable Version Server]
+        EP2 --> D[Canary Version Server]
 
         C --> E[Response with Stable Version]
         D --> F[Response with Canary Version]
@@ -65,6 +66,8 @@ graph TD
     style GA fill:#fdd,stroke:#333
     style LB fill:#f9a,stroke:#333
     style SM fill:#fcf,stroke:#333
+    style EP1 fill:#cff,stroke:#333
+    style EP2 fill:#ccf,stroke:#333
     style J fill:#af9,stroke:#333
 ```
 
