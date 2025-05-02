@@ -8,6 +8,323 @@
   <script src="../js/analytics.js"></script>
   <script src="../js/canary-config.js"></script>
   <script src="../js/version-switcher.js"></script>
+  <!-- Google Fonts for modern typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Modern design styles inspired by Shadcn UI -->
+  <style>
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      --background: #ffffff;
+      --foreground: #020817;
+      --card: #ffffff;
+      --card-foreground: #020817;
+      --popover: #ffffff;
+      --popover-foreground: #020817;
+      --primary: #0f172a;
+      --primary-foreground: #f8fafc;
+      --secondary: #f1f5f9;
+      --secondary-foreground: #0f172a;
+      --muted: #f1f5f9;
+      --muted-foreground: #64748b;
+      --accent: #f1f5f9;
+      --accent-foreground: #0f172a;
+      --destructive: #ef4444;
+      --destructive-foreground: #f8fafc;
+      --border: #e2e8f0;
+      --input: #e2e8f0;
+      --ring: #94a3b8;
+      --radius: 0.5rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #020817;
+        --foreground: #f8fafc;
+        --card: #0f172a;
+        --card-foreground: #f8fafc;
+        --popover: #0f172a;
+        --popover-foreground: #f8fafc;
+        --primary: #f8fafc;
+        --primary-foreground: #0f172a;
+        --secondary: #1e293b;
+        --secondary-foreground: #f8fafc;
+        --muted: #1e293b;
+        --muted-foreground: #94a3b8;
+        --accent: #1e293b;
+        --accent-foreground: #f8fafc;
+        --destructive: #7f1d1d;
+        --destructive-foreground: #f8fafc;
+        --border: #1e293b;
+        --input: #1e293b;
+        --ring: #1e293b;
+      }
+    }
+
+    /* Base styles applied to all versions */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9f9f9;
+    }
+
+    /* Classic styles (used when newDesign is disabled) */
+    .classic-theme {
+      padding: 20px;
+    }
+    
+    .classic-theme h2 {
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    
+    .classic-theme button {
+      background-color: #0366d6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .classic-theme button:hover {
+      background-color: #0255b3;
+    }
+    
+    /* Modern Shadcn UI inspired styles (used when newDesign is enabled) */
+    .shadcn-theme {
+      font-family: var(--font-sans);
+      background-color: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .shadcn-theme header {
+      border-bottom: 1px solid var(--border);
+      background-color: var(--card);
+      padding: 1rem 0;
+    }
+
+    .shadcn-theme .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .shadcn-theme .logo {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .shadcn-theme .logo svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .shadcn-theme main {
+      flex: 1;
+      padding: 2rem 0;
+    }
+
+    .shadcn-theme h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .shadcn-theme h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+    }
+
+    .shadcn-theme h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .shadcn-theme p {
+      margin-bottom: 1rem;
+      color: var(--muted-foreground);
+      max-width: 65ch;
+    }
+
+    .shadcn-theme .card {
+      background-color: var(--card);
+      color: var(--card-foreground);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+    }
+
+    .shadcn-theme .card:hover {
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    .shadcn-theme .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .shadcn-theme button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 0.875rem;
+      height: 2.5rem;
+      padding: 0 1rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .shadcn-theme .btn-primary {
+      background-color: var(--primary);
+      color: var(--primary-foreground);
+    }
+
+    .shadcn-theme .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .shadcn-theme .btn-secondary {
+      background-color: var(--secondary);
+      color: var(--secondary-foreground);
+    }
+
+    .shadcn-theme .btn-secondary:hover {
+      background-color: var(--accent);
+    }
+
+    .shadcn-theme .btn-destructive {
+      background-color: var(--destructive);
+      color: var(--destructive-foreground);
+    }
+
+    .shadcn-theme .btn-destructive:hover {
+      opacity: 0.9;
+    }
+
+    .shadcn-theme .tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: var(--radius);
+      background-color: var(--muted);
+      color: var(--muted-foreground);
+      padding: 0 0.5rem;
+      height: 1.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .shadcn-theme .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      border-radius: 10rem;
+      padding: 0.125rem 0.5rem;
+      font-weight: 500;
+      font-size: 0.75rem;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .shadcn-theme .badge-success {
+      background-color: rgba(34, 197, 94, 0.1);
+      color: rgb(34, 197, 94);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .shadcn-theme .badge-info {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: rgb(59, 130, 246);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .shadcn-theme .badge-warning {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: rgb(245, 158, 11);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .shadcn-theme .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+    }
+
+    .shadcn-theme .feature-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+    }
+
+    .shadcn-theme .feature-enabled {
+      background-color: rgba(34, 197, 94, 0.1);
+      color: rgb(34, 197, 94);
+    }
+
+    .shadcn-theme .feature-disabled {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: rgb(239, 68, 68);
+    }
+
+    .shadcn-theme .metrics-output {
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.875rem;
+      overflow-x: auto;
+      line-height: 1.5;
+      color: var(--foreground);
+    }
+
+    .shadcn-theme footer {
+      border-top: 1px solid var(--border);
+      background-color: var(--card);
+      padding: 1.5rem 0;
+      color: var(--muted-foreground);
+    }
+  </style>
   <script>
     // Initialize analytics with canary-specific configuration
     document.addEventListener('DOMContentLoaded', function() {
@@ -43,35 +360,195 @@
           });
         }
       });
+      
+      // Apply theme based on newDesign feature flag
+      applyTheme();
     });
+    
+    // Function to apply the appropriate theme based on the feature flag
+    function applyTheme() {
+      const isNewDesignEnabled = CanaryConfig.featureFlags.newDesign;
+      const body = document.body;
+      
+      if (isNewDesignEnabled) {
+        body.classList.add('shadcn-theme');
+        body.classList.remove('classic-theme');
+        
+        // Track analytics for theme usage
+        if (window.analytics) {
+          window.analytics.trackEvent('theme_applied', {
+            theme: 'shadcn',
+            newDesignEnabled: true
+          });
+        }
+      } else {
+        body.classList.add('classic-theme');
+        body.classList.remove('shadcn-theme');
+        
+        // Track analytics for theme usage
+        if (window.analytics) {
+          window.analytics.trackEvent('theme_applied', {
+            theme: 'classic',
+            newDesignEnabled: false
+          });
+        }
+      }
+    }
   </script>
 </head>
 <body>
-  <p>This is the canary version of the app.</p>
-  
-  <div id="app-info">
-    <h2>Canary Version Information</h2>
-    <p>You are currently viewing the experimental version of the application.</p>
-    <p>This version includes the latest features and improvements that are being tested.</p>
-    <p>You can switch back to the stable version using the Version Switcher in the bottom right corner.</p>
-    <button id="track-click">Click me for testing</button>
-    <button id="simulate-error">Simulate Error</button>
-    <div id="feature-status">
-      <h3>Feature Status:</h3>
-      <ul id="feature-list">
-        <!-- Feature flags will be populated here -->
-      </ul>
-    </div>
-    <div id="metrics-display">
-      <h3>Analytics Data:</h3>
-      <button id="show-metrics">Show Current Metrics</button>
-      <pre id="metrics-output" style="display: none; background: #f5f5f5; padding: 10px; border: 1px solid #ccc; max-height: 300px; overflow: auto;"></pre>
-    </div>
+  <!-- Content will be wrapped in the appropriate containers based on the theme -->
+  <div id="content-wrapper">
+    <!-- Content will be injected here via JavaScript -->
   </div>
-
+  
   <script>
-    // Add interaction testing for analytics
-    document.getElementById('track-click').addEventListener('click', function() {
+    // Function to render the content based on the current theme
+    function renderContent() {
+      const isNewDesignEnabled = CanaryConfig.featureFlags.newDesign;
+      const wrapper = document.getElementById('content-wrapper');
+      
+      if (isNewDesignEnabled) {
+        // Modern Shadcn UI inspired layout
+        wrapper.innerHTML = `
+          <header>
+            <div class="container">
+              <div class="navbar">
+                <div class="logo">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
+                    <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9" />
+                    <path d="M12 3v6" />
+                  </svg>
+                  Canary Dashboard
+                </div>
+                <div class="badge badge-warning">CANARY</div>
+              </div>
+            </div>
+          </header>
+          
+          <main>
+            <div class="container">
+              <h1>Canary Version</h1>
+              <p>You're currently viewing the experimental version with our newest features and improvements.</p>
+              
+              <div class="grid">
+                <div class="card">
+                  <h2>Feature Status</h2>
+                  <div id="feature-list-modern">
+                    <!-- Feature flags will be populated here -->
+                  </div>
+                </div>
+                
+                <div class="card">
+                  <h2>Test Actions</h2>
+                  <p>Use these buttons to test analytics and error tracking.</p>
+                  <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                    <button id="track-click-modern" class="btn-primary">Track Event</button>
+                    <button id="simulate-error-modern" class="btn-destructive">Simulate Error</button>
+                  </div>
+                  <p>You can switch back to the stable version using the Version Switcher in the bottom right corner.</p>
+                </div>
+              </div>
+              
+              <div class="card">
+                <h2>Analytics Data</h2>
+                <button id="show-metrics-modern" class="btn-secondary">Show/Hide Metrics</button>
+                <div style="margin-top: 1rem;">
+                  <pre id="metrics-output-modern" class="metrics-output" style="display: none;"></pre>
+                </div>
+              </div>
+            </div>
+          </main>
+          
+          <footer>
+            <div class="container">
+              <p>Client-Side Canary Deployment Demo &copy; 2025</p>
+            </div>
+          </footer>
+        `;
+        
+        // Set up event listeners for the modern UI
+        document.getElementById('track-click-modern').addEventListener('click', trackEvent);
+        document.getElementById('simulate-error-modern').addEventListener('click', simulateError);
+        document.getElementById('show-metrics-modern').addEventListener('click', function() {
+          const output = document.getElementById('metrics-output-modern');
+          toggleMetrics(output);
+        });
+        
+        // Display feature flags in the modern style
+        displayFeatureFlagsModern();
+        
+      } else {
+        // Classic UI layout
+        wrapper.innerHTML = `
+          <p>This is the canary version of the app.</p>
+          
+          <div id="app-info">
+            <h2>Canary Version Information</h2>
+            <p>You are currently viewing the experimental version of the application.</p>
+            <p>This version includes the latest features and improvements that are being tested.</p>
+            <p>You can switch back to the stable version using the Version Switcher in the bottom right corner.</p>
+            <button id="track-click">Click me for testing</button>
+            <button id="simulate-error">Simulate Error</button>
+            <div id="feature-status">
+              <h3>Feature Status:</h3>
+              <ul id="feature-list">
+                <!-- Feature flags will be populated here -->
+              </ul>
+            </div>
+            <div id="metrics-display">
+              <h3>Analytics Data:</h3>
+              <button id="show-metrics">Show Current Metrics</button>
+              <pre id="metrics-output" style="display: none; background: #f5f5f5; padding: 10px; border: 1px solid #ccc; max-height: 300px; overflow: auto;"></pre>
+            </div>
+          </div>
+        `;
+        
+        // Set up event listeners for the classic UI
+        document.getElementById('track-click').addEventListener('click', trackEvent);
+        document.getElementById('simulate-error').addEventListener('click', simulateError);
+        document.getElementById('show-metrics').addEventListener('click', function() {
+          const output = document.getElementById('metrics-output');
+          toggleMetrics(output);
+        });
+        
+        // Display feature flags in the classic style
+        displayFeatureFlags();
+      }
+    }
+    
+    // Function to display feature flags in modern style
+    function displayFeatureFlagsModern() {
+      const featureList = document.getElementById('feature-list-modern');
+      for (const [feature, enabled] of Object.entries(CanaryConfig.featureFlags)) {
+        const featureItem = document.createElement('div');
+        featureItem.className = 'feature-item';
+        featureItem.innerHTML = `
+          <span class="feature-icon ${enabled ? 'feature-enabled' : 'feature-disabled'}">
+            ${enabled ? '✓' : '✗'}
+          </span>
+          <span>${feature}</span>
+          <span class="badge ${enabled ? 'badge-success' : 'badge-info'}" style="margin-left: auto;">
+            ${enabled ? 'Enabled' : 'Disabled'}
+          </span>
+        `;
+        featureList.appendChild(featureItem);
+      }
+    }
+    
+    // Display feature flags in classic style
+    function displayFeatureFlags() {
+      const featureList = document.getElementById('feature-list');
+      for (const [feature, enabled] of Object.entries(CanaryConfig.featureFlags)) {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${feature}</strong>: ${enabled ? '✅ Enabled' : '❌ Disabled'}`;
+        featureList.appendChild(li);
+      }
+    }
+    
+    // Track event function
+    function trackEvent() {
       if (window.analytics) {
         window.analytics.trackEvent('button_click', {
           button_id: 'track-click',
@@ -80,10 +557,10 @@
         });
         alert('Event tracked in canary version!');
       }
-    });
-
-    // Add error simulation for testing rollback logic
-    document.getElementById('simulate-error').addEventListener('click', function() {
+    }
+    
+    // Simulate error function
+    function simulateError() {
       if (window.analytics) {
         window.analytics.trackEvent('simulated_error_triggered', {
           type: 'user_initiated'
@@ -96,33 +573,24 @@
           console.error('Simulated error for canary testing:', error);
         }
       }
-    });
-
-    // Display feature flags
-    function displayFeatureFlags() {
-      const featureList = document.getElementById('feature-list');
-      for (const [feature, enabled] of Object.entries(CanaryConfig.featureFlags)) {
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${feature}</strong>: ${enabled ? '✅ Enabled' : '❌ Disabled'}`;
-        featureList.appendChild(li);
-      }
     }
-
-    // Display current metrics
-    document.getElementById('show-metrics').addEventListener('click', function() {
-      const output = document.getElementById('metrics-output');
+    
+    // Toggle metrics display
+    function toggleMetrics(outputElement) {
       if (window.analytics) {
         const metrics = window.analytics.getMetrics();
-        output.textContent = JSON.stringify(metrics, null, 2);
-        output.style.display = output.style.display === 'none' ? 'block' : 'none';
+        outputElement.textContent = JSON.stringify(metrics, null, 2);
+        outputElement.style.display = outputElement.style.display === 'none' ? 'block' : 'none';
       } else {
-        output.textContent = 'Analytics not available';
-        output.style.display = 'block';
+        outputElement.textContent = 'Analytics not available';
+        outputElement.style.display = 'block';
       }
+    }
+    
+    // Initialize content
+    document.addEventListener('DOMContentLoaded', function() {
+      renderContent();
     });
-
-    // Initialize feature display
-    displayFeatureFlags();
   </script>
 </body>
 </html>
