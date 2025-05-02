@@ -1,6 +1,6 @@
-# CanaryJS Advanced Options
+# Advanced Options
 
-While CanaryJS is designed to work with zero configuration, some projects may require more control. This document explains advanced options and customization.
+While Client-Side Canary Deployment is designed to work with zero configuration, some projects may require more control. This document explains advanced options and customization.
 
 ## Full Configuration Options
 
