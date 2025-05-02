@@ -25,15 +25,28 @@ jobs:
       - name: Install Dependencies
         run: npm install
       
+      - name: Build Project
+        run: npm run build
+      
       - name: Replace PostHog Keys
         run: |
           # Replace placeholder values with actual keys from secrets
           sed -i 's/__POSTHOG_PUBLIC_KEY__/${{ secrets.POSTHOG_PUBLIC_KEY }}/g' config/canary-config.json
           sed -i 's/__POSTHOG_PROJECT_ID__/${{ secrets.POSTHOG_PROJECT_ID }}/g' config/canary-config.json
       
+      - name: Configure Base Path
+        run: |
+          # Create a .nojekyll file to disable Jekyll processing
+          touch .nojekyll
+          
+          # Create a config file for GitHub Pages with the correct base path
+          echo '{ "baseUrl": "/client-side-canary-deployment" }' > config/gh-pages.json
+      
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: .  # The folder to deploy
-          branch: gh-pages  # The branch to deploy to
-          token: ${{ secrets.GITHUB_TOKEN }}  # Use the GITHUB_TOKEN with proper permissions
+          folder: .                    # The folder to deploy
+          branch: gh-pages             # The branch to deploy to
+          clean: true                  # Automatically remove deleted files
+          single-commit: true          # Delete previous deployment history
+          token: ${{ secrets.GITHUB_TOKEN }}
