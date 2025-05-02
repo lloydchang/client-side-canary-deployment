@@ -26,7 +26,7 @@ jobs:
         run: npm install
       
       - name: Build Project
-        run: npm run build
+        run: npx rollup -c --bundleConfigAsCjs
       
       - name: Replace PostHog Keys
         run: |
