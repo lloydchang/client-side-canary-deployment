@@ -31,33 +31,44 @@ graph LR
  
  In this approach, the traffic shaping decision (which version a user receives) happens mostly in the user's browser:
  
- - **No server infrastructure required**: No need for load balancers, service meshes, or global accelerators
+ - **No server infrastructure required**: No need for global accelerators, load balancers, service meshes
  - **Works with static hosting**: Compatible with GitHub Pages, Netlify, Vercel, or any static hosting
  - **JavaScript-based assignment**: Uses browser's localStorage (not server-side sessions) and JavaScript for user assignment
  - **Analytics-driven**: Collects metrics to evaluate canary performance vs. stable version
  
- ### How It Differs From Traditional Server-Side Approaches
- 
- ```mermaid
- graph TD
-     subgraph "Server-Side Canary Deployment"
-         A[User Request] --> B[Load Balancer]
-         B -->|95% of traffic| C[Stable Version Server]
-         B -->|5% of traffic| D[Canary Version Server]
-         C --> E[Response with Stable Version]
-         D --> F[Response with Canary Version]
-     end
-     
-     subgraph "Client-Side Canary Deployment"
-         G[User Request] --> H[Static Web Server]
-         H --> I[index.html with JavaScript]
-         I --> J{Client-Side Decision}
-         J -->|95% of users| K[Load Stable Version]
-         J -->|5% of users| L[Load Canary Version]
-     end
-     
-     style B fill:#f9a,stroke:#333
-     style J fill:#af9,stroke:#333
+### How It Differs From Traditional Server-Side Approaches
+
+```mermaid
+graph TD
+    subgraph "Server-Side Canary Deployment"
+        A[User Request] --> GA[Global Accelerator]
+        GA --> LB[Load Balancer]
+        LB --> SM[Service Mesh - e.g. Istio or Linkerd]
+        
+        SM -->|95% of traffic| EP1[Envoy Proxy or Linkerd2-proxy to Stable]
+        SM -->|5% of traffic| EP2[Envoy Proxy or Linkerd2-proxy to Canary]
+
+        EP1 --> C[Stable Version Server]
+        EP2 --> D[Canary Version Server]
+
+        C --> E[Response with Stable Version]
+        D --> F[Response with Canary Version]
+    end
+
+    subgraph "Client-Side Canary Deployment"
+        G[User Request] --> H[Static Web Server or CDN]
+        H --> I[index.html with JavaScript]
+        I --> J{Client-Side Decision Logic}
+        J -->|95% of users| K[Load Stable Version Assets]
+        J -->|5% of users| L[Load Canary Version Assets]
+    end
+
+    style GA fill:#fdd,stroke:#333
+    style LB fill:#f9a,stroke:#333
+    style SM fill:#fcf,stroke:#333
+    style EP1 fill:#cff,stroke:#333
+    style EP2 fill:#ccf,stroke:#333
+    style J fill:#af9,stroke:#333
 ```
 
 ## Installation
