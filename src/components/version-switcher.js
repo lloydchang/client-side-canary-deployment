@@ -192,8 +192,19 @@ class VersionSwitcher {
             // This ensures we return to the same version if the user navigates back
         }
         
-        // Navigate to the home page
-        window.location.href = `${basePath}/`;
+        // Normalize the URL similar to _switchVersion
+        const baseUrl = window.location.origin;
+        let normalizedPath = '';
+        
+        if (basePath) {
+            basePath = basePath.replace(/^\/+|\/+$/g, '');
+            normalizedPath = baseUrl + '/' + basePath;
+        } else {
+            normalizedPath = baseUrl;
+        }
+        
+        // Navigate to the home page with a clean URL
+        window.location.href = normalizedPath + '/';
     }
     
     /**
@@ -224,17 +235,28 @@ class VersionSwitcher {
         // Get the base path for the application
         let basePath = this._getBasePath();
         
-        // Normalize path by ensuring no double slashes
-        // Remove trailing slash from basePath if it exists
-        if (basePath.endsWith('/')) {
-            basePath = basePath.slice(0, -1);
+        // Normalize the URL: clean up any potential issues with slashes
+        // This fixes the issue with paths like "/client-side-canary-deployment////stable/"
+        const baseUrl = window.location.origin;
+        let normalizedPath = '';
+        
+        // Only add basePath if it's not empty
+        if (basePath) {
+            // Remove leading and trailing slashes from basePath
+            basePath = basePath.replace(/^\/+|\/+$/g, '');
+            normalizedPath = baseUrl + '/' + basePath;
+        } else {
+            normalizedPath = baseUrl;
         }
         
-        // Redirect to the appropriate version
+        // Ensure we have exactly one slash before the version
+        normalizedPath = normalizedPath.replace(/\/+$/, '');
+        
+        // Redirect to the appropriate version with clean URLs
         if (version === 'canary') {
-            window.location.href = `${basePath}/canary/`;
+            window.location.href = normalizedPath + '/canary/';
         } else {
-            window.location.href = `${basePath}/stable/`;
+            window.location.href = normalizedPath + '/stable/';
         }
     }
     
