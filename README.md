@@ -6,8 +6,6 @@ Deploy new features to a percentage of your users with a single line of code.
 <script src="canary.min.js"></script>
 ```
 
-That's it! You're ready to use canary deployments! 🚀
-
 ## Usage
 
 ### Basic Feature Flags
