@@ -94,7 +94,3 @@ Results are automatically collected and stored. View them anytime:
 ## Want More Control?
 
 The one-line approach works for most cases, but you can [view advanced options](ADVANCED.md) if needed.
-
-## License
-
-[MIT License](LICENSE)
