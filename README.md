@@ -1,12 +1,10 @@
-# CanaryJS - One-Line Canary Deployments
+# Client-Side Canary Deployment
 
 Deploy new features to a percentage of your users with a single line of code.
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/yourusername/canaryjs/dist/canary.min.js"></script>
+<script src="canary.min.js"></script>
 ```
-
-That's it! You're ready to use canary deployments! 🚀
 
 ## Usage
 
@@ -94,7 +92,3 @@ Results are automatically collected and stored. View them anytime:
 ## Want More Control?
 
 The one-line approach works for most cases, but you can [view advanced options](ADVANCED.md) if needed.
-
-## License
-
-[MIT License](LICENSE)
