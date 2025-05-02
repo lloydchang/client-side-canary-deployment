@@ -1,5 +1,64 @@
 # Client-Side Canary Deployment
 
+## Overview
+
+This project demonstrates how to implement canary deployments for static web applications primarily on the client side. It enables gradual feature rollouts to a subset of users without requiring server-side infrastructure such as load balancers, service meshes, or global accelerators. Traffic-shaping decisions—such as whether a user sees the new or old version—are made directly in the user's browser using JavaScript, potentially based on cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
+
+## How It Works
+
+1. Assigns users to either stable or canary groups based on configurable percentages
+2. Tracks errors, performance, and user engagement
+3. Gradually increases canary percentage when metrics look good
+4. Rolls back features if error rates increase
+5. Persists user assignments in localStorage
+
+```mermaid
+graph LR
+    A[User Visits Site] --> B{First Visit?}
+    B -->|Yes| C{Assign Version}
+    B -->|No| D[Load Saved Assignment]
+    C -->|95%| E[Stable Experience]
+    C -->|5%| F[Canary Experience]
+    D --> G[Consistent Experience]
+    E --> H[Collect Metrics]
+    F --> H
+    H --> I[Auto-Adjust Percentage]
+```
+
+ ## Client-Side vs. Server-Side Canary Deployments
+ 
+ ### What is a Client-Side Canary Deployment?
+ 
+ In this approach, the traffic shaping decision (which version a user receives) happens entirely in the user's browser:
+ 
+ - **No server infrastructure required**: No need for load balancers, proxies, or service meshes
+ - **Works with static hosting**: Compatible with GitHub Pages, Netlify, Vercel, or any static hosting
+ - **JavaScript-based assignment**: Uses browser's sessionStorage and JavaScript for user assignment
+ - **Analytics-driven**: Collects metrics to evaluate canary performance vs. stable version
+ 
+ ### How It Differs From Traditional Server-Side Approaches
+ 
+ ```mermaid
+ graph TD
+     subgraph "Server-Side Canary Deployment"
+         A[User Request] --> B[Load Balancer]
+         B -->|85% of traffic| C[Stable Version Server]
+         B -->|15% of traffic| D[Canary Version Server]
+         C --> E[Response with Stable Version]
+         D --> F[Response with Canary Version]
+     end
+     
+     subgraph "Client-Side Canary Deployment"
+         G[User Request] --> H[Static Web Server]
+         H --> I[index.html with JavaScript]
+         I --> J{Client-Side Decision}
+         J -->|85% of users| K[Load Stable Version]
+         J -->|15% of users| L[Load Canary Version]
+     end
+     
+     style B fill:#f9a,stroke:#333
+     style J fill:#af9,stroke:#333
+
 ## Installation
 
 ### Option 1: One-line installation (recommended)
@@ -84,27 +143,6 @@ This library consists of two main components:
   
   canary.defineFeatures(features);
 </script>
-```
-
-## How It Works
-
-1. Assigns users to either stable or canary groups based on configurable percentages
-2. Tracks errors, performance, and user engagement
-3. Gradually increases canary percentage when metrics look good
-4. Rolls back features if error rates increase
-5. Persists user assignments in localStorage
-
-```mermaid
-graph LR
-    A[User Visits Site] --> B{First Visit?}
-    B -->|Yes| C{Assign Version}
-    B -->|No| D[Load Saved Assignment]
-    C -->|95%| E[Stable Experience]
-    C -->|5%| F[Canary Experience]
-    D --> G[Consistent Experience]
-    E --> H[Collect Metrics]
-    F --> H
-    H --> I[Auto-Adjust Percentage]
 ```
 
 ## Enhanced Analytics (Optional)
