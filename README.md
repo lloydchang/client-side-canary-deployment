@@ -10,8 +10,8 @@ This project demonstrates how to implement canary deployments for static web app
 
 1. When a user visits the [index.html](index.html) page, the script checks if they have already been assigned to a version (stored in `sessionStorage`)
 2. If no version is assigned, the user is randomly directed to either:
-   - The default version (v1)
-   - The canary version (v2)
+   - The default version (default)
+   - The canary version (canary)
 3. The assignment persists in the user's session, ensuring a consistent experience during their visit
 4. The user is automatically redirected to the appropriate version
 
@@ -19,8 +19,8 @@ This project demonstrates how to implement canary deployments for static web app
 
 - [index.html](index.html): Entry point that handles version assignment and redirection
 - [canary.json](canary.json): Configuration file defining default and canary versions
-- [v1/index.html](v1/index.html): The default version of the application
-- [v2/index.html](v2/index.html): The canary (new) version of the application
+- [default/index.html](default/index.html): The default version of the application
+- [canary/index.html](canary/index.html): The canary (new) version of the application
 
 ## Customization
 
