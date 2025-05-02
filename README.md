@@ -29,7 +29,7 @@ graph LR
  
  ### What is a Client-Side Canary Deployment?
  
- In this approach, the traffic shaping decision (which version a user receives) happens entirely in the user's browser:
+ In this approach, the traffic shaping decision (which version a user receives) happens mostly in the user's browser:
  
  - **No server infrastructure required**: No need for load balancers, proxies, or service meshes
  - **Works with static hosting**: Compatible with GitHub Pages, Netlify, Vercel, or any static hosting
