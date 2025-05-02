@@ -17,8 +17,8 @@
   "analytics": {
     "sampleRate": 1.0,
     "debug": false,
-    "posthogApiKey": "ph_YOUR_KEY_HERE",
-    "posthogProjectId": "YOUR_PROJECT_ID"
+    "posthogApiKey": "__POSTHOG_PUBLIC_KEY__",
+    "posthogProjectId": "__POSTHOG_PROJECT_ID__"
   },
   "thresholds": {
     "minSampleSize": {
