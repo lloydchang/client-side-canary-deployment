@@ -6,108 +6,30 @@
  */
 
 class VersionSwitcher {
+    /**
+     * Create a new Version Switcher instance
+     * @param {Object} config - Configuration options
+     */
     constructor(config = {}) {
         this.config = {
-            stableVersion: 'stable',
-            canaryVersion: 'canary',
             switcherContainerId: 'version-switcher',
-            storageKey: 'version',
-            onVersionSwitch: null, // Optional callback when version is switched
+            position: 'bottom-right',
             ...config
         };
-
-        // Try to get CanaryConfig if available
-        if (window.CanaryConfig) {
-            this.canaryConfig = window.CanaryConfig;
+        
+        // Ensure the global canary object exists
+        if (!window.canary) {
+            console.error('Version Switcher requires the canary object to be available globally');
+            return;
         }
-
-        this.currentVersion = this._getCurrentVersion();
+        
+        // Create the UI
         this._createSwitcher();
         
-        // Log version switch events using main canary object directly
-        if (window.canary) {
-            window.canary.trackEvent('version_switcher_init', {
-                currentVersion: this.currentVersion,
-                referrer: document.referrer,
-                url: window.location.href
-            });
-        }
+        // Add event listeners
+        this._addEventListeners();
     }
-
-    /**
-     * Get current version from localStorage
-     * @private
-     * @returns {string} Current version
-     */
-    _getCurrentVersion() {
-        // If canary object is available, try to use its version first
-        if (window.canary && window.canary._assignment && window.canary._assignment.version) {
-            return window.canary._assignment.version;
-        }
-        
-        // Otherwise use localStorage
-        try {
-            const stored = localStorage.getItem(this.config.storageKey);
-            if (stored) {
-                return stored;
-            }
-        } catch (e) {
-            console.error('Error accessing localStorage', e);
-        }
-        
-        // Default to stable if no version is found
-        return this.config.stableVersion;
-    }
-
-    /**
-     * Switch to a different version
-     * @param {string} version - Version to switch to
-     */
-    switchToVersion(version) {
-        if (this.currentVersion === version) {
-            return; // Already on this version
-        }
-
-        // Track the switch using canary directly
-        if (window.canary) {
-            window.canary.trackEvent('version_switched', {
-                fromVersion: this.currentVersion,
-                toVersion: version
-            });
-        }
-        
-        // Update current version
-        this.currentVersion = version;
-        
-        // Update UI
-        if (document.getElementById('vs-btn-stable')) {
-            document.getElementById('vs-btn-stable').classList.toggle('active', version === this.config.stableVersion);
-        }
-        if (document.getElementById('vs-btn-canary')) {
-            document.getElementById('vs-btn-canary').classList.toggle('active', version === this.config.canaryVersion);
-        }
-        
-        // Call callback if provided
-        if (typeof this.config.onVersionSwitch === 'function') {
-            this.config.onVersionSwitch(version);
-        }
-        
-        // If canary object exists, update its assignment
-        if (window.canary && typeof window.canary.updateVersion === 'function') {
-            window.canary.updateVersion(version);
-        } else {
-            // Update localStorage
-            try {
-                localStorage.setItem(this.config.storageKey, version);
-            } catch (e) {
-                console.error('Error saving to localStorage', e);
-            }
-            
-            // Reload page to apply changes if canary isn't available
-            window.location.reload();
-        }
-    }
-
+    
     /**
      * Create the version switcher UI
      * @private
@@ -122,12 +44,15 @@ class VersionSwitcher {
             document.body.appendChild(container);
         }
         
+        // Get info directly from the global canary object
         let canaryPercentage = '';
-        if (this.canaryConfig && typeof this.canaryConfig.getCurrentCanaryPercentage === 'function') {
-            canaryPercentage = this.canaryConfig.getCurrentCanaryPercentage() + '%';
-        } else if (window.canary && window.canary._config) {
+        if (window.canary && window.canary._config) {
             canaryPercentage = window.canary._config.initialCanaryPercentage + '%';
         }
+        
+        // Get current version
+        const currentVersion = window.canary && window.canary._assignment ? 
+            window.canary._assignment.version : 'unknown';
         
         container.innerHTML = `
             <style>
@@ -214,24 +139,66 @@ class VersionSwitcher {
                 <h4>Version Switcher</h4>
                 ${canaryPercentage ? `<div class="version-info">Canary distribution: ${canaryPercentage}</div>` : ''}
                 <div class="version-switcher-options">
-                    <button id="vs-btn-stable" class="${this.currentVersion === this.config.stableVersion ? 'active' : ''}">
+                    <button id="vs-stable-btn" class="${currentVersion === 'stable' ? 'active' : ''}">
                         Stable
                     </button>
-                    <button id="vs-btn-canary" class="${this.currentVersion === this.config.canaryVersion ? 'active' : ''}">
-                        Canary
+                    <button id="vs-canary-btn" class="${currentVersion === 'canary' ? 'active' : ''}">
+                        Canary <span class="vs-tag" style="background: #ffc107; color: #333;">BETA</span>
                     </button>
                 </div>
             </div>
         `;
-
-        // Add event listeners
-        document.getElementById('vs-btn-stable').addEventListener('click', () => {
-            this.switchToVersion(this.config.stableVersion);
+    }
+    
+    /**
+     * Add event listeners to the version switcher buttons
+     * @private
+     */
+    _addEventListeners() {
+        // Get the buttons
+        const stableBtn = document.getElementById('vs-stable-btn');
+        const canaryBtn = document.getElementById('vs-canary-btn');
+        
+        if (!stableBtn || !canaryBtn) return;
+        
+        // Add click listeners
+        stableBtn.addEventListener('click', () => {
+            if (window.canary && typeof window.canary.setVersion === 'function') {
+                window.canary.setVersion('stable');
+                this._updateActiveButton('stable');
+                // Reload the page to apply changes
+                setTimeout(() => window.location.reload(), 500);
+            }
         });
         
-        document.getElementById('vs-btn-canary').addEventListener('click', () => {
-            this.switchToVersion(this.config.canaryVersion);
+        canaryBtn.addEventListener('click', () => {
+            if (window.canary && typeof window.canary.setVersion === 'function') {
+                window.canary.setVersion('canary');
+                this._updateActiveButton('canary');
+                // Reload the page to apply changes
+                setTimeout(() => window.location.reload(), 500);
+            }
         });
+    }
+    
+    /**
+     * Update the active button in the UI
+     * @param {string} version - The active version ('stable' or 'canary')
+     * @private
+     */
+    _updateActiveButton(version) {
+        const stableBtn = document.getElementById('vs-stable-btn');
+        const canaryBtn = document.getElementById('vs-canary-btn');
+        
+        if (!stableBtn || !canaryBtn) return;
+        
+        if (version === 'stable') {
+            stableBtn.classList.add('active');
+            canaryBtn.classList.remove('active');
+        } else {
+            stableBtn.classList.remove('active');
+            canaryBtn.classList.add('active');
+        }
     }
 }
 

@@ -287,6 +287,14 @@
       return this;
     },
     
+    /**
+     * Get the current canary percentage
+     * @returns {number} The current canary percentage
+     */
+    getCurrentCanaryPercentage: function() {
+      return this._calculateCurrentPercentage();
+    },
+    
     // Internal methods
     
     /**
