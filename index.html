@@ -1,31 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CanaryJS Demo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client-Side Canary Deployment</title>
+  
+  <!-- Include the core canary.js script -->
+  <script src="src/canary.js"></script>
+  
+  <!-- Include the analytics integration -->
+  <script src="src/analytics.js"></script>
+  
+  <!-- Include the version switcher component -->
+  <script src="src/components/version-switcher.js"></script>
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 40px;
+      line-height: 1.6;
+      color: #333;
+    }
     
-    <!-- Include the core canary.js script -->
-    <script src="src/canary.js"></script>
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
     
-    <!-- Include the optional version-switcher.js for UI control -->
-    <script src="js/version-switcher.js"></script>
+    h1 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
     
-    <script>
-        // Initialize canary with PostHog analytics
-        document.addEventListener('DOMContentLoaded', () => {
-            // Basic canary initialization
-            canary.init({
-                posthogApiKey: 'YOUR_POSTHOG_API_KEY',  // Replace with your real key
-                posthogEnabled: true
-            });
-            
-            // Optional: Initialize version switcher
-            new VersionSwitcher();
-        });
-    </script>
+    .card {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .button-container {
+      margin-top: 30px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: #0366d6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .button:hover {
+      background-color: #0255b3;
+    }
+    
+    .button-outline {
+      background-color: transparent;
+      border: 1px solid #0366d6;
+      color: #0366d6;
+    }
+    
+    .button-outline:hover {
+      background-color: rgba(3, 102, 214, 0.1);
+    }
+  </style>
 </head>
 <body>
-    <!-- Your page content here -->
+  <div class="container">
+    <div class="card">
+      <h1>Client-Side Canary Deployment</h1>
+      <p>Welcome to the demonstration of client-side canary deployment.</p>
+      <p>This system enables you to:</p>
+      <ul>
+        <li>Deploy new features gradually to a subset of users</li>
+        <li>Track metrics and performance differences between versions</li>
+        <li>Automatically roll back if issues are detected</li>
+        <li>Test feature flags without server-side infrastructure</li>
+      </ul>
+      
+      <div class="button-container">
+        <a href="stable/" class="button">Visit Stable Version</a>
+        <a href="canary/" class="button button-outline">Visit Canary Version</a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize canary
+    document.addEventListener('DOMContentLoaded', function() {
+      // Basic canary initialization
+      window.canary.init({
+        initialCanaryPercentage: 10
+      });
+      
+      // Initialize version switcher
+      new VersionSwitcher();
+      
+      // Redirect to appropriate version based on assignment
+      const assignment = window.canary._assignment;
+      if (assignment && assignment.version) {
+        setTimeout(function() {
+          if (assignment.version === 'canary') {
+            window.location.href = 'canary/';
+          } else {
+            window.location.href = 'stable/';
+          }
+        }, 2000); // Delay to show landing page briefly
+      }
+    });
+  </script>
 </body>
 </html>

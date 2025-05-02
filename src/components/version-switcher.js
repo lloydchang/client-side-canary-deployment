@@ -2,7 +2,6 @@
  * Version Switcher Module
  * 
  * Allows users to manually switch between stable and canary versions
- * and coordinates directly with the main canary object
  */
 
 class VersionSwitcher {
@@ -13,17 +12,12 @@ class VersionSwitcher {
     constructor(config = {}) {
         this.config = {
             switcherContainerId: 'version-switcher',
+            onVersionSwitch: null,
             position: 'bottom-right',
             ...config
         };
         
-        // Ensure the global canary object exists
-        if (!window.canary) {
-            console.error('Version Switcher requires the canary object to be available globally');
-            return;
-        }
-        
-        // Create the UI
+        // Create UI
         this._createSwitcher();
         
         // Add event listeners
@@ -155,42 +149,50 @@ class VersionSwitcher {
      * @private
      */
     _addEventListeners() {
-        // Get the buttons
         const stableBtn = document.getElementById('vs-stable-btn');
         const canaryBtn = document.getElementById('vs-canary-btn');
         
-        if (!stableBtn || !canaryBtn) return;
+        if (stableBtn && canaryBtn) {
+            stableBtn.addEventListener('click', () => this._switchVersion('stable'));
+            canaryBtn.addEventListener('click', () => this._switchVersion('canary'));
+        }
+    }
+    
+    /**
+     * Switch version and redirect
+     * @param {string} version - The version to switch to
+     * @private
+     */
+    _switchVersion(version) {
+        // Only proceed if we're not already on this version
+        if (window.canary && window.canary._assignment && window.canary._assignment.version === version) {
+            return;
+        }
         
-        // Add click listeners
-        stableBtn.addEventListener('click', () => {
-            if (window.canary && typeof window.canary.setVersion === 'function') {
-                window.canary.setVersion('stable');
-                this._updateActiveButton('stable');
-                
-                // Call onVersionSwitch callback if provided
-                if (this.config.onVersionSwitch && typeof this.config.onVersionSwitch === 'function') {
-                    this.config.onVersionSwitch('stable');
-                }
-                
-                // Reload the page to apply changes
-                setTimeout(() => window.location.reload(), 500);
-            }
-        });
+        // Update assignment
+        if (window.canary && window.canary._assignment) {
+            window.canary._assignment.version = version;
+            window.canary._saveAssignment();
+        }
         
-        canaryBtn.addEventListener('click', () => {
-            if (window.canary && typeof window.canary.setVersion === 'function') {
-                window.canary.setVersion('canary');
-                this._updateActiveButton('canary');
-                
-                // Call onVersionSwitch callback if provided
-                if (this.config.onVersionSwitch && typeof this.config.onVersionSwitch === 'function') {
-                    this.config.onVersionSwitch('canary');
-                }
-                
-                // Reload the page to apply changes
-                setTimeout(() => window.location.reload(), 500);
+        // Update UI
+        this._updateActiveButton(version);
+        
+        // Call callback if provided
+        if (this.config.onVersionSwitch) {
+            this.config.onVersionSwitch(version);
+        }
+        
+        // Redirect to the appropriate version
+        if (version === 'canary') {
+            if (!window.location.pathname.includes('/canary/')) {
+                window.location.href = '/canary/';
             }
-        });
+        } else {
+            if (!window.location.pathname.includes('/stable/')) {
+                window.location.href = '/stable/';
+            }
+        }
     }
     
     /**
@@ -202,14 +204,14 @@ class VersionSwitcher {
         const stableBtn = document.getElementById('vs-stable-btn');
         const canaryBtn = document.getElementById('vs-canary-btn');
         
-        if (!stableBtn || !canaryBtn) return;
-        
-        if (version === 'stable') {
-            stableBtn.classList.add('active');
-            canaryBtn.classList.remove('active');
-        } else {
-            canaryBtn.classList.add('active');
-            stableBtn.classList.remove('active');
+        if (stableBtn && canaryBtn) {
+            if (version === 'stable') {
+                stableBtn.classList.add('active');
+                canaryBtn.classList.remove('active');
+            } else {
+                canaryBtn.classList.add('active');
+                stableBtn.classList.remove('active');
+            }
         }
     }
 }

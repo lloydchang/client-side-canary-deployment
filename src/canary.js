@@ -1,138 +1,87 @@
 /**
- * CanaryJS - One-Line Canary Deployment Solution
- * An ultra-simple, zero-config approach to client-side canary deployments
+ * Client-Side Canary Deployment
+ * Core functionality for feature flagging and canary deployments
  */
 
 (function(window) {
-  // Main canary object
+  'use strict';
+  
+  // Default configuration
+  const DEFAULT_CONFIG = {
+    initialCanaryPercentage: 5,      // Start with 5% of users
+    maxCanaryPercentage: 50,         // Never exceed 50% without manual review
+    safetyThreshold: 2,              // Minimum percentage on rollback
+    gradualRollout: true,            // Automatically increase percentage
+    rolloutPeriod: 7,                // Days to reach max percentage
+    storageKey: 'canary_assignment', // localStorage key for assignment
+    metricsStorageKey: 'canary_metrics', // localStorage key for metrics
+    switcherContainerId: 'version-switcher',
+    autoEvaluate: true,              // Auto-evaluate metrics periodically
+    evaluationInterval: 3600000,     // Evaluate every hour (in milliseconds)
+    errorThreshold: 1.5,             // Rollback if error rate 1.5x stable version
+    posthogEnabled: false,           // PostHog disabled by default
+    posthogApiKey: null              // PostHog API key
+  };
+  
+  // Canary object
   const canary = {
-    // Configuration with opinionated defaults
-    _config: {
-      initialCanaryPercentage: 5,      // Start with 5% of users
-      maxCanaryPercentage: 50,         // Never go above 50% without manual review
-      safetyThreshold: 2,              // Keep at least 2% even on rollback
-      gradualRollout: true,            // Automatically increase percentage over time
-      rolloutPeriod: 7,                // Days to reach max percentage
-      storageKey: 'canary_assignment', // localStorage key for assignment
-      metricsStorageKey: 'canary_metrics', // localStorage key for metrics
-      autoEvaluate: true,              // Auto-evaluate metrics periodically
-      evaluationInterval: 3600000,     // Evaluate every hour (in milliseconds)
-      errorThreshold: 1.5,             // Rollback if error rate 1.5x stable version
-      posthogEnabled: false,           // PostHog disabled by default (localStorage fallback)
-      posthogApiKey: null,             // PostHog API key (if enabled)
-      sessionStorageKey: 'canary_session' // Add session storage key for session-specific data
-    },
-    
-    // Features registry
+    _config: { ...DEFAULT_CONFIG },
+    _assignment: null,
     _features: {},
-    
-    // Metrics storage
+    _customAssignFn: null,
+    _userIdentity: {},
+    _eventHooks: {},
     _metrics: {
-      stable: {
-        pageviews: 0,
-        errors: 0,
-        performance: {
-          pageLoadTime: 0,
-          measurements: []
-        }
-      },
-      canary: {
-        pageviews: 0,
-        errors: 0,
-        performance: {
-          pageLoadTime: 0,
-          measurements: []
-        }
-      }
+      'stable': { pageviews: 0, errors: 0, clicks: 0 },
+      'canary': { pageviews: 0, errors: 0, clicks: 0 }
     },
-    
-    // User assignment
-    _assignment: {
-      version: null,      // 'stable' or 'canary'
-      assignedAt: null,   // Timestamp of assignment
-      percentage: null,   // Percentage at time of assignment
-      features: {}        // Enabled features for this user
-    },
-    
-    // Debug mode flag
     _debug: false,
     
-    // Event listeners
-    _eventListeners: {},
-    
     /**
-     * Initialize canary system
-     * @param {Object} options - Optional configuration
+     * Initialize the canary system
+     * @param {Object} config - Configuration options
      */
-    init: function(options = {}) {
-      // Override defaults with provided options
-      if (options) {
-        this._config = {...this._config, ...options};
-      }
+    init: function(config = {}) {
+      // Merge with defaults
+      this._config = { ...this._config, ...config };
       
-      // Load or initialize assignment
+      // Load or create assignment
       this._loadAssignment();
       
       // Set up error tracking
       this._setupErrorTracking();
       
-      // Track performance
-      this._trackPerformance();
-      
-      // Set up PostHog if API key is provided
-      if (this._config.posthogApiKey) {
-        // Use the external PostHog integration instead of embedding the code
-        if (typeof this._initPostHog === 'function') {
-          this._initPostHog(this._config.posthogApiKey);
-          this._config.posthogEnabled = true;
-        } else {
-          console.warn('PostHog integration not available. Include analytics.js for PostHog support.');
-        }
-      }
-      
-      // Set up auto-evaluation if enabled
+      // Start auto-evaluation if enabled
       if (this._config.autoEvaluate) {
-        this._setupAutoEvaluation();
+        this._scheduleEvaluation();
       }
       
-      // Load saved metrics
+      // Load metrics
       this._loadMetrics();
       
-      // Track pageview
-      this.trackEvent('pageview');
+      // Track initial page view
+      this._trackPageview();
       
       return this;
     },
     
     /**
-     * Configure canary settings
-     * @param {Object} options - Configuration options
+     * Configure the canary system
+     * @param {Object} config - Configuration options
      */
-    config: function(options) {
-      this._config = {...this._config, ...options};
+    config: function(config = {}) {
+      this._config = { ...this._config, ...config };
       return this;
     },
     
     /**
-     * Enable PostHog analytics
-     * @param {string} apiKey - PostHog API key
+     * Define multiple features at once
+     * @param {Object} features - Feature definitions
      */
-    analytics: function(apiKey) {
-      if (!apiKey) {
-        console.error('Analytics API key is required');
-        return this;
+    defineFeatures: function(features = {}) {
+      for (const [name, options] of Object.entries(features)) {
+        this.defineFeature(name, options);
       }
-      
-      this._config.posthogApiKey = apiKey;
-      
-      // Load PostHog integration if available
-      if (typeof this._initPostHog === 'function') {
-        this._initPostHog(apiKey);
-        this._config.posthogEnabled = true;
-      } else {
-        console.warn('PostHog integration not available. Include analytics.js for PostHog support.');
-      }
-      
       return this;
     },
     
@@ -142,209 +91,113 @@
      * @param {Object} options - Feature options
      */
     defineFeature: function(name, options = {}) {
-      this._features[name] = {
-        name: name,
-        description: options.description || name,
-        initialPercentage: options.initialPercentage || this._config.initialCanaryPercentage,
-        currentPercentage: options.initialPercentage || this._config.initialCanaryPercentage,
-        enabled: false
+      const defaultOptions = {
+        description: '',
+        initialPercentage: this._config.initialCanaryPercentage,
+        evaluationCriteria: {
+          errorThreshold: this._config.errorThreshold
+        }
       };
       
-      // Determine if this feature is enabled for the current user
-      if (this._assignment.version === 'canary') {
-        this._evaluateFeature(name);
+      this._features[name] = { ...defaultOptions, ...options };
+      
+      // Update assignment feature flags if necessary
+      if (this._assignment && this._assignment.features) {
+        if (this._assignment.version === 'canary' && !(name in this._assignment.features)) {
+          // For canary users, enable feature based on random percentage
+          const shouldEnable = Math.random() * 100 < this._features[name].initialPercentage;
+          this._assignment.features[name] = shouldEnable;
+          this._saveAssignment();
+        } else if (!(name in this._assignment.features)) {
+          // For stable users, disable by default
+          this._assignment.features[name] = false;
+          this._saveAssignment();
+        }
       }
       
-      return this;
-    },
-    
-    /**
-     * Define multiple features at once
-     * @param {Object} featuresObject - Object containing feature definitions
-     */
-    defineFeatures: function(featuresObject) {
-      for (const [name, options] of Object.entries(featuresObject)) {
-        this.defineFeature(name, options);
-      }
       return this;
     },
     
     /**
      * Check if a feature is enabled for the current user
-     * @param {string} featureName - Name of the feature to check
-     * @returns {boolean} True if the feature is enabled
+     * @param {string} featureName - Feature name to check
+     * @returns {boolean} - Whether the feature is enabled
      */
     isEnabled: function(featureName) {
-      // If feature status is already determined in current session
-      if (this._assignment.features && this._assignment.features[featureName] !== undefined) {
-        return this._assignment.features[featureName];
+      // If no assignment yet, create one
+      if (!this._assignment) {
+        this._createAssignment();
       }
       
-      // If feature isn't registered, register it with default settings
-      if (!this._features[featureName]) {
+      // Feature doesn't exist, automatically define it
+      if (!(featureName in this._features)) {
         this.defineFeature(featureName);
       }
       
-      // Always disabled for stable version
-      if (this._assignment.version === 'stable') {
-        this._assignment.features[featureName] = false;
-        return false;
+      // Check if feature is enabled for this user
+      return this._assignment.features[featureName] === true;
+    },
+    
+    /**
+     * Set custom assignment logic
+     * @param {Function} assignFn - Custom assignment function
+     */
+    customAssignment: function(assignFn) {
+      if (typeof assignFn !== 'function') {
+        throw new Error('Custom assignment must be a function');
+      }
+      this._customAssignFn = assignFn;
+      return this;
+    },
+    
+    /**
+     * Identify current user with properties
+     * @param {Object} user - User properties
+     */
+    identifyUser: function(user = {}) {
+      this._userIdentity = { ...this._userIdentity, ...user };
+      
+      // If we have a custom assignment function, reevaluate assignment
+      if (this._customAssignFn && this._assignment) {
+        const customAssignment = this._customAssignFn(this._userIdentity);
+        if (customAssignment && (customAssignment === 'stable' || customAssignment === 'canary')) {
+          // Only update if assignment changed
+          if (this._assignment.version !== customAssignment) {
+            this._assignment.version = customAssignment;
+            this._saveAssignment();
+          }
+        }
       }
       
-      // Evaluate for canary version
-      return this._evaluateFeature(featureName);
-    },
-    
-    /**
-     * Track a custom event
-     * @param {string} eventName - Name of the event
-     * @param {Object} properties - Event properties
-     */
-    trackEvent: function(eventName, properties = {}) {
-      // Track internally
-      const version = this._assignment.version || 'unknown';
-      this._metrics[version].events = this._metrics[version].events || [];
-      this._metrics[version].events.push({
-        name: eventName,
-        timestamp: Date.now(),
-        properties
-      });
-      
-      // Send to PostHog if enabled
-      this._sendToPostHog(eventName, properties);
-      
-      // Save metrics
-      this._saveMetrics();
-      
       return this;
     },
     
     /**
-     * Track an error
-     * @param {string} message - Error message
-     * @param {string} stack - Error stack
+     * Configure analytics integration
+     * @param {string} apiKey - PostHog API Key
      */
-    trackError: function(message, stack = '') {
-      const version = this._assignment.version || 'unknown';
-      this._metrics[version].errors = this._metrics[version].errors || 0;
-      this._metrics[version].errors++;
-      
-      // Track error details
-      this._metrics[version].errorDetails = this._metrics[version].errorDetails || [];
-      this._metrics[version].errorDetails.push({
-        message,
-        stack,
-        timestamp: Date.now()
-      });
-      
-      // Send to PostHog if enabled
-      this._sendToPostHog('error', { message, stack });
-      
-      // Save metrics
-      this._saveMetrics();
-      
+    analytics: function(apiKey) {
+      this._config.posthogEnabled = true;
+      this._config.posthogApiKey = apiKey;
       return this;
     },
     
     /**
-     * Get results of the canary deployment
-     * @returns {Object} Metrics and evaluation results
+     * Get results of canary testing
+     * @returns {Object} - Results object
      */
     getResults: function() {
-      // Calculate error rates
-      const stableErrorRate = this._calculateErrorRate('stable');
-      const canaryErrorRate = this._calculateErrorRate('canary');
-      
-      const metrics = {
-        stable: {
-          pageviews: this._metrics.stable.pageviews || 0,
-          errors: this._metrics.stable.errors || 0,
-          errorRate: stableErrorRate
-        },
-        canary: {
-          pageviews: this._metrics.canary.pageviews || 0,
-          errors: this._metrics.canary.errors || 0,
-          errorRate: canaryErrorRate
-        },
-        features: this._features,
+      return {
         currentAssignment: this._assignment,
-        healthStatus: canaryErrorRate <= stableErrorRate * this._config.errorThreshold ? 'healthy' : 'unhealthy',
-        lastEvaluation: this._metrics.lastEvaluation || null
+        metrics: this._metrics,
+        features: this._features,
+        config: this._config
       };
-      
-      return metrics;
     },
     
     /**
-     * Update the user's version assignment directly
-     * This is used by the version-switcher to change versions manually
-     * @param {string} version - The version to switch to ('stable' or 'canary')
-     */
-    updateVersion: function(version) {
-      if (version !== 'stable' && version !== 'canary') {
-        console.error('Invalid version. Must be "stable" or "canary"');
-        return this;
-      }
-      
-      // Update assignment
-      this._assignment.version = version;
-      this._assignment.manuallyAssigned = true;
-      
-      // Save to localStorage
-      localStorage.setItem(this._config.storageKey, JSON.stringify(this._assignment));
-      
-      // Track the manual version change
-      this.trackEvent('manual_version_change', {
-        previousVersion: this._assignment.version,
-        newVersion: version
-      });
-      
-      // Reset feature assignments for the new version
-      this._assignment.features = {};
-      
-      // Re-evaluate all registered features
-      for (const featureName in this._features) {
-        this._evaluateFeature(featureName);
-      }
-      
-      return this;
-    },
-    
-    /**
-     * Manually set the version for this user
-     * @param {string} version - 'stable' or 'canary'
-     * @returns {Object} - The canary object for chaining
-     */
-    setVersion: function(version) {
-      if (version !== 'stable' && version !== 'canary') {
-        console.error('Invalid version. Must be "stable" or "canary"');
-        return this;
-      }
-      
-      // Update the assignment
-      this._assignment.version = version;
-      this._assignment.assignedAt = Date.now();
-      this._assignment.manuallySet = true;
-      
-      // Save to localStorage
-      localStorage.setItem(this._config.storageKey, JSON.stringify(this._assignment));
-      
-      this._debug && console.log(`Version manually set to ${version}`);
-      
-      return this;
-    },
-    
-    /**
-     * Get the current canary percentage
-     * @returns {number} The current canary percentage
-     */
-    getCurrentCanaryPercentage: function() {
-      return this._calculateCurrentPercentage();
-    },
-    
-    /**
-     * Enable debug mode
-     * @param {boolean} enabled - Whether to enable debug mode
+     * Enable or disable debug mode
+     * @param {boolean} enabled - Whether debug mode is enabled
      */
     debug: function(enabled = true) {
       this._debug = enabled;
@@ -352,39 +205,86 @@
     },
     
     /**
-     * Register an event listener
+     * Get debug information
+     * @returns {Object} - Debug information
+     */
+    debugInfo: function() {
+      return {
+        assignment: this._assignment,
+        features: this._features,
+        metrics: this._metrics,
+        config: this._config,
+        userIdentity: this._userIdentity
+      };
+    },
+    
+    /**
+     * Export all data (useful for support)
+     * @returns {Object} - All exported data
+     */
+    exportData: function() {
+      return {
+        assignment: this._assignment,
+        features: this._features,
+        metrics: this._metrics,
+        config: this._config,
+        userIdentity: this._userIdentity,
+        localStorage: {
+          assignment: localStorage.getItem(this._config.storageKey),
+          metrics: localStorage.getItem(this._config.metricsStorageKey)
+        }
+      };
+    },
+    
+    /**
+     * Subscribe to canary events
      * @param {string} event - Event name
-     * @param {function} callback - Callback function
+     * @param {Function} callback - Callback function
      */
     on: function(event, callback) {
-      if (!this._eventListeners[event]) {
-        this._eventListeners[event] = [];
+      if (!this._eventHooks[event]) {
+        this._eventHooks[event] = [];
       }
-      this._eventListeners[event].push(callback);
+      this._eventHooks[event].push(callback);
       return this;
     },
     
     /**
-     * Trigger an event
-     * @param {string} event - Event name
-     * @param {object} data - Event data
+     * Track an event for analytics
+     * @param {string} eventName - Name of the event
+     * @param {Object} properties - Event properties
      */
-    _trigger: function(event, data) {
-      if (this._eventListeners[event]) {
-        this._eventListeners[event].forEach(callback => {
-          try {
-            callback(data);
-          } catch (error) {
-            console.error(`Error in event listener for ${event}:`, error);
-          }
-        });
+    trackEvent: function(eventName, properties = {}) {
+      // Add default properties
+      const eventProperties = {
+        timestamp: Date.now(),
+        version: this._assignment ? this._assignment.version : 'unknown',
+        ...properties
+      };
+      
+      // Track clicks
+      if (eventName.toLowerCase().includes('click')) {
+        this._metrics[eventProperties.version].clicks = 
+          (this._metrics[eventProperties.version].clicks || 0) + 1;
       }
+      
+      // Send to PostHog if enabled
+      if (this._config.posthogEnabled && window.posthog) {
+        try {
+          window.posthog.capture(eventName, eventProperties);
+        } catch (e) {
+          console.error('Error sending event to PostHog:', e);
+        }
+      }
+      
+      // Save metrics
+      this._saveMetrics();
+      
+      return this;
     },
     
-    // Internal methods
-    
     /**
-     * Load user assignment from localStorage or create new assignment
+     * Load assignment from localStorage
      * @private
      */
     _loadAssignment: function() {
@@ -393,12 +293,16 @@
       if (saved) {
         try {
           this._assignment = JSON.parse(saved);
+          
+          // Initialize features object if it doesn't exist
+          if (!this._assignment.features) {
+            this._assignment.features = {};
+          }
         } catch (e) {
-          // If parsing fails, create a new assignment
+          console.error('Error loading assignment from localStorage:', e);
           this._createAssignment();
         }
       } else {
-        // No saved assignment, create new one
         this._createAssignment();
       }
     },
@@ -439,9 +343,16 @@
       if (saved) {
         try {
           this._metrics = JSON.parse(saved);
+          
+          // Initialize metrics objects if they don't exist
+          if (!this._metrics.stable) {
+            this._metrics.stable = { pageviews: 0, errors: 0, clicks: 0 };
+          }
+          if (!this._metrics.canary) {
+            this._metrics.canary = { pageviews: 0, errors: 0, clicks: 0 };
+          }
         } catch (e) {
-          // If parsing fails, use default metrics
-          // Default metrics already set in initialization
+          console.error('Error loading metrics from localStorage:', e);
         }
       }
     },
@@ -455,71 +366,57 @@
     },
     
     /**
-     * Calculate current canary percentage based on gradual rollout settings
+     * Save assignment to localStorage
      * @private
-     * @returns {number} Current canary percentage
      */
-    _calculateCurrentPercentage: function() {
-      const { initialCanaryPercentage, maxCanaryPercentage, gradualRollout, rolloutPeriod } = this._config;
-      
-      if (!gradualRollout) {
-        return initialCanaryPercentage;
-      }
-      
-      // Get last evaluation result
-      if (this._metrics.lastEvaluation && this._metrics.lastEvaluation.recommendation === 'ROLLBACK') {
-        return this._config.safetyThreshold;
-      }
-      
-      // Simple gradual increase based on pageviews
-      const stableViews = this._metrics.stable.pageviews || 0;
-      const canaryViews = this._metrics.canary.pageviews || 0;
-      const totalViews = stableViews + canaryViews;
-      
-      if (totalViews < 10) {
-        return initialCanaryPercentage;
-      }
-      
-      // Calculate percentage based on data collected
-      const calculatedPercentage = initialCanaryPercentage + 
-        (Math.min(100, Math.floor(totalViews / 10)) * (maxCanaryPercentage - initialCanaryPercentage) / 100);
-        
-      return Math.min(maxCanaryPercentage, calculatedPercentage);
+    _saveAssignment: function() {
+      localStorage.setItem(this._config.storageKey, JSON.stringify(this._assignment));
     },
     
     /**
-     * Evaluate if a feature should be enabled for the current user
+     * Calculate the current canary percentage based on rollout period
      * @private
-     * @param {string} featureName - Name of the feature to evaluate
-     * @returns {boolean} True if the feature is enabled
      */
-    _evaluateFeature: function(featureName) {
-      // Feature is already evaluated
-      if (this._assignment.features[featureName] !== undefined) {
-        return this._assignment.features[featureName];
+    _calculateCurrentPercentage: function() {
+      if (!this._config.gradualRollout) {
+        return this._config.initialCanaryPercentage;
       }
       
-      // User is not in canary group
-      if (this._assignment.version !== 'canary') {
-        this._assignment.features[featureName] = false;
-        localStorage.setItem(this._config.storageKey, JSON.stringify(this._assignment));
-        return false;
+      const now = Date.now();
+      const dayInMs = 24 * 60 * 60 * 1000;
+      const daysSinceStart = Math.floor(now / dayInMs);
+      const daysInPeriod = this._config.rolloutPeriod;
+      
+      // Calculate percentage based on days elapsed in rollout period
+      let percentage = this._config.initialCanaryPercentage + 
+        ((this._config.maxCanaryPercentage - this._config.initialCanaryPercentage) * 
+         (daysSinceStart % daysInPeriod) / daysInPeriod);
+      
+      return Math.min(percentage, this._config.maxCanaryPercentage);
+    },
+    
+    /**
+     * Track a pageview for the current assignment
+     * @private
+     */
+    _trackPageview: function() {
+      if (this._assignment) {
+        const version = this._assignment.version;
+        this._metrics[version].pageviews = (this._metrics[version].pageviews || 0) + 1;
+        this._saveMetrics();
+        
+        // Track via PostHog if enabled
+        if (this._config.posthogEnabled && window.posthog) {
+          try {
+            window.posthog.capture('pageview', {
+              version: version,
+              timestamp: Date.now()
+            });
+          } catch (e) {
+            console.error('Error sending pageview to PostHog:', e);
+          }
+        }
       }
-      
-      // If feature doesn't exist, create it with defaults
-      if (!this._features[featureName]) {
-        this.defineFeature(featureName);
-      }
-      
-      // Randomize based on feature percentage
-      const feature = this._features[featureName];
-      const enabled = Math.random() * 100 < feature.currentPercentage;
-      
-      // Save the decision for this user
-      this._assignment.features[featureName] = enabled;
-      localStorage.setItem(this._config.storageKey, JSON.stringify(this._assignment));
-      
-      return enabled;
     },
     
     /**
@@ -527,211 +424,105 @@
      * @private
      */
     _setupErrorTracking: function() {
-      window.addEventListener('error', (event) => {
-        this.trackError(event.message, event.error ? event.error.stack : '');
-      });
+      const self = this;
       
-      window.addEventListener('unhandledrejection', (event) => {
-        this.trackError(`Promise rejection: ${event.reason}`, '');
+      // Capture unhandled errors
+      window.addEventListener('error', function(event) {
+        if (self._assignment) {
+          const version = self._assignment.version;
+          self._metrics[version].errors = (self._metrics[version].errors || 0) + 1;
+          self._saveMetrics();
+          
+          // Evaluate metrics after error
+          self._evaluateMetrics();
+        }
       });
     },
     
     /**
-     * Track performance metrics
+     * Schedule periodic evaluation of metrics
      * @private
      */
-    _trackPerformance: function() {
-      // Wait for page to finish loading
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          if (window.performance && window.performance.timing) {
-            const timing = window.performance.timing;
-            const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
-            
-            // Store performance data
-            const version = this._assignment.version || 'unknown';
-            this._metrics[version].performance = this._metrics[version].performance || {};
-            this._metrics[version].performance.pageLoadTime = pageLoadTime;
-            
-            // Get web vitals if available
-            if (window.performance && window.performance.getEntriesByType) {
-              try {
-                // Get LCP
-                const paintEntries = window.performance.getEntriesByType('paint');
-                const lcpEntry = paintEntries.find(entry => entry.name === 'first-contentful-paint');
-                if (lcpEntry) {
-                  this._metrics[version].performance.lcp = lcpEntry.startTime;
-                }
-                
-                // Get CLS if available
-                if (window.LayoutShift && window.LayoutShift.value) {
-                  this._metrics[version].performance.cls = window.LayoutShift.value;
-                }
-              } catch (e) {
-                // Ignore errors in performance measurement
-              }
-            }
-            
-            this._saveMetrics();
-          }
-        }, 0);
-      });
-    },
-    
-    /**
-     * Set up PostHog analytics with provided API key
-     * This method will be overridden by analytics.js if included
-     * @param {string} apiKey - PostHog API key
-     */
-    _initPostHog: function(apiKey) {
-      console.warn('PostHog integration loaded but not initialized. Include analytics.js before canary.js.');
-    },
-    
-    /**
-     * Send event to PostHog
-     * This method will be overridden by analytics.js if included
-     * @param {string} eventName - Event name
-     * @param {object} properties - Event properties
-     */
-    _sendToPostHog: function(eventName, properties = {}) {
-      if (this._debug) {
-        console.log('PostHog not initialized. Event not sent:', eventName, properties);
-      }
-    },
-    
-    /**
-     * Get the current session ID
-     * @private
-     * @returns {string} The current session ID
-     */
-    _getSessionId: function() {
-      const data = JSON.parse(sessionStorage.getItem(this._config.sessionStorageKey) || '{}');
-      if (!data.sessionId) {
-        data.sessionId = 'session_' + Math.random().toString(36).substring(2, 15);
-        sessionStorage.setItem(this._config.sessionStorageKey, JSON.stringify(data));
-      }
-      return data.sessionId;
-    },
-    
-    /**
-     * Set up automatic evaluation of metrics
-     * @private
-     */
-    _setupAutoEvaluation: function() {
-      // Evaluate immediately
-      this._evaluateMetrics();
+    _scheduleEvaluation: function() {
+      const self = this;
       
-      // Set up interval for periodic evaluation
-      setInterval(() => {
-        this._evaluateMetrics();
+      setInterval(function() {
+        self._evaluateMetrics();
       }, this._config.evaluationInterval);
     },
     
     /**
-     * Evaluate metrics and make rollback/rollforward decisions
+     * Evaluate metrics and make decisions
      * @private
      */
     _evaluateMetrics: function() {
-      const stableErrorRate = this._calculateErrorRate('stable');
-      const canaryErrorRate = this._calculateErrorRate('canary');
-      
-      let recommendation = 'PROCEED';
-      let details = '';
-      
-      // Not enough data
-      if ((this._metrics.canary.pageviews || 0) < 5) {
-        recommendation = 'INSUFFICIENT_DATA';
-        details = 'Not enough canary traffic to make decision';
-      }
-      // Error rate significantly higher
-      else if (canaryErrorRate > stableErrorRate * this._config.errorThreshold) {
-        recommendation = 'ROLLBACK';
-        details = `Canary error rate ${(canaryErrorRate * 100).toFixed(2)}% vs stable ${(stableErrorRate * 100).toFixed(2)}%`;
-      }
-      // Error rate moderately higher
-      else if (canaryErrorRate > stableErrorRate * 1.2) {
-        recommendation = 'SLOW_DOWN';
-        details = `Canary error rate moderately higher: ${(canaryErrorRate * 100).toFixed(2)}% vs ${(stableErrorRate * 100).toFixed(2)}%`;
-      }
-      // All good
-      else {
-        recommendation = 'PROCEED';
-        details = 'Metrics within acceptable ranges';
+      if (!this._metrics.stable || !this._metrics.canary) {
+        return;
       }
       
-      // Store evaluation results
-      this._metrics.lastEvaluation = {
-        timestamp: Date.now(),
-        recommendation,
-        details,
+      const stableErrors = this._metrics.stable.errors || 0;
+      const canaryErrors = this._metrics.canary.errors || 0;
+      const stableViews = this._metrics.stable.pageviews || 1;
+      const canaryViews = this._metrics.canary.pageviews || 1;
+      
+      // Calculate error rates
+      const stableErrorRate = stableViews > 0 ? stableErrors / stableViews : 0;
+      const canaryErrorRate = canaryViews > 0 ? canaryErrors / canaryViews : 0;
+      
+      // If canary error rate is significantly higher, consider rollback
+      if (canaryErrorRate > 0 && stableErrorRate > 0 && canaryErrorRate > (stableErrorRate * this._config.errorThreshold)) {
+        // Rollback - decrease canary percentage
+        this._config.initialCanaryPercentage = Math.max(
+          this._config.safetyThreshold, 
+          this._config.initialCanaryPercentage / 2
+        );
+        
+        // Trigger rollback event
+        this._triggerEvent('rollback', {
+          stableErrorRate,
+          canaryErrorRate,
+          newPercentage: this._config.initialCanaryPercentage
+        });
+      } else if (canaryErrorRate <= stableErrorRate && this._config.gradualRollout) {
+        // Success - slightly increase canary percentage if under max
+        if (this._config.initialCanaryPercentage < this._config.maxCanaryPercentage) {
+          this._config.initialCanaryPercentage = Math.min(
+            this._config.maxCanaryPercentage,
+            this._config.initialCanaryPercentage * 1.05
+          );
+          
+          // Trigger increase event
+          this._triggerEvent('percentageIncrease', {
+            newPercentage: this._config.initialCanaryPercentage
+          });
+        }
+      }
+      
+      // Trigger evaluation event
+      this._triggerEvent('evaluationComplete', {
         stableErrorRate,
         canaryErrorRate,
-        stablePageviews: this._metrics.stable.pageviews || 0,
-        canaryPageviews: this._metrics.canary.pageviews || 0
-      };
-      
-      // Apply recommendations automatically
-      this._applyRecommendation(recommendation);
-      
-      // Save updated metrics
-      this._saveMetrics();
+        recommendation: canaryErrorRate > (stableErrorRate * this._config.errorThreshold) ? 'ROLLBACK' : 'CONTINUE'
+      });
     },
     
     /**
-     * Apply a recommendation to change canary percentages
+     * Trigger an event and call all registered callbacks
      * @private
-     * @param {string} recommendation - Recommendation type (PROCEED, SLOW_DOWN, ROLLBACK)
      */
-    _applyRecommendation: function(recommendation) {
-      switch(recommendation) {
-        case 'ROLLBACK':
-          // Set all features to safety threshold
-          for (const feature in this._features) {
-            this._features[feature].currentPercentage = this._config.safetyThreshold;
+    _triggerEvent: function(event, data) {
+      if (this._eventHooks[event]) {
+        for (const callback of this._eventHooks[event]) {
+          try {
+            callback(data);
+          } catch (e) {
+            console.error(`Error in ${event} event handler:`, e);
           }
-          break;
-          
-        case 'SLOW_DOWN':
-          // Reduce all features by 25% but not below safety threshold
-          for (const feature in this._features) {
-            const currentPct = this._features[feature].currentPercentage;
-            this._features[feature].currentPercentage = Math.max(
-              this._config.safetyThreshold,
-              currentPct * 0.75
-            );
-          }
-          break;
-          
-        case 'PROCEED':
-          // Gradually increase all features up to max
-          for (const feature in this._features) {
-            const currentPct = this._features[feature].currentPercentage;
-            if (currentPct < this._config.maxCanaryPercentage) {
-              this._features[feature].currentPercentage = Math.min(
-                this._config.maxCanaryPercentage,
-                currentPct * 1.1  // 10% increase
-              );
-            }
-          }
-          break;
+        }
       }
-    },
-    
-    /**
-     * Calculate error rate for a version
-     * @private
-     * @param {string} version - 'stable' or 'canary'
-     * @returns {number} Error rate as a fraction (0 to 1)
-     */
-    _calculateErrorRate: function(version) {
-      const pageviews = this._metrics[version].pageviews || 0;
-      const errors = this._metrics[version].errors || 0;
-      
-      if (pageviews === 0) return 0;
-      return errors / pageviews;
     }
   };
   
-  // Export to global scope
+  // Make available globally
   window.canary = canary;
 })(window);
