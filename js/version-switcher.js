@@ -90,60 +90,105 @@ class VersionSwitcher {
             document.body.appendChild(container);
         }
 
-        // Create styled container
+        // Create styled container with more specific and consistent styling
         container.innerHTML = `
             <style>
-                .version-switcher {
+                /* Reset and isolate version switcher styles to prevent external influence */
+                #version-switcher.version-switcher {
+                    all: initial; /* Reset all properties */
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                    box-sizing: border-box;
                     position: fixed;
                     bottom: 20px;
                     right: 20px;
+                    width: 200px; /* Fixed width */
                     background: #f5f5f5;
                     border: 1px solid #ddd;
                     border-radius: 4px;
                     padding: 10px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                     z-index: 9999;
+                    color: #333;
+                    font-size: 14px;
+                    line-height: 1.4;
                 }
-                .version-switcher h4 {
+
+                #version-switcher.version-switcher * {
+                    box-sizing: border-box;
+                    font-family: inherit;
+                }
+
+                #version-switcher.version-switcher h4 {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
                     margin: 0 0 8px 0;
                     font-size: 14px;
                     color: #333;
+                    font-weight: 600;
+                    padding: 0;
+                    white-space: nowrap;
                 }
-                .version-switcher-options {
+
+                #version-switcher.version-switcher .version-switcher-options {
                     display: flex;
+                    width: 100%;
                     gap: 8px;
                 }
-                .version-switcher button {
+
+                #version-switcher.version-switcher button {
+                    flex: 1;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
                     padding: 5px 10px;
+                    height: 32px;
                     border: 1px solid #ccc;
                     border-radius: 4px;
                     background: #fff;
                     cursor: pointer;
                     font-size: 13px;
+                    font-weight: normal;
+                    text-align: center;
+                    color: #333;
+                    margin: 0;
+                    transition: background-color 0.2s ease;
+                    width: auto;
+                    min-width: 60px;
+                    outline: none;
+                    box-shadow: none;
                 }
-                .version-switcher button:hover {
+
+                #version-switcher.version-switcher button:hover {
                     background: #f0f0f0;
                 }
-                .version-switcher button.active {
+
+                #version-switcher.version-switcher button.active {
                     background: #0366d6;
                     color: white;
                     border-color: #0366d6;
                 }
-                .version-switcher .vs-tag {
-                    display: inline-block;
+
+                #version-switcher.version-switcher .vs-tag {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
                     font-size: 10px;
                     padding: 2px 5px;
                     border-radius: 3px;
                     margin-left: 5px;
+                    min-width: 42px;
+                    text-align: center;
                     text-transform: uppercase;
                     font-weight: bold;
                 }
-                .version-switcher .vs-tag.stable {
+
+                #version-switcher.version-switcher .vs-tag.stable {
                     background: #28a745;
                     color: white;
                 }
-                .version-switcher .vs-tag.canary {
+
+                #version-switcher.version-switcher .vs-tag.canary {
                     background: #f9c513;
                     color: black;
                 }
