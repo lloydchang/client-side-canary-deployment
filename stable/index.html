@@ -14,7 +14,6 @@
       version: 'stable'
     });
   </script>
-  <script src="../js/analytics.js"></script>
   <script src="../js/canary-config.js"></script>
   <script src="../js/version-switcher.js"></script>
 </head>
@@ -41,17 +40,6 @@
     // Track stable page view
     window.canary.trackEvent('page_view', {
       page: 'stable_home'
-    });
-
-    // Add some interaction for testing
-    document.getElementById('track-click').addEventListener('click', function() {
-      if (window.canary) {
-        window.canary.trackEvent('button_click', {
-          button_id: 'track-click',
-          button_text: 'Click me for testing'
-        });
-        alert('Event tracked!');
-      }
     });
   </script>
 </body>

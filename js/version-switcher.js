@@ -2,7 +2,7 @@
  * Version Switcher Module
  * 
  * Allows users to manually switch between stable and canary versions
- * while maintaining analytics data integrity and reporting to PostHog
+ * and coordinates directly with the main canary object
  */
 
 class VersionSwitcher {
@@ -12,7 +12,6 @@ class VersionSwitcher {
             canaryVersion: 'canary',
             switcherContainerId: 'version-switcher',
             storageKey: 'version',
-            posthogEnabled: true, // Whether to track version switching in PostHog
             onVersionSwitch: null, // Optional callback when version is switched
             ...config
         };
@@ -25,12 +24,14 @@ class VersionSwitcher {
         this.currentVersion = this._getCurrentVersion();
         this._createSwitcher();
         
-        // Log version switch events
-        this._trackEvent('version_switcher_init', {
-            currentVersion: this.currentVersion,
-            referrer: document.referrer,
-            url: window.location.href
-        });
+        // Log version switch events using main canary object directly
+        if (window.canary) {
+            window.canary.trackEvent('version_switcher_init', {
+                currentVersion: this.currentVersion,
+                referrer: document.referrer,
+                url: window.location.href
+            });
+        }
     }
 
     /**
@@ -67,18 +68,13 @@ class VersionSwitcher {
             return; // Already on this version
         }
 
-        // Update localStorage
-        try {
-            localStorage.setItem(this.config.storageKey, version);
-        } catch (e) {
-            console.error('Error saving to localStorage', e);
+        // Track the switch using canary directly
+        if (window.canary) {
+            window.canary.trackEvent('version_switched', {
+                fromVersion: this.currentVersion,
+                toVersion: version
+            });
         }
-        
-        // Track the switch
-        this._trackEvent('version_switched', {
-            fromVersion: this.currentVersion,
-            toVersion: version
-        });
         
         // Update current version
         this.currentVersion = version;
@@ -100,27 +96,15 @@ class VersionSwitcher {
         if (window.canary && typeof window.canary.updateVersion === 'function') {
             window.canary.updateVersion(version);
         } else {
+            // Update localStorage
+            try {
+                localStorage.setItem(this.config.storageKey, version);
+            } catch (e) {
+                console.error('Error saving to localStorage', e);
+            }
+            
             // Reload page to apply changes if canary isn't available
             window.location.reload();
-        }
-    }
-
-    /**
-     * Track an event (uses canary if available, otherwise tries PostHog directly)
-     * @private
-     * @param {string} eventName - Event name
-     * @param {object} data - Event data
-     */
-    _trackEvent(eventName, data = {}) {
-        // Try to use canary object if available
-        if (window.canary && typeof window.canary.trackEvent === 'function') {
-            window.canary.trackEvent(eventName, data);
-            return;
-        }
-        
-        // Fall back to PostHog if enabled
-        if (this.config.posthogEnabled && window.posthog) {
-            window.posthog.capture(eventName, data);
         }
     }
 
