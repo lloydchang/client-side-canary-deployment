@@ -1,9 +1,9 @@
-<!-- default/index.html - Default Version -->
+<!-- stable/index.html - Stable Version -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Default Version</title>
+  <title>Stable Version</title>
   <!-- Analytics Scripts -->
   <script src="../js/analytics.js"></script>
   <script src="../js/canary-config.js"></script>
@@ -13,7 +13,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       // Create analytics instance with version information
       window.analytics = new CanaryAnalytics({
-        version: 'default',
+        version: 'stable',
         debug: CanaryConfig.analytics.debug,
         endpoint: CanaryConfig.analytics.endpoint,
         sampleRate: CanaryConfig.analytics.sampleRate,
@@ -23,14 +23,14 @@
       
       // Track page view
       window.analytics.trackEvent('page_view', {
-        page: 'default_home'
+        page: 'stable_home'
       });
       
       // Initialize version switcher
       window.versionSwitcher = new VersionSwitcher({
         onVersionSwitch: function(newVersion) {
           window.analytics.trackEvent('manual_version_switch', {
-            fromVersion: 'default',
+            fromVersion: 'stable',
             toVersion: newVersion
           });
         }
@@ -39,10 +39,10 @@
   </script>
 </head>
 <body>
-  <p>This is the default version of the app.</p>
+  <p>This is the stable version of the app.</p>
   
   <div id="app-info">
-    <h2>Default Version Information</h2>
+    <h2>Stable Version Information</h2>
     <p>You are currently viewing the stable version of the application.</p>
     <p>You can switch to the canary version using the Version Switcher in the bottom right corner.</p>
     <button id="track-click">Click me for testing</button>

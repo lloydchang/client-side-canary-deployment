@@ -1,14 +1,14 @@
 /**
  * Version Switcher Module
  * 
- * Allows users to manually switch between default and canary versions
+ * Allows users to manually switch between stable and canary versions
  * while maintaining analytics data integrity
  */
 
 class VersionSwitcher {
     constructor(config = {}) {
         this.config = {
-            defaultVersion: 'default',
+            stableVersion: 'stable',
             canaryVersion: 'canary',
             switcherContainerId: 'version-switcher',
             storageKey: 'version',
@@ -33,7 +33,7 @@ class VersionSwitcher {
      * @returns {string} Current version
      */
     _getCurrentVersion() {
-        return sessionStorage.getItem(this.config.storageKey) || this.config.defaultVersion;
+        return sessionStorage.getItem(this.config.storageKey) || this.config.stableVersion;
     }
 
     /**
@@ -42,7 +42,7 @@ class VersionSwitcher {
      * @returns {boolean} Success status
      */
     switchToVersion(version) {
-        if (version !== this.config.defaultVersion && version !== this.config.canaryVersion) {
+        if (version !== this.config.stableVersion && version !== this.config.canaryVersion) {
             console.error(`Invalid version: ${version}`);
             return false;
         }
@@ -139,7 +139,7 @@ class VersionSwitcher {
                     text-transform: uppercase;
                     font-weight: bold;
                 }
-                .version-switcher .vs-tag.default {
+                .version-switcher .vs-tag.stable {
                     background: #28a745;
                     color: white;
                 }
@@ -151,8 +151,8 @@ class VersionSwitcher {
             <div>
                 <h4>Version Switcher <span class="vs-tag ${this.currentVersion}">${this.currentVersion}</span></h4>
                 <div class="version-switcher-options">
-                    <button id="vs-btn-default" class="${this.currentVersion === this.config.defaultVersion ? 'active' : ''}">
-                        Default
+                    <button id="vs-btn-stable" class="${this.currentVersion === this.config.stableVersion ? 'active' : ''}">
+                        Stable
                     </button>
                     <button id="vs-btn-canary" class="${this.currentVersion === this.config.canaryVersion ? 'active' : ''}">
                         Canary
@@ -162,8 +162,8 @@ class VersionSwitcher {
         `;
 
         // Add event listeners
-        document.getElementById('vs-btn-default').addEventListener('click', () => {
-            this.switchToVersion(this.config.defaultVersion);
+        document.getElementById('vs-btn-stable').addEventListener('click', () => {
+            this.switchToVersion(this.config.stableVersion);
         });
         
         document.getElementById('vs-btn-canary').addEventListener('click', () => {

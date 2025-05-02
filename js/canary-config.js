@@ -123,12 +123,12 @@ const CanaryConfig = {
     /**
      * Evaluate canary metrics to make rollback/rollforward decision
      * 
-     * @param {Object} defaultMetrics - Aggregated metrics from default version
+     * @param {Object} stableMetrics - Aggregated metrics from stable version
      * @param {Object} canaryMetrics - Aggregated metrics from canary version
      * @returns {Object} Decision object with recommendation and details
      */
-    evaluateCanaryHealth: function(defaultMetrics, canaryMetrics) {
-        if (!defaultMetrics || !canaryMetrics) {
+    evaluateCanaryHealth: function(stableMetrics, canaryMetrics) {
+        if (!stableMetrics || !canaryMetrics) {
             return {
                 decision: 'INCONCLUSIVE',
                 confidence: 0,
@@ -143,7 +143,7 @@ const CanaryConfig = {
         // Check performance metrics
         if (canaryMetrics.performance) {
             // Page load time check
-            if (canaryMetrics.performance.pageLoadTime > defaultMetrics.performance.pageLoadTime * 1.2) {
+            if (canaryMetrics.performance.pageLoadTime > stableMetrics.performance.pageLoadTime * 1.2) {
                 if (canaryMetrics.performance.pageLoadTime > this.thresholds.performance.pageLoad.criticalThreshold) {
                     criticalIssues++;
                     issues.push('Critical: Page load time exceeds threshold');
@@ -157,10 +157,10 @@ const CanaryConfig = {
         }
         
         // Check error rates
-        const defaultErrorRate = this._calculateErrorRate(defaultMetrics);
+        const stableErrorRate = this._calculateErrorRate(stableMetrics);
         const canaryErrorRate = this._calculateErrorRate(canaryMetrics);
         
-        if (canaryErrorRate > defaultErrorRate * 1.5) {
+        if (canaryErrorRate > stableErrorRate * 1.5) {
             issues.push('Error rate increased by more than 50%');
         }
         

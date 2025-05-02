@@ -1,4 +1,4 @@
 {
-    "defaultVersion": "default",
+    "stableVersion": "stable",
     "canaryVersion": "canary"
 }

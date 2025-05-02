@@ -8,7 +8,7 @@
   <script>
     // Configuration
     const configUrl = 'config.json';
-    const defaultVersion = 'default';
+    const stableVersion = 'stable';
     const canaryVersion = 'canary';
 
     // Check sessionStorage for version assignment, if not assigned, assign one based on configuration
@@ -18,11 +18,11 @@
       
       // Use CanaryConfig for more intelligent decision making
       if (window.CanaryConfig && window.CanaryConfig.shouldUseCanary) {
-        return window.CanaryConfig.shouldUseCanary() ? canaryVersion : defaultVersion;
+        return window.CanaryConfig.shouldUseCanary() ? canaryVersion : stableVersion;
       }
       
       // Fallback to random assignment if config is not available
-      return Math.random() < 0.5 ? canaryVersion : defaultVersion;
+      return Math.random() < 0.5 ? canaryVersion : stableVersion;
     }
 
     function setVersionInSession(version) {
@@ -51,7 +51,7 @@
       
       // Merge server config with client config if available
       if (serverConfig && window.CanaryConfig) {
-        if (serverConfig.defaultVersion) window.CanaryConfig.defaultVersion = serverConfig.defaultVersion;
+        if (serverConfig.stableVersion) window.CanaryConfig.stableVersion = serverConfig.stableVersion;
         if (serverConfig.canaryVersion) window.CanaryConfig.canaryVersion = serverConfig.canaryVersion;
         if (serverConfig.distribution && serverConfig.distribution.canaryPercentage !== undefined) {
           window.CanaryConfig.distribution.canaryPercentage = serverConfig.distribution.canaryPercentage;
@@ -87,7 +87,7 @@
   <p>You're being directed to the appropriate version of the application.</p>
   <noscript>
     <p>JavaScript is required for this application. Please enable JavaScript and reload the page.</p>
-    <p>You can manually access the <a href="default/index.html">default version</a>.</p>
+    <p>You can manually access the <a href="stable/index.html">stable version</a>.</p>
   </noscript>
 </body>
 </html>

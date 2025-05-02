@@ -10,7 +10,7 @@ This project demonstrates how to implement canary deployments for static web app
 
 1. When a user visits the [index.html](index.html) page, the script checks if they have already been assigned to a version (stored in `sessionStorage`)
 2. If no version is assigned, the user is randomly directed to either:
-   - The default version (default)
+   - The stable version (stable)
    - The canary version (canary)
 3. The assignment persists in the user's session, ensuring a consistent experience during their visit
 4. The user is automatically redirected to the appropriate version
@@ -18,8 +18,8 @@ This project demonstrates how to implement canary deployments for static web app
 ## Files
 
 - [index.html](index.html): Entry point that handles version assignment and redirection
-- [config.json](config.json): Configuration file defining default and canary versions
-- [default/index.html](default/index.html): The default version of the application
+- [config.json](config.json): Configuration file defining stable and canary versions
+- [stable/index.html](stable/index.html): The stable version of the application
 - [canary/index.html](canary/index.html): The canary (new) version of the application
 
 ## Customization
@@ -44,7 +44,7 @@ To make data-driven decisions about whether to roll back or roll forward with ca
 ### Client-Side Analytics Implementation
 
 1. **Basic Analytics Integration**:
-   - Add a simple analytics module to both default and canary versions
+   - Add a simple analytics module to both stable and canary versions
    - Track key metrics like page load time, user interactions, and custom events
    - Store analytics data in sessionStorage or localStorage temporarily
 
