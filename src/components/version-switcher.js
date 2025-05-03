@@ -235,15 +235,13 @@ class VersionSwitcher {
     _switchVersion(version) {
         console.log('Switching to version:', version);
         
-        // Check BOTH assignment AND current path to determine if we're already on the version
+        // Check if we're already on the version - FIX: separate path and assignment checks
         const currentPath = window.location.pathname;
-        const alreadyOnVersion = window.canary && 
-                                window.canary._assignment && 
-                                window.canary._assignment.version === version && 
-                                currentPath.includes(`/${version}/`);
+        const pathContainsVersion = currentPath.includes(`/${version}/`);
         
-        if (alreadyOnVersion) {
-            console.log('Already on version', version, '- skipping redirect');
+        // Only skip if we're actually on the version's path
+        if (pathContainsVersion) {
+            console.log('Already on path for version', version, '- skipping redirect');
             return;
         }
         
