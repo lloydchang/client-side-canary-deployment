@@ -7,7 +7,7 @@
   'use strict';
   
   // Store API key as a separate variable before using it
-  const POSTHOG_API_KEY = "phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR";
+  const POSTHOG_API_KEY = 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR';
   
   // Default configuration
   const DEFAULT_CONFIG = {
