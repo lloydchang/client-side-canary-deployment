@@ -140,24 +140,23 @@
         const posthogStatus = window.canary._posthogBlocked ? 
           'BLOCKED' : 'Working';
         
-        output.innerHTML = `
-          <h3>Canary Metrics</h3>
-          <p><strong>PostHog Status:</strong> ${posthogStatus}</p>
-          <h4>Stable Version:</h4>
-          <ul>
-            <li>Pageviews: ${metrics.stable.pageviews}</li>
-            <li>Errors: ${metrics.stable.errors}</li>
-            <li>Clicks: ${metrics.stable.clicks}</li>
-          </ul>
-          <h4>Canary Version:</h4>
-          <ul>
-            <li>Pageviews: ${metrics.canary.pageviews}</li>
-            <li>Errors: ${metrics.canary.errors}</li>
-            <li>Clicks: ${metrics.canary.clicks}</li>
-          </ul>
-          <h4>Last ${metrics.events ? metrics.events.length : 0} Events:</h4>
-          <pre>${JSON.stringify(metrics.events, null, 2)}</pre>
-        `;
+        output.innerHTML = 
+          '<h3>Canary Metrics</h3>' +
+          '<p><strong>PostHog Status:</strong> ' + posthogStatus + '</p>' +
+          '<h4>Stable Version:</h4>' +
+          '<ul>' +
+            '<li>Pageviews: ' + metrics.stable.pageviews + '</li>' +
+            '<li>Errors: ' + metrics.stable.errors + '</li>' +
+            '<li>Clicks: ' + metrics.stable.clicks + '</li>' +
+          '</ul>' +
+          '<h4>Canary Version:</h4>' +
+          '<ul>' +
+            '<li>Pageviews: ' + metrics.canary.pageviews + '</li>' +
+            '<li>Errors: ' + metrics.canary.errors + '</li>' +
+            '<li>Clicks: ' + metrics.canary.clicks + '</li>' +
+          '</ul>' +
+          '<h4>Last ' + (metrics.events ? metrics.events.length : 0) + ' Events:</h4>' +
+          '<pre>' + JSON.stringify(metrics.events, null, 2) + '</pre>';
       } else {
         output.textContent = 'Analytics not available';
       }

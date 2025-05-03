@@ -131,6 +131,12 @@
         <a href="canary/" class="button button-outline">Visit Canary Version</a>
       </div>
       
+      <div class="button-container">
+        <button id="show-metrics" class="button button-outline">Show Metrics</button>
+      </div>
+      
+      <pre id="metrics-output" style="display: none; background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 20px;"></pre>
+      
       <div id="countdown" class="countdown">
         Redirecting to <span id="assigned-version-text">your assigned version</span> in <span id="countdown-number" class="countdown-number">10</span> seconds...
       </div>
@@ -138,6 +144,43 @@
   </div>
   
   <script>
+    // Add event listener for the show metrics button
+    document.addEventListener('DOMContentLoaded', function() {
+      const showMetricsBtn = document.getElementById('show-metrics');
+      if (showMetricsBtn) {
+        showMetricsBtn.addEventListener('click', function() {
+          const output = document.getElementById('metrics-output');
+          if (window.canary) {
+            const metrics = window.canary._metrics;
+            const posthogStatus = window.canary._posthogBlocked ? 
+              'BLOCKED' : 'Working';
+            
+            output.innerHTML = 
+              '<h3>Canary Metrics</h3>' +
+              '<p><strong>PostHog Status:</strong> ' + posthogStatus + '</p>' +
+              '<h4>Stable Version:</h4>' +
+              '<ul>' +
+                '<li>Pageviews: ' + metrics.stable.pageviews + '</li>' +
+                '<li>Errors: ' + metrics.stable.errors + '</li>' +
+                '<li>Clicks: ' + metrics.stable.clicks + '</li>' +
+              '</ul>' +
+              '<h4>Canary Version:</h4>' +
+              '<ul>' +
+                '<li>Pageviews: ' + metrics.canary.pageviews + '</li>' +
+                '<li>Errors: ' + metrics.canary.errors + '</li>' +
+                '<li>Clicks: ' + metrics.canary.clicks + '</li>' +
+              '</ul>' +
+              '<h4>Last ' + (metrics.events ? metrics.events.length : 0) + ' Events:</h4>' +
+              '<pre>' + JSON.stringify(metrics.events, null, 2) + '</pre>';
+          } else {
+            output.textContent = 'Analytics not available';
+          }
+          
+          output.style.display = output.style.display === 'none' ? 'block' : 'none';
+        });
+      }
+    });
+
     // Simple approach - start countdown immediately when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM fully loaded');
