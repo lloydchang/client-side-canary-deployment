@@ -107,14 +107,6 @@ To set up PostHog integration:
 
 ## Installation
 
-### Option 1: One-line installation
-
-```html
-<script src="https://cdn.jsdelivr.net/gh/yourusername/client-side-canary-deployment@main/dist/canary.js"></script>
-```
-
-### Option 2: Separate components
-
 Add the following script tags to your HTML:
 
 ```html
