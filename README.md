@@ -235,6 +235,8 @@ The GitHub Actions workflow handles both deployment and analytics:
   - Deploys the application and injects PostHog keys when triggered by pushes to main
   - Runs scheduled analytics every 6 hours to analyze canary deployment performance
   - Supports manual triggering of either deployment or analytics tasks
+  - Provides detailed analytics reports in GitHub Actions summaries
+  - Implements automatic rollback capability when error thresholds are exceeded
 
 For more details on the analytics integration, see [ANALYTICS.md](./docs/ANALYTICS.md).
 

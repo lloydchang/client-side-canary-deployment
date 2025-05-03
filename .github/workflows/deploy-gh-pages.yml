@@ -77,7 +77,7 @@ jobs:
           single-commit: true          # Delete previous deployment history
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Analytics job
+  # Enhanced Analytics job from canary-analytics.yml
   analyze-canary:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'analyze')
     runs-on: ubuntu-latest
@@ -91,19 +91,66 @@ jobs:
       
       - name: Install Dependencies
         run: npm install
-
-      - name: Run Analytics
-        run: node scripts/analyze-canary.js
+      
+      - name: Make analytics script executable
+        run: chmod +x ./scripts/analyze-canary.js
+        
+      - name: Run canary analysis
+        id: canary_analysis
         env:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           POSTHOG_HOST: 'https://us.i.posthog.com'
           ERROR_THRESHOLD: ${{ vars.ERROR_THRESHOLD || '0.02' }}
           TIMEFRAME: ${{ vars.TIMEFRAME || '24h' }}
+        run: |
+          OUTPUT=$(node ./scripts/analyze-canary.js)
+          echo "$OUTPUT" > canary-analysis.json
+          echo "ANALYSIS_RESULT<<EOF" >> $GITHUB_ENV
+          echo "$OUTPUT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
+          # Extract the recommended action
+          RECOMMENDED_ACTION=$(echo "$OUTPUT" | jq -r '.analysis.recommendedAction')
+          echo "RECOMMENDED_ACTION=$RECOMMENDED_ACTION" >> $GITHUB_ENV
+          
+          if [[ "$RECOMMENDED_ACTION" == "rollback" ]]; then
+            echo "::warning::Canary version shows elevated error rates - rollback recommended"
+          else
+            echo "::notice::Canary version performing within acceptable parameters"
+          fi
+      
+      - name: Create summary report
+        run: |
+          echo "# Canary Deployment Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Analysis timestamp: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | Pageviews | Errors | Error Rate |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----------|--------|------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Stable | $(jq -r '.stable.pageviews' canary-analysis.json) | $(jq -r '.stable.errors' canary-analysis.json) | $(jq -r '.stable.errorRate' canary-analysis.json) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Canary | $(jq -r '.canary.pageviews' canary-analysis.json) | $(jq -r '.canary.errors' canary-analysis.json) | $(jq -r '.canary.errorRate' canary-analysis.json) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Relative error increase: $(jq -r '.analysis.relativeErrorIncrease' canary-analysis.json)" >> $GITHUB_STEP_SUMMARY
+          echo "- Exceeds threshold: $(jq -r '.analysis.exceedsThreshold' canary-analysis.json)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Recommended action**: $(jq -r '.analysis.recommendedAction' canary-analysis.json)" >> $GITHUB_STEP_SUMMARY
       
       - name: Save Analytics Results
         uses: actions/upload-artifact@v3
         with:
           name: analytics-results
-          path: canary-analytics-*.json
+          path: canary-analysis.json
           retention-days: 30
+      
+      - name: Auto-rollback (if needed)
+        if: env.RECOMMENDED_ACTION == 'rollback'
+        run: |
+          echo "Canary version error rates exceed threshold!"
+          echo "Initiating automatic rollback process..."
+          # This is where you would implement your rollback logic
+          # For example, a script that updates configurations to direct all traffic to stable
+          # Or trigger another workflow using the GitHub API

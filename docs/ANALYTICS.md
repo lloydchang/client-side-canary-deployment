@@ -49,6 +49,16 @@ The analytics portion of the `Deploy and Analytics` workflow has several configu
 
 You can also manually trigger the analytics task from the Actions tab in GitHub by selecting the "Deploy and Analytics" workflow and setting the task input to "analyze".
 
+#### Analysis Reports
+
+The workflow generates detailed analysis reports that include:
+- Pageview and error statistics for both stable and canary versions
+- Calculated error rates and relative increases
+- Recommended actions (continue or rollback)
+- Automatic rollback process when thresholds are exceeded
+
+These reports are available in the GitHub Actions run summary and are also stored as artifacts.
+
 ## Analyzing Results
 
 The canary analytics workflow:
