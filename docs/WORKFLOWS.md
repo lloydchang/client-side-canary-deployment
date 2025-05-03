@@ -46,7 +46,7 @@ Allows manual adjustment of canary percentages:
 
 ## Supporting Scripts
 
-### analyze-canary.js
+### `analyze-canary.js`
 
 This script queries the PostHog API to compare stable and canary version performance:
 
@@ -62,7 +62,7 @@ This script queries the PostHog API to compare stable and canary version perform
 - `ERROR_THRESHOLD`: Maximum acceptable error rate increase (default: 0.02)
 - `TIMEFRAME`: Analysis time period (default: 24h)
 
-### update-canary.js
+### `update-canary.js`
 
 Script for updating the canary percentage configuration:
 
