@@ -34,7 +34,7 @@ graph LR
  - **No specialized server infrastructure required**: No need for global accelerators, load balancers, or service meshes
  - **Works with static hosting**: Compatible with GitHub Pages
  - **JavaScript-based assignment**: Uses browser's localStorage (not server-side sessions) and JavaScript for user assignment
- - **Analytics-driven**: Collects metrics to evaluate canary performance vs. stable version
+ - **Analytics-driven**: Collects metrics to evaluate stable vs. canary versions
  
 ### How It Differs From Server-Side Canary Deployment
 
