@@ -87,19 +87,17 @@ Add the following script tags to your HTML:
 <!-- Core canary functionality -->
 <script src="https://cdn.example.com/canary.js"></script>
 
-<!-- Optional: PostHog analytics integration -->
-<script src="https://cdn.example.com/analytics.js"></script>
-
 <!-- Optional: Version switcher UI component -->
 <script src="https://cdn.example.com/version-switcher.js"></script>
+
+<!-- Optional: PostHog analytics integration -->
+<script src="https://cdn.example.com/analytics.js"></script>
 
 <!-- Initialize canary -->
 <script>
   canary.init();
 </script>
 ```
-
-> **Important**: Make sure to load the scripts in the correct order as shown above.
 
 ## Components
 
