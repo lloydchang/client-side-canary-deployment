@@ -50,7 +50,7 @@ The consolidated workflow file (`deploy-gh-pages.yml`) includes analytics capabi
 You can also manually trigger specific tasks from the Actions tab in GitHub by selecting the "Canary Deployment & Analytics" workflow and choosing one of these operations:
 
 - **deploy**: Deploy the latest code to GitHub Pages
-- **analyze**: Run analytics to evaluate canary performance
+- **analyze**: Run analytics to evaluate canary performance using `.github/scripts/analyze-canary.js`
 - **adjust-canary**: Change the percentage of users directed to the canary version
 
 #### Analysis Reports

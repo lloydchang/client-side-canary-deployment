@@ -102,7 +102,7 @@ jobs:
         run: npm install
       
       - name: Make analytics script executable
-        run: chmod +x ./scripts/analyze-canary.js
+        run: chmod +x ./.github/scripts/analyze-canary.js
         
       - name: Run canary analysis
         id: canary_analysis
@@ -113,7 +113,7 @@ jobs:
           ERROR_THRESHOLD: ${{ vars.ERROR_THRESHOLD || '0.02' }}
           TIMEFRAME: ${{ vars.TIMEFRAME || '24h' }}
         run: |
-          OUTPUT=$(node ./scripts/analyze-canary.js)
+          OUTPUT=$(node ./.github/scripts/analyze-canary.js)
           echo "$OUTPUT" > canary-analysis.json
           echo "ANALYSIS_RESULT<<EOF" >> $GITHUB_ENV
           echo "$OUTPUT" >> $GITHUB_ENV

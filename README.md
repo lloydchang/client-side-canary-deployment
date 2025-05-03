@@ -233,7 +233,7 @@ The consolidated GitHub Actions workflow handles deployment, analytics, and cana
 
 - **Canary Deployment & Analytics workflow**: A comprehensive workflow that:
   - Deploys the application and injects PostHog keys when triggered by pushes to main
-  - Runs scheduled analytics every 6 hours to analyze canary deployment performance
+  - Runs scheduled analytics every 6 hours to analyze canary deployment performance using `.github/scripts/analyze-canary.js`
   - Supports manual triggering for three operations:
     - `deploy`: Deploy the latest code to GitHub Pages
     - `analyze`: Run analytics to evaluate canary performance
