@@ -4,7 +4,7 @@ This document explains how our client-side canary deployment system integrates w
 
 ## How It Works
 
-1. **Client-side tracking**: The canary.js and analytics.js scripts automatically track:
+1. **Client-side tracking**: The `canary.js` and `analytics.js` scripts automatically track:
    - Pageviews with version information (stable/canary)
    - Error events with stack traces and context
    - Feature flag evaluations
