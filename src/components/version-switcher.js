@@ -233,8 +233,17 @@ class VersionSwitcher {
      * @private
      */
     _switchVersion(version) {
-        // Only proceed if we're not already on this version
-        if (window.canary && window.canary._assignment && window.canary._assignment.version === version) {
+        console.log('Switching to version:', version);
+        
+        // Check BOTH assignment AND current path to determine if we're already on the version
+        const currentPath = window.location.pathname;
+        const alreadyOnVersion = window.canary && 
+                                window.canary._assignment && 
+                                window.canary._assignment.version === version && 
+                                currentPath.includes(`/${version}/`);
+        
+        if (alreadyOnVersion) {
+            console.log('Already on version', version, '- skipping redirect');
             return;
         }
         
@@ -254,9 +263,9 @@ class VersionSwitcher {
         
         // Get the base path for the application
         let basePath = this._getBasePath();
+        console.log('Base path for redirection:', basePath);
         
         // Normalize the URL: clean up any potential issues with slashes
-        // This fixes the issue with paths like "/client-side-canary-deployment////stable/"
         const baseUrl = window.location.origin;
         let normalizedPath = '';
         
