@@ -257,6 +257,21 @@
       
       console.log('Starting countdown from', secondsLeft, 'seconds');
       
+      // Determine the target version immediately and display it
+      let targetVersion = 'stable'; // Default to stable
+      
+      if (window.canary && window.canary._assignment && window.canary._assignment.version) {
+        targetVersion = window.canary._assignment.version;
+        console.log('Using canary assignment:', targetVersion);
+      } else {
+        console.log('No canary assignment found, using default');
+      }
+      
+      // Update version text immediately
+      if (assignedVersionText) {
+        assignedVersionText.textContent = targetVersion + ' version';
+      }
+      
       // Start the countdown immediately
       const countdownInterval = setInterval(function() {
         secondsLeft--;
@@ -271,21 +286,6 @@
           
           // Clear the interval to stop the countdown
           clearInterval(countdownInterval);
-          
-          // First try to get the canary assignment if available
-          let targetVersion = 'stable'; // Default to stable
-          
-          if (window.canary && window.canary._assignment && window.canary._assignment.version) {
-            targetVersion = window.canary._assignment.version;
-            console.log('Using canary assignment:', targetVersion);
-          } else {
-            console.log('No canary assignment found, using default');
-          }
-          
-          // Update version text before redirecting
-          if (assignedVersionText) {
-            assignedVersionText.textContent = targetVersion + ' version';
-          }
           
           // Redirect based on assignment or default
           window.location.href = targetVersion + '/';
