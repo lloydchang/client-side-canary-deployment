@@ -181,7 +181,7 @@ jobs:
           
       - name: Commit changes
         run: |
-          git config --global user.name 'Lloyd Chang'
+          git config --global user.name 'lloydchang'
           git config --global user.email 'lloydchang@gmail.com'
           git add ./config/canary-config.json
           git commit -m "Update canary configuration based on metrics analysis [skip ci]" || echo "No changes to commit"
