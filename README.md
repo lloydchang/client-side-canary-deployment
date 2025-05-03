@@ -1,7 +1,5 @@
 # Client-Side Canary Deployment
 
-One-line solution for client-side canary deployments and feature flags.
-
 ## Overview
 
 This project demonstrates how to implement canary deployments for static web applications primarily on the client side. It enables gradual feature rollouts to a subset of users without requiring server-side infrastructure such as load balancers, service meshes, or global accelerators. Traffic-shaping decisions—such as whether a user sees the new or old version—are made directly in the user's browser using JavaScript, potentially based on client-side cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
@@ -109,7 +107,7 @@ To set up PostHog integration:
 
 ## Installation
 
-### Option 1: One-line installation (recommended)
+### Option 1: One-line installation
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/yourusername/client-side-canary-deployment@main/dist/canary.js"></script>
