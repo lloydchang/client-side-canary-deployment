@@ -40,7 +40,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
       
       - name: Install Dependencies
         run: npm install
@@ -96,14 +96,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
       
       - name: Install Dependencies
         run: npm install
       
-      - name: Make analytics script executable
-        run: chmod +x ./.github/scripts/analyze-canary.js
-        
       - name: Run canary analysis
         id: canary_analysis
         env:
@@ -174,7 +171,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
       
       - name: Install Dependencies
         run: npm install
