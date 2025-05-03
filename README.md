@@ -44,7 +44,7 @@ graph TD
         A[User Request] --> GA[Global Accelerator]
         GA --> SSDL[Regional Load Balancer]
         SSDL --> RLB{Server-Side Decision Logic}
-        RLB --> SSDL[Service Mesh - e.g. Istio or Linkerd]
+        RLB --> SM[Service Mesh - e.g. Istio or Linkerd]
         SM -->|95% of users| EP1[Envoy Proxy or Linkerd2-proxy to Stable]
         SM -->|5% of users| EP2[Envoy Proxy or Linkerd2-proxy to Canary]
         EP1 --> C[Stable Version Server]
