@@ -91,6 +91,11 @@
       display: block !important;
       z-index: 9999 !important;
       visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
     }
   </style>
 </head>
@@ -117,30 +122,67 @@
   </div>
   
   <script>
-    // Initialize canary first - OUTSIDE of DOMContentLoaded
-    // This ensures it's available as soon as possible
-    window.canary.init({
-      initialCanaryPercentage: 5
-    });
-    
-    // Wait for DOM to be fully loaded
+    // Keep track of initialization state
+    let canaryInitialized = false;
+    let versionSwitcherInitialized = false;
+
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM fully loaded');
       
-      // Force version switcher creation with stronger visibility settings
-      const switcher = new VersionSwitcher({
-        currentPage: 'home', // Mark home as current page
-        position: 'bottom-right',
-        switcherContainerId: 'version-switcher'
-      });
-      
-      console.log('Version switcher initialized');
-      
-      // Ensure the countdown functionality works by setting a larger delay
-      setTimeout(function() {
-        console.log('Starting countdown logic');
+      // Initialize canary with specific configuration
+      if (window.canary) {
+        window.canary.init({
+          initialCanaryPercentage: 5,
+          posthogEnabled: true,
+          posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+        });
         
-        // Get the assignment
+        canaryInitialized = true;
+        console.log('Canary initialized');
+      } else {
+        console.error('Canary not available');
+      }
+      
+      // Force version switcher creation with increased delay for reliability
+      setTimeout(function() {
+        if (window.VersionSwitcher) {
+          const switcher = new VersionSwitcher({
+            currentPage: 'home', // Mark home as current page
+            position: 'bottom-right',
+            switcherContainerId: 'version-switcher'
+          });
+          
+          versionSwitcherInitialized = true;
+          console.log('Version switcher initialized');
+          
+          // Force visibility immediately after creation
+          const switcherElement = document.getElementById('version-switcher');
+          if (switcherElement) {
+            switcherElement.style.display = 'block';
+            switcherElement.style.visibility = 'visible';
+            switcherElement.style.opacity = '1';
+            console.log('Version switcher visibility enforced immediately after creation');
+          }
+        } else {
+          console.error('VersionSwitcher not available');
+        }
+      }, 800); // Increased delay to ensure scripts are fully loaded
+      
+      // Ensure the countdown functionality works by ensuring canary initialization is complete
+      let countdownStarted = false;
+      const startCountdownWhenReady = function() {
+        if (countdownStarted) return; // Prevent duplicate timers
+        
+        console.log('Checking if ready for countdown...');
+        if (!window.canary || !window.canary._assignment) {
+          console.log('Canary assignment not ready yet, waiting...');
+          setTimeout(startCountdownWhenReady, 300); // Check again in 300ms
+          return;
+        }
+        
+        countdownStarted = true;
+        console.log('Starting countdown logic - canary assignment is ready');
+        
         const assignment = window.canary._assignment;
         
         // Debug information
@@ -208,7 +250,10 @@
           }
           console.warn('No canary assignment found');
         }
-      }, 1000); // Increased delay to ensure assignment is ready
+      };
+      
+      // Start the polling for canary assignment
+      setTimeout(startCountdownWhenReady, 1000);
     });
     
     // Additional check to make sure version switcher appears
