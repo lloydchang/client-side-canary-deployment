@@ -1,4 +1,4 @@
-name: Deploy and Analytics
+name: Canary Deployment & Analytics
 
 on:
   # For deployment
@@ -7,9 +7,18 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: 'Task to run (deploy or analyze)'
+        description: 'Task to run (deploy, analyze, or adjust-canary)'
         required: true
         default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - analyze
+          - adjust-canary
+      canary_percentage:
+        description: 'New canary percentage (only for adjust-canary task)'
+        required: false
+        type: number
   # For analytics
   schedule:
     - cron: '0 */6 * * *' # Run every 6 hours
@@ -77,7 +86,7 @@ jobs:
           single-commit: true          # Delete previous deployment history
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Enhanced Analytics job from canary-analytics.yml
+  # Analytics job
   analyze-canary:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'analyze')
     runs-on: ubuntu-latest
@@ -154,3 +163,67 @@ jobs:
           # This is where you would implement your rollback logic
           # For example, a script that updates configurations to direct all traffic to stable
           # Or trigger another workflow using the GitHub API
+  
+  # New job for adjusting canary percentage
+  adjust-canary:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'adjust-canary'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install Dependencies
+        run: npm install
+      
+      - name: Update Canary Configuration
+        run: |
+          mkdir -p config
+          
+          # Read current config if exists
+          if [ -f "config/canary-config.json" ]; then
+            CONFIG=$(cat config/canary-config.json)
+          else
+            # Create default config structure
+            CONFIG='{
+              "posthog": {
+                "apiKey": "${{ secrets.POSTHOG_PUBLIC_KEY }}",
+                "projectId": "${{ secrets.POSTHOG_PROJECT_ID }}",
+                "host": "https://us.i.posthog.com"
+              },
+              "canary": {
+                "initialPercentage": 5,
+                "maxPercentage": 50,
+                "incrementStep": 5
+              }
+            }'
+          fi
+          
+          # Update canary percentage
+          NEW_PERCENTAGE="${{ github.event.inputs.canary_percentage }}"
+          if [ -n "$NEW_PERCENTAGE" ]; then
+            CONFIG=$(echo "$CONFIG" | jq ".canary.initialPercentage = $NEW_PERCENTAGE")
+            echo "$CONFIG" > config/canary-config.json
+            echo "Updated canary percentage to $NEW_PERCENTAGE%"
+          else
+            echo "::error::No canary percentage provided"
+            exit 1
+          fi
+      
+      - name: Deploy Updated Config
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: config              # Only deploy the config folder
+          branch: gh-pages             # The branch to deploy to
+          target-folder: config        # Deploy to the config folder on gh-pages
+          clean: false                 # Don't remove other files
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create summary report
+        run: |
+          echo "# Canary Percentage Adjustment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Successfully updated canary percentage to ${{ github.event.inputs.canary_percentage }}%" >> $GITHUB_STEP_SUMMARY

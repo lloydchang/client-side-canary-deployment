@@ -229,12 +229,15 @@ View them anytime:
 
 ## Workflows
 
-The GitHub Actions workflow handles both deployment and analytics:
+The consolidated GitHub Actions workflow handles deployment, analytics, and canary adjustments:
 
-- **Deploy and Analytics workflow**: A consolidated workflow that:
+- **Canary Deployment & Analytics workflow**: A comprehensive workflow that:
   - Deploys the application and injects PostHog keys when triggered by pushes to main
   - Runs scheduled analytics every 6 hours to analyze canary deployment performance
-  - Supports manual triggering of either deployment or analytics tasks
+  - Supports manual triggering for three operations:
+    - `deploy`: Deploy the latest code to GitHub Pages
+    - `analyze`: Run analytics to evaluate canary performance
+    - `adjust-canary`: Update the canary percentage for traffic allocation
   - Provides detailed analytics reports in GitHub Actions summaries
   - Implements automatic rollback capability when error thresholds are exceeded
 
