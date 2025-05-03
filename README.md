@@ -42,9 +42,9 @@ graph LR
 graph TD
     subgraph "Server-Side Canary Deployment"
         A[User Request] --> GA[Global Accelerator]
-        GA --> RLB[Regional Load Balancer]
+        GA --> SSDL[Regional Load Balancer]
+        SSDL --> RLB{Server-Side Decision Logic}
         RLB --> SSDL[Service Mesh - e.g. Istio or Linkerd]
-        SSDL --> SM{Server-Side Decision Logic}
         SM -->|95% of users| EP1[Envoy Proxy or Linkerd2-proxy to Stable]
         SM -->|5% of users| EP2[Envoy Proxy or Linkerd2-proxy to Canary]
         EP1 --> C[Stable Version Server]
