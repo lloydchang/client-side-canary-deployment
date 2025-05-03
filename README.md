@@ -40,6 +40,14 @@ graph LR
 
 ```mermaid
 graph TD
+    subgraph "Client-Side Canary Deployment"
+        G[User Request] --> H[Static Web Server or CDN]
+        H --> I[index.html with JavaScript]
+        I --> J{Client-Side Decision Logic}
+        J -->|95% of users| K[Load Stable Version Assets]
+        J -->|5% of users| L[Load Canary Version Assets]
+    end
+
     subgraph "Server-Side Canary Deployment"
         A[User Request] --> GA[Global Accelerator]
         GA --> RLB[Regional Load Balancer]
@@ -53,14 +61,6 @@ graph TD
 
         C --> E[Response with Stable Version]
         D --> F[Response with Canary Version]
-    end
-
-    subgraph "Client-Side Canary Deployment"
-        G[User Request] --> H[Static Web Server or CDN]
-        H --> I[index.html with JavaScript]
-        I --> J{Client-Side Decision Logic}
-        J -->|95% of users| K[Load Stable Version Assets]
-        J -->|5% of users| L[Load Canary Version Assets]
     end
 
     style GA fill:#fdd,stroke:#333
