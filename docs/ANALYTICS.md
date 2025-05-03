@@ -41,11 +41,13 @@ Add the following secrets to your GitHub repository:
 
 ### 3. Workflow Configuration
 
-The `canary-analytics.yml` workflow has several configurable parameters:
+The analytics portion of the `Deploy and Analytics` workflow has several configurable parameters:
 
 - `ERROR_THRESHOLD`: Maximum acceptable error rate difference (default: 2%)
 - `TIMEFRAME`: Time period for analysis (default: 24h)
-- Schedule: By default, runs every 6 hours (adjust as needed)
+- Schedule: By default, runs every 6 hours
+
+You can also manually trigger the analytics task from the Actions tab in GitHub by selecting the "Deploy and Analytics" workflow and setting the task input to "analyze".
 
 ## Analyzing Results
 

@@ -229,10 +229,12 @@ View them anytime:
 
 ## Workflows
 
-The following GitHub Actions workflows interact with PostHog:
+The GitHub Actions workflow handles both deployment and analytics:
 
-- `deploy-gh-pages.yml`: Deploys the application and injects PostHog keys
-- `canary-analytics.yml`: Scheduled task to analyze canary deployment performance
+- **Deploy and Analytics workflow**: A consolidated workflow that:
+  - Deploys the application and injects PostHog keys when triggered by pushes to main
+  - Runs scheduled analytics every 6 hours to analyze canary deployment performance
+  - Supports manual triggering of either deployment or analytics tasks
 
 For more details on the analytics integration, see [ANALYTICS.md](./docs/ANALYTICS.md).
 
