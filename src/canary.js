@@ -534,7 +534,7 @@
             
             if (this._posthogErrorCount > 3) {
               this._posthogBlocked = true;
-              console.log('PostHog appears to be blocked or unavailable - disabling remote analytics');
+              if (this._debug) console.log('PostHog appears to be blocked or unavailable - disabling remote analytics');
             }
             
             if (this._debug) {
@@ -672,19 +672,31 @@
         this._metrics[version].pageviews = (this._metrics[version].pageviews || 0) + 1;
         this._saveMetrics();
         
-        // Use analytics system if available
-        if (window.canaryAnalytics && typeof window.canaryAnalytics.trackPageview === 'function') {
-          window.canaryAnalytics.trackPageview(version);
-        }
-        // Fallback to direct PostHog usage
-        else if (this._config.posthogEnabled && window.posthog) {
-          try {
-            window.posthog.capture('pageview', {
-              version: version,
-              timestamp: Date.now()
-            });
-          } catch (e) {
-            console.error('Error sending pageview to PostHog:', e);
+        // Only attempt remote tracking if PostHog isn't blocked
+        if (!this._posthogBlocked) {
+          // Use analytics system if available
+          if (window.canaryAnalytics && typeof window.canaryAnalytics.trackPageview === 'function') {
+            window.canaryAnalytics.trackPageview(version);
+          }
+          // Fallback to direct PostHog usage
+          else if (this._config.posthogEnabled && window.posthog) {
+            try {
+              window.posthog.capture('pageview', {
+                version: version,
+                timestamp: Date.now()
+              });
+            } catch (e) {
+              if (this._debug) console.error('Error sending pageview to PostHog:', e);
+              
+              // Increment error count
+              if (!this._posthogErrorCount) this._posthogErrorCount = 0;
+              this._posthogErrorCount++;
+              
+              // If we get multiple errors, assume PostHog is blocked
+              if (this._posthogErrorCount > 2) {
+                this._posthogBlocked = true;
+              }
+            }
           }
         }
       }
