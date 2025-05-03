@@ -189,7 +189,7 @@ Add PostHog analytics with one extra line:
 <!-- Make sure analytics.js is loaded -->
 <script src="https://cdn.example.com/analytics.js"></script>
 <script>
-  canary.analytics('ph_YOUR_KEY_HERE');
+  canary.analytics('phc_YOUR_KEY_HERE');
 </script>
 ```
 
