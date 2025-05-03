@@ -54,7 +54,7 @@ canary.customAssignment(function(user) {
 canary.identifyUser({
   id: 'user123',
   isPowerUser: true,
-  joinDate: '2023-05-01'
+  joinDate: '2025-05-01'
 });
 ```
 
