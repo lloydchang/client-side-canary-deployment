@@ -6,9 +6,6 @@
 (function(window) {
   'use strict';
   
-  // Store API key as a separate variable before using it
-  const POSTHOG_API_KEY = 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR';
-  
   // Default configuration
   const DEFAULT_CONFIG = {
     initialCanaryPercentage: 5,      // Start with 5% of users
@@ -22,8 +19,9 @@
     autoEvaluate: true,              // Auto-evaluate metrics periodically
     evaluationInterval: 3600000,     // Evaluate every hour (in milliseconds)
     errorThreshold: 1.5,             // Rollback if error rate 1.5x stable version
-    posthogEnabled: true,            // PostHog disabled by default
-    posthogApiKey: POSTHOG_API_KEY   // Use the variable instead of direct string
+    posthogEnabled: false,           // PostHog disabled by default
+    posthogApiKey: '',               // PostHog API key should be provided during initialization
+    posthogHost: 'https://us.i.posthog.com' // Default PostHog host
   };
   
   // Canary object
@@ -39,6 +37,7 @@
       'canary': { pageviews: 0, errors: 0, clicks: 0 }
     },
     _debug: false,
+    _analyticsInitialized: false,
     
     /**
      * Initialize the canary system
@@ -178,10 +177,28 @@
     /**
      * Configure analytics integration
      * @param {string} apiKey - PostHog API Key
+     * @param {Object} options - Additional PostHog options
      */
-    analytics: function(apiKey) {
+    analytics: function(apiKey, options = {}) {
+      if (!apiKey) {
+        console.error('PostHog API key is required');
+        return this;
+      }
+      
       this._config.posthogEnabled = true;
       this._config.posthogApiKey = apiKey;
+      
+      // Extend config with any additional options
+      if (options.host) {
+        this._config.posthogHost = options.host;
+      }
+      
+      // Initialize analytics if the analytics.js is already loaded
+      if (window.canaryAnalytics && typeof window.canaryAnalytics.initialize === 'function') {
+        window.canaryAnalytics.initialize(this._config);
+        this._analyticsInitialized = true;
+      }
+      
       return this;
     },
     
@@ -273,8 +290,12 @@
         }
       }
       
-      // Send to PostHog if enabled
-      if (this._config.posthogEnabled && window.posthog) {
+      // Send to analytics system if available
+      if (window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {
+        window.canaryAnalytics.trackEvent(eventName, eventProperties);
+      }
+      // Fallback to direct PostHog usage if analytics module not properly initialized
+      else if (this._config.posthogEnabled && window.posthog) {
         try {
           window.posthog.capture(eventName, eventProperties);
         } catch (e) {
@@ -410,8 +431,12 @@
         this._metrics[version].pageviews = (this._metrics[version].pageviews || 0) + 1;
         this._saveMetrics();
         
-        // Track via PostHog if enabled
-        if (this._config.posthogEnabled && window.posthog) {
+        // Use analytics system if available
+        if (window.canaryAnalytics && typeof window.canaryAnalytics.trackPageview === 'function') {
+          window.canaryAnalytics.trackPageview(version);
+        }
+        // Fallback to direct PostHog usage
+        else if (this._config.posthogEnabled && window.posthog) {
           try {
             window.posthog.capture('pageview', {
               version: version,
