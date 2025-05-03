@@ -32,6 +32,14 @@
         capture_pageview: true,
         persistence: 'localStorage'
       });
+
+    // Identify user with canary assignment
+    if (window.canary._assignment) {
+      window.posthog.identify(window.canary._assignment.id || 'anonymous', {
+        canaryVersion: window.canary._assignment.version,
+        assignedAt: window.canary._assignment.assignedAt
+      });
+    }
       
       console.log('PostHog analytics initialized');
     } catch (e) {

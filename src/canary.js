@@ -6,6 +6,9 @@
 (function(window) {
   'use strict';
   
+  // Store API key as a separate variable before using it
+  const POSTHOG_API_KEY = "phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR";
+  
   // Default configuration
   const DEFAULT_CONFIG = {
     initialCanaryPercentage: 5,      // Start with 5% of users
@@ -20,7 +23,7 @@
     evaluationInterval: 3600000,     // Evaluate every hour (in milliseconds)
     errorThreshold: 1.5,             // Rollback if error rate 1.5x stable version
     posthogEnabled: true,            // PostHog disabled by default
-    posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'  // PostHog API key as a string
+    posthogApiKey: POSTHOG_API_KEY   // Use the variable instead of direct string
   };
   
   // Canary object
@@ -264,8 +267,10 @@
       
       // Track clicks
       if (eventName.toLowerCase().includes('click')) {
-        this._metrics[eventProperties.version].clicks = 
-          (this._metrics[eventProperties.version].clicks || 0) + 1;
+        if (this._metrics[eventProperties.version]) {
+          this._metrics[eventProperties.version].clicks = 
+            (this._metrics[eventProperties.version].clicks || 0) + 1;
+        }
       }
       
       // Send to PostHog if enabled
