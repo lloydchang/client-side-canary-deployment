@@ -85,6 +85,13 @@
       font-size: 18px;
       color: #0366d6;
     }
+
+    /* Force version switcher to be visible */
+    #version-switcher.version-switcher {
+      display: block !important;
+      z-index: 9999 !important;
+      visibility: visible !important;
+    }
   </style>
 </head>
 <body>
@@ -110,21 +117,29 @@
   </div>
   
   <script>
+    // Initialize canary first - OUTSIDE of DOMContentLoaded
+    // This ensures it's available as soon as possible
+    window.canary.init({
+      initialCanaryPercentage: 5
+    });
+    
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
-      // Basic canary initialization
-      window.canary.init({
-        initialCanaryPercentage: 5
-      });
+      console.log('DOM fully loaded');
       
-      // Initialize version switcher with specific configuration
-      new VersionSwitcher({
+      // Force version switcher creation with stronger visibility settings
+      const switcher = new VersionSwitcher({
         currentPage: 'home', // Mark home as current page
-        position: 'bottom-right'
+        position: 'bottom-right',
+        switcherContainerId: 'version-switcher'
       });
       
-      // Set a small delay to ensure canary assignment is ready
+      console.log('Version switcher initialized');
+      
+      // Ensure the countdown functionality works by setting a larger delay
       setTimeout(function() {
+        console.log('Starting countdown logic');
+        
         // Get the assignment
         const assignment = window.canary._assignment;
         
@@ -149,22 +164,24 @@
           let secondsLeft = 10;
           countdownElement.textContent = secondsLeft;
           
-          // Update the countdown every second
+          console.log('Starting countdown from', secondsLeft, 'seconds');
+          
+          // Create and store the interval ID
           const countdownInterval = setInterval(function() {
             secondsLeft--;
+            console.log('Countdown:', secondsLeft);
             
             // Update the display
-            if (countdownElement) {
-              countdownElement.textContent = secondsLeft;
-            }
+            countdownElement.textContent = secondsLeft.toString();
             
             // Check if countdown is complete
             if (secondsLeft <= 0) {
+              console.log('Countdown complete, redirecting now');
+              
               // Clear the interval to stop the countdown
               clearInterval(countdownInterval);
               
               // Redirect based on assignment
-              console.log('Redirecting to', assignment.version, 'version');
               if (assignment.version === 'canary') {
                 window.location.href = 'canary/';
               } else {
@@ -172,6 +189,17 @@
               }
             }
           }, 1000);
+          
+          // Force the version switcher to be visible after a short delay
+          setTimeout(function() {
+            const switcherElement = document.getElementById('version-switcher');
+            if (switcherElement) {
+              switcherElement.style.display = 'block';
+              switcherElement.style.visibility = 'visible';
+              console.log('Version switcher visibility enforced');
+            }
+          }, 100);
+          
         } else {
           // Hide countdown if no assignment
           const countdownDiv = document.getElementById('countdown');
@@ -180,7 +208,30 @@
           }
           console.warn('No canary assignment found');
         }
-      }, 500); // Small delay to ensure assignment is ready
+      }, 1000); // Increased delay to ensure assignment is ready
+    });
+    
+    // Additional check to make sure version switcher appears
+    window.addEventListener('load', function() {
+      console.log('Window fully loaded');
+      const switcherElement = document.getElementById('version-switcher');
+      if (switcherElement) {
+        switcherElement.style.display = 'block';
+        switcherElement.style.visibility = 'visible';
+        console.log('Version switcher visibility enforced on window load');
+      } else {
+        console.warn('Version switcher element not found on window load');
+        // Try creating it again if it doesn't exist
+        setTimeout(function() {
+          if (!document.getElementById('version-switcher')) {
+            console.log('Recreating version switcher');
+            new VersionSwitcher({
+              currentPage: 'home',
+              position: 'bottom-right'
+            });
+          }
+        }, 500);
+      }
     });
   </script>
 </body>
