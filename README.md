@@ -62,6 +62,7 @@ graph TD
     end
 
     style GA fill:#fdd,stroke:#333
+    style SSDL fill:#af9,stroke:#333
     style RLB fill:#f9a,stroke:#333
     style SM fill:#fcf,stroke:#333
     style EP1 fill:#cff,stroke:#333
