@@ -229,17 +229,34 @@ View them anytime:
 
 ## Workflows
 
-The consolidated GitHub Actions workflow handles deployment, analytics, and canary adjustments:
+The project includes several GitHub Actions workflows that automate canary deployment processes:
 
-- **Canary Deployment & Analytics workflow**: A comprehensive workflow that:
-  - Deploys the application and injects PostHog keys when triggered by pushes to main
-  - Runs scheduled analytics every 6 hours to analyze canary deployment performance using `.github/scripts/analyze-canary.js`
-  - Supports manual triggering for three operations:
-    - `deploy`: Deploy the latest code to GitHub Pages
-    - `analyze`: Run analytics to evaluate canary performance
-    - `adjust-canary`: Update the canary percentage for traffic allocation
-  - Provides detailed analytics reports in GitHub Actions summaries
-  - Implements automatic rollback capability when error thresholds are exceeded
+### Main Workflow: Canary Deployment & Analytics
+
+The consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of canary deployment:
+
+- **Deployment**: Triggered by pushes to main branch
+  - Builds the project with npm/Rollup
+  - Injects PostHog API keys from GitHub secrets
+  - Deploys to GitHub Pages
+
+- **Analytics**: Runs every 6 hours by default
+  - Uses `analyze-canary.js` to query PostHog data
+  - Compares error rates between stable and canary versions
+  - Creates detailed reports in GitHub Actions summaries
+  - Implements automatic rollback if error thresholds are exceeded
+
+- **Manual Operations**: Can be manually triggered for:
+  - `deploy`: Deploy the latest code to GitHub Pages
+  - `analyze`: Run analytics to evaluate canary performance
+  - `adjust-canary`: Update the canary percentage for traffic allocation
+
+### Additional Workflows
+
+- **Evaluate Canary Metrics** (`evaluate-canary.yml`): Standalone evaluation workflow
+- **Canary Automation** (`canary-automation.yml`): Fully automated canary management
+
+For detailed information on workflows and scripts, see [docs/WORKFLOWS.md](./docs/WORKFLOWS.md).
 
 For more details on the analytics integration, see [docs/ANALYTICS.md](./docs/ANALYTICS.md).
 

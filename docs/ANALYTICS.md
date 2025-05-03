@@ -41,17 +41,32 @@ Add the following secrets to your GitHub repository:
 
 ### 3. Workflow Configuration
 
-The consolidated workflow file (`deploy-gh-pages.yml`) includes analytics capabilities with several configurable parameters:
+The project uses GitHub Actions workflows to automate analytics collection and decision-making:
 
-- `ERROR_THRESHOLD`: Maximum acceptable error rate difference (default: 2%)
-- `TIMEFRAME`: Time period for analysis (default: 24h)
-- Schedule: By default, runs every 6 hours
+#### Primary Workflow (`deploy-gh-pages.yml`)
 
-You can also manually trigger specific tasks from the Actions tab in GitHub by selecting the "Canary Deployment & Analytics" workflow and choosing one of these operations:
+This consolidated workflow handles deployment, analytics, and canary adjustments with several configurable parameters:
+
+- **Scheduled Analysis**: Runs every 6 hours by default to evaluate canary performance
+- **Configuration Options**:
+  - `ERROR_THRESHOLD`: Maximum acceptable error rate difference (default: 2%)
+  - `TIMEFRAME`: Time period for analysis (default: 24h)
+
+You can manually trigger specific tasks from the Actions tab:
 
 - **deploy**: Deploy the latest code to GitHub Pages
 - **analyze**: Run analytics to evaluate canary performance using `.github/scripts/analyze-canary.js`
 - **adjust-canary**: Change the percentage of users directed to the canary version
+
+#### Analysis Process
+
+The analytics workflow:
+1. Runs `analyze-canary.js` which queries PostHog for event data
+2. Compares pageviews and errors between stable and canary versions
+3. Calculates error rates and determines if thresholds are exceeded
+4. Generates a recommendation (continue or rollback)
+5. Creates detailed reports in the workflow summary
+6. Can trigger automatic rollback for high error rates
 
 #### Analysis Reports
 
