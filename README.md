@@ -40,18 +40,27 @@ graph LR
 
 ```mermaid
 graph TD
-    subgraph "Server-Side Canary Deployment"
+    subgraph "Server-Side Canary Deployment (Early Traffic Split)"
         A[User Request] --> GA[Global Accelerator]
-        GA --> SSDL{Server-Side Decision Logic}
-        SSDL --> RLB[Regional Load Balancer]
-        RLB --> SM[Service Mesh - e.g. Istio or Linkerd]
-        SM -->|95% of users| EP1[Envoy Proxy or Linkerd2-proxy to Stable]
-        SM -->|5% of users| EP2[Envoy Proxy or Linkerd2-proxy to Canary]
+        GA --> SSDL{Server-Side Decision Logic at Edge}
+        SSDL -->|95% of users| StablePath[Route to Stable]
+        SSDL -->|5% of users| CanaryPath[Route to Canary]
+    subgraph "Stable Traffic Flow"
+        StablePath --> RLB1[Regional Load Balancer - Stable]
+        RLB1 --> SM1[Service Mesh - Stable]
+        SM1 --> EP1[Envoy Proxy / Linkerd2-proxy - Stable]
         EP1 --> C[Stable Version Server]
-        EP2 --> D[Canary Version Server]
         C --> E[Response with Stable Version]
+    end
+    subgraph "Canary Traffic Flow"
+        CanaryPath --> RLB2[Regional Load Balancer - Canary]
+        RLB2 --> SM2[Service Mesh - Canary]
+        SM2 --> EP2[Envoy Proxy / Linkerd2-proxy - Canary]
+        EP2 --> D[Canary Version Server]
         D --> F[Response with Canary Version]
     end
+end
+
 
     subgraph "Client-Side Canary Deployment"
         G[User Request] --> H[Static Web Server or CDN]
