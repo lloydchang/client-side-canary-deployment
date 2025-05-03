@@ -20,7 +20,7 @@
     evaluationInterval: 3600000,     // Evaluate every hour (in milliseconds)
     errorThreshold: 1.5,             // Rollback if error rate 1.5x stable version
     posthogEnabled: true,           // PostHog disabled by default
-    posthogApiKey: phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR              // PostHog API key
+    posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'              // PostHog API key
   };
   
   // Canary object
