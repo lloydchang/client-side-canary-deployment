@@ -111,7 +111,7 @@
       if (this._assignment && this._assignment.features) {
         if (this._assignment.version === 'canary' && !(name in this._assignment.features)) {
           // For canary users, check PostHog first if enabled
-          if (this._config.posthogEnabled && window.posthog && this._features[name].usePostHogFlag) {
+          if (this._config.posthogEnabled && window.posthog && !window.posthog.__blocked && this._features[name].usePostHogFlag) {
             try {
               // Try to get flag value from PostHog
               const posthogFlag = window.posthog.isFeatureEnabled(name);
@@ -119,13 +119,15 @@
                 this._assignment.features[name] = posthogFlag;
                 this._saveAssignment();
                 
-                // Track feature flag evaluation
-                window.posthog.capture('feature_flag_evaluated', {
-                  feature: name,
-                  enabled: posthogFlag,
-                  source: 'posthog',
-                  version: this._assignment.version
-                });
+                // Only track if PostHog is actually working
+                if (!this._posthogBlocked && window.posthog.capture) {
+                  window.posthog.capture('feature_flag_evaluated', {
+                    feature: name,
+                    enabled: posthogFlag,
+                    source: 'posthog',
+                    version: this._assignment.version
+                  });
+                }
                 
                 return this;
               }
@@ -234,9 +236,39 @@
     _initPostHog: function() {
       if (this._config.posthogEnabled && this._config.posthogApiKey) {
         try {
+          // Set a flag to detect if loading fails
+          this._posthogAttempted = true;
+          this._posthogLoaded = false;
+          
+          // Create a timeout to check if PostHog loaded successfully
+          const posthogLoadTimeout = setTimeout(() => {
+            if (!window.posthog || !window.posthog.__loaded) {
+              console.log('PostHog failed to load - possibly blocked by browser extension');
+              this._posthogBlocked = true;
+              
+              // Setup minimal mock for required functions to avoid errors
+              if (!window.posthog) {
+                window.posthog = {
+                  capture: () => {},
+                  identify: () => {},
+                  isFeatureEnabled: () => null,
+                  reloadFeatureFlags: () => {},
+                  onFeatureFlags: () => {},
+                  __blocked: true
+                };
+              }
+              
+              // Trigger event to notify about blocked analytics
+              this._triggerEvent('analyticsBlocked', {
+                reason: 'client_blocker',
+                timestamp: Date.now()
+              });
+            }
+          }, 2000);
+          
           if (!window.posthog) {
             // Initialize PostHog using the HTML snippet approach
-            !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init bs ws ge fs capture De Ai $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetGroupPropertiesForFlags resetPersonPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+            !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init bs ws ge fs capture De Ai $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetGroupPropertiesForFlags resetPersonPropertiesForFlags resetGroupPropertiesForFlags resetPersonPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
           }
           
           // Initialize PostHog if not already initialized
@@ -245,12 +277,20 @@
               api_host: this._config.posthogHost || 'https://us.i.posthog.com',
               person_profiles: 'always',
               capture_pageview: true,
-              persistence: 'localStorage'
+              persistence: 'localStorage',
+              loaded: (posthog) => {
+                // Clear the timeout when PostHog loads successfully
+                clearTimeout(posthogLoadTimeout);
+                this._posthogLoaded = true;
+                console.log('PostHog loaded successfully');
+                
+                // Set up feature flag listeners here...
+              }
             });
             
             // Set up feature flag listeners
             window.posthog.onFeatureFlags(() => {
-              console.log('PostHog feature flags loaded');
+              if (this._debug) console.log('PostHog feature flags loaded');
               
               // If we have an assignment and features, update them
               if (this._assignment && this._features) {
@@ -262,7 +302,7 @@
                         this._assignment.features[name] = posthogFlag;
                       }
                     } catch (e) {
-                      console.warn(`Error checking PostHog feature flag ${name}:`, e);
+                      if (this._debug) console.warn(`Error checking PostHog feature flag ${name}:`, e);
                     }
                   }
                 }
@@ -285,6 +325,7 @@
           }
         } catch (e) {
           console.error('Error initializing PostHog:', e);
+          this._posthogBlocked = true;
         }
       }
     },
@@ -459,16 +500,45 @@
         }
       }
       
-      // Send to analytics system if available
-      if (window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {
-        window.canaryAnalytics.trackEvent(eventName, eventProperties);
+      // Always track locally regardless of remote analytics status
+      if (!this._metrics.events) {
+        this._metrics.events = [];
       }
-      // Fallback to direct PostHog usage if analytics module not properly initialized
-      else if (this._config.posthogEnabled && window.posthog) {
-        try {
-          window.posthog.capture(eventName, eventProperties);
-        } catch (e) {
-          console.error('Error sending event to PostHog:', e);
+      this._metrics.events.push({
+        name: eventName,
+        properties: eventProperties,
+        time: Date.now()
+      });
+      
+      // Keep events array from growing too large
+      if (this._metrics.events.length > 100) {
+        this._metrics.events = this._metrics.events.slice(-100);
+      }
+      
+      // Try remote tracking only if PostHog isn't known to be blocked
+      if (!this._posthogBlocked) {
+        // Send to analytics system if available
+        if (window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {
+          window.canaryAnalytics.trackEvent(eventName, eventProperties);
+        }
+        // Fallback to direct PostHog usage if analytics module not properly initialized
+        else if (this._config.posthogEnabled && window.posthog) {
+          try {
+            window.posthog.capture(eventName, eventProperties);
+          } catch (e) {
+            // Mark PostHog as blocked if we get consistent failures
+            if (!this._posthogErrorCount) this._posthogErrorCount = 0;
+            this._posthogErrorCount++;
+            
+            if (this._posthogErrorCount > 3) {
+              this._posthogBlocked = true;
+              console.log('PostHog appears to be blocked or unavailable - disabling remote analytics');
+            }
+            
+            if (this._debug) {
+              console.error('Error sending event to PostHog:', e);
+            }
+          }
         }
       }
       
