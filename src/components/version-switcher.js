@@ -52,16 +52,25 @@ class VersionSwitcher {
         if (!activePage) {
             // Check if URL contains /canary/ or /stable/
             const path = window.location.pathname;
-            if (path.includes('/canary/')) {
+            console.log('Current path for version detection:', path);
+            
+            // More robust detection for GitHub Pages and other environments
+            // Check for /canary/ or /canary at the end of the URL
+            if (path.includes('/canary/') || path.endsWith('/canary')) {
                 activePage = 'canary';
-            } else if (path.includes('/stable/')) {
+                console.log('Detected canary version from URL');
+            } 
+            // Check for /stable/ or /stable at the end of the URL
+            else if (path.includes('/stable/') || path.endsWith('/stable')) {
                 activePage = 'stable';
+                console.log('Detected stable version from URL');
             }
         }
         
-        // If still not determined, check assignment
+        // Now, only check assignment if path detection didn't work
         if (!activePage && window.canary && window.canary._assignment) {
             activePage = window.canary._assignment.version;
+            console.log('Using assignment from localStorage:', activePage);
         }
         
         // If we're on the root path and no specific page is set, assume it's home
