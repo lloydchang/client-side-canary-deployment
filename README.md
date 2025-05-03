@@ -39,9 +39,8 @@ graph LR
 ### How It Differs From Server-Side Canary Deployment
 
 ```mermaid
-%% File: canary_deployment_flows.mmd
 graph TD
-    subgraph "Server-Side Canary Deployment (Early Traffic Split)"
+    subgraph "Server-Side Canary Deployment"
         A[User Request] --> GA[Global Accelerator]
         GA --> SSDL{Server-Side Decision Logic at Edge}
         SSDL -->|95% of users| StablePath[Route to Stable]
