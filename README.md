@@ -47,7 +47,6 @@ graph TD
         J -->|95% of users| K[Load Stable Version Assets]
         J -->|5% of users| L[Load Canary Version Assets]
     end
-
     subgraph "Server-Side Canary Deployment"
         A[User Request] --> GA[Global Accelerator]
         GA --> RLB[Regional Load Balancer]
