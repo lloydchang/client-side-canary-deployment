@@ -241,8 +241,8 @@ The consolidated GitHub Actions workflow handles deployment, analytics, and cana
   - Provides detailed analytics reports in GitHub Actions summaries
   - Implements automatic rollback capability when error thresholds are exceeded
 
-For more details on the analytics integration, see [ANALYTICS.md](./docs/ANALYTICS.md).
+For more details on the analytics integration, see [docs/ANALYTICS.md](./docs/ANALYTICS.md).
 
 ## Want More Control?
 
-The one-line approach works for most cases, but you can [view advanced options in ADVANCED.md](ADVANCED.md).
+The one-line approach works for most cases, but you can view advanced options in [docs/ADVANCED.md](docs/ADVANCED.md).
