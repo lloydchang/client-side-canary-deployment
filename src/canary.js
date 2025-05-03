@@ -121,12 +121,16 @@
                 
                 // Only track if PostHog is actually working
                 if (!this._posthogBlocked && window.posthog.capture) {
-                  window.posthog.capture('feature_flag_evaluated', {
-                    feature: name,
-                    enabled: posthogFlag,
-                    source: 'posthog',
-                    version: this._assignment.version
-                  });
+                  try {
+                    window.posthog.capture('feature_flag_evaluated', {
+                      feature: name,
+                      enabled: posthogFlag,
+                      source: 'posthog',
+                      version: this._assignment.version
+                    });
+                  } catch (e) {
+                    if (this._debug) console.warn('Error tracking feature flag evaluation:', e);
+                  }
                 }
                 
                 return this;
@@ -243,7 +247,7 @@
           // Create a timeout to check if PostHog loaded successfully
           const posthogLoadTimeout = setTimeout(() => {
             if (!window.posthog || !window.posthog.__loaded) {
-              console.log('PostHog failed to load - possibly blocked by browser extension');
+              if (this._debug) console.log('PostHog failed to load - possibly blocked by browser extension');
               this._posthogBlocked = true;
               
               // Setup minimal mock for required functions to avoid errors
@@ -282,9 +286,7 @@
                 // Clear the timeout when PostHog loads successfully
                 clearTimeout(posthogLoadTimeout);
                 this._posthogLoaded = true;
-                console.log('PostHog loaded successfully');
-                
-                // Set up feature flag listeners here...
+                if (this._debug) console.log('PostHog loaded successfully');
               }
             });
             
