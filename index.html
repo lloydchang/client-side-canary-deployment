@@ -14,6 +14,22 @@
   <!-- Include the version switcher component -->
   <script src="src/components/version-switcher.js"></script>
   
+  <!-- Initialize canary right after scripts are loaded -->
+  <script>
+    try {
+      if (window.canary) {
+        window.canary.init({
+          initialCanaryPercentage: 5,
+          posthogEnabled: true,
+          posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+        });
+        console.log('Canary initialized on page load');
+      }
+    } catch (e) {
+      console.error('Failed to initialize canary on page load:', e);
+    }
+  </script>
+  
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -126,8 +142,8 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM fully loaded');
       
-      // Initialize canary first
-      if (window.canary) {
+      // Initialize canary first - this is now a backup if the head initialization failed
+      if (window.canary && !window.canary._assignment) {
         try {
           window.canary.init({
             initialCanaryPercentage: 5,
@@ -138,8 +154,6 @@
         } catch (e) {
           console.error('Error initializing canary:', e);
         }
-      } else {
-        console.error('Canary not available');
       }
       
       // Initialize version switcher with a delay to ensure it's visible

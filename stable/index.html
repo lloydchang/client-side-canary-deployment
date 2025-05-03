@@ -6,12 +6,21 @@
   <title>Stable Version</title>
   <script src="../src/canary.js"></script>
   <script>
-    // Initialize canary
-    window.canary.init({
-      posthogEnabled: true,
-      posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR',
-      version: 'stable'
-    });
+    // Initialize canary with proper error handling
+    try {
+      if (window.canary) {
+        window.canary.init({
+          posthogEnabled: true,
+          posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR',
+          version: 'stable'
+        });
+        console.log('Canary initialized in stable version');
+      } else {
+        console.error('Canary object not found. Check that canary.js loaded correctly.');
+      }
+    } catch (e) {
+      console.error('Error initializing canary:', e);
+    }
   </script>
   <script src="../src/analytics.js"></script>
   <script src="../src/config/canary-config.js"></script>
@@ -86,14 +95,22 @@
 
   <script>
     // Initialize version switcher
-    window.versionSwitcher = new VersionSwitcher({
-      onVersionSwitch: function(newVersion) {
-        window.canary.trackEvent('manual_version_switch', {
-          fromVersion: 'stable',
-          toVersion: newVersion,
-        });
-      }
-    });
+    try {
+      window.versionSwitcher = new VersionSwitcher({
+        onVersionSwitch: function(newVersion) {
+          if (window.canary && window.canary.trackEvent) {
+            window.canary.trackEvent('manual_version_switch', {
+              fromVersion: 'stable',
+              toVersion: newVersion,
+            });
+          } else {
+            console.error('Canary not initialized properly, cannot track version switch');
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Error initializing version switcher:', e);
+    }
     
     // Set up event handlers
     document.getElementById('track-click').addEventListener('click', function() {
@@ -129,9 +146,17 @@
     });
     
     // Track stable page view
-    window.canary.trackEvent('page_view', {
-      page: 'stable_home'
-    });
+    try {
+      if (window.canary && window.canary.trackEvent) {
+        window.canary.trackEvent('page_view', {
+          page: 'stable_home'
+        });
+      } else {
+        console.error('Canary not initialized properly, cannot track page view');
+      }
+    } catch (e) {
+      console.error('Error tracking page view:', e);
+    }
   </script>
 </body>
 </html>
