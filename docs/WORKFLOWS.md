@@ -1,21 +1,18 @@
 # GitHub Workflows & Scripts Documentation
 
-This document provides detailed information about the GitHub Actions workflows and scripts used in this project for canary deployment automation.
+This document provides detailed information about the GitHub Actions workflow and scripts used in this project for canary deployment automation.
 
-## Workflows Overview
+## Workflow Overview
 
-The project uses several GitHub Actions workflows to manage different aspects of canary deployments:
+The project uses a single GitHub Actions workflow to manage all aspects of canary deployments:
 
 | Workflow | File | Purpose |
 |----------|------|---------|
-| Canary Deployment & Analytics | `deploy-gh-pages.yml` | Main consolidated workflow for deployment, analytics, and adjustments |
-| Evaluate Canary Metrics | `evaluate-canary.yml` | Standalone canary performance evaluation |
-| Canary Deployment Evaluation | `canary-evaluation.yml` | Alternative evaluation workflow |
-| Canary Deployment Automation | `canary-automation.yml` | Automated canary management |
+| Canary Deployment & Analytics | `deploy-gh-pages.yml` | All-in-one workflow for deployment, analytics, and adjustments |
 
 ## Main Workflow: Canary Deployment & Analytics
 
-This is the primary workflow (`deploy-gh-pages.yml`) that handles all aspects of the canary deployment process.
+This consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of the canary deployment process.
 
 ### Triggers
 - **Push to main branch**: Automatic deployment
@@ -78,36 +75,9 @@ Script for updating the canary percentage configuration:
 node update-canary.js --percentage=20
 ```
 
-## Additional Workflows
-
-### Evaluate Canary Metrics (`evaluate-canary.yml`)
-A standalone workflow focused on evaluation that:
-- Queries PostHog for performance metrics
-- Makes promotion/rollback decisions
-- Updates configuration based on performance
-- Commits changes back to the repository
-
-### Canary Deployment Evaluation (`canary-evaluation.yml`)
-Alternative evaluation workflow that:
-- Runs the canary evaluator script
-- Commits configuration updates if needed
-
-### Canary Deployment Automation (`canary-automation.yml`)
-Fully automated workflow that:
-- Fetches analytics data
-- Updates configuration based on performance metrics
-- Commits changes automatically
-
-## Workflow Selection Guide
-
-- **For regular deployments**: Use the main `Canary Deployment & Analytics` workflow
-- **For quick analytics**: Use `Canary Deployment & Analytics` with the "analyze" option
-- **For emergency percentage adjustments**: Use `Canary Deployment & Analytics` with the "adjust-canary" option
-- **For completely automated management**: Enable the scheduled triggers in `canary-automation.yml`
-
 ## Setting Up GitHub Secrets
 
-For these workflows to function properly, you need to set up the following secrets in your GitHub repository:
+For the workflow to function properly, you need to set up the following secrets in your GitHub repository:
 
 1. `POSTHOG_API_KEY`: PostHog API key (for server-side operations)
 2. `POSTHOG_PUBLIC_KEY`: PostHog project API key (for client-side tracking)
@@ -115,7 +85,7 @@ For these workflows to function properly, you need to set up the following secre
 
 ## Environment Variables
 
-You can configure these workflows further with repository variables:
+You can configure the workflow further with repository variables:
 
 - `ERROR_THRESHOLD`: Maximum acceptable error rate difference (default: 0.02)
 - `TIMEFRAME`: Time period for analysis (default: 24h)

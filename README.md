@@ -229,11 +229,11 @@ View them anytime:
 
 ## Workflows
 
-The project includes several GitHub Actions workflows that automate canary deployment processes:
+The project includes a comprehensive GitHub Actions workflow that automates all canary deployment processes:
 
-### Main Workflow: Canary Deployment & Analytics
+### Canary Deployment & Analytics Workflow
 
-The consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of canary deployment:
+The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of canary deployment:
 
 - **Deployment**: Triggered by pushes to main branch
   - Builds the project with npm/Rollup
@@ -251,12 +251,7 @@ The consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of canary 
   - `analyze`: Run analytics to evaluate canary performance
   - `adjust-canary`: Update the canary percentage for traffic allocation
 
-### Additional Workflows
-
-- **Evaluate Canary Metrics** (`evaluate-canary.yml`): Standalone evaluation workflow
-- **Canary Automation** (`canary-automation.yml`): Fully automated canary management
-
-For detailed information on workflows and scripts, see [docs/WORKFLOWS.md](./docs/WORKFLOWS.md).
+For detailed information on the workflow and supporting scripts, see [docs/WORKFLOWS.md](./docs/WORKFLOWS.md).
 
 For more details on the analytics integration, see [docs/ANALYTICS.md](./docs/ANALYTICS.md).
 

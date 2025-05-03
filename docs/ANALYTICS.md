@@ -41,11 +41,11 @@ Add the following secrets to your GitHub repository:
 
 ### 3. Workflow Configuration
 
-The project uses GitHub Actions workflows to automate analytics collection and decision-making:
+The project uses a GitHub Actions workflow to automate analytics collection and decision-making:
 
 #### Primary Workflow (`deploy-gh-pages.yml`)
 
-This consolidated workflow handles deployment, analytics, and canary adjustments with several configurable parameters:
+This all-in-one workflow handles deployment, analytics, and canary adjustments with several configurable parameters:
 
 - **Scheduled Analysis**: Runs every 6 hours by default to evaluate canary performance
 - **Configuration Options**:
