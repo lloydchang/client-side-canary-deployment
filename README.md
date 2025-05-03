@@ -36,7 +36,7 @@ graph LR
  - **JavaScript-based assignment**: Uses browser's localStorage (not server-side sessions) and JavaScript for user assignment
  - **Analytics-driven**: Collects metrics to evaluate canary performance vs. stable version
  
-### How It Differs From Traditional Server-Side Approaches
+### How It Differs From Server-Side Canary Deployment
 
 ```mermaid
 graph TD
