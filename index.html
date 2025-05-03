@@ -110,51 +110,77 @@
   </div>
   
   <script>
-    // Initialize canary
+    // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
       // Basic canary initialization
       window.canary.init({
         initialCanaryPercentage: 5
       });
       
-      // Initialize version switcher
+      // Initialize version switcher with specific configuration
       new VersionSwitcher({
-        currentPage: 'home' // Mark home as current page
+        currentPage: 'home', // Mark home as current page
+        position: 'bottom-right'
       });
       
-      // Redirect to appropriate version based on assignment
-      const assignment = window.canary._assignment;
-      if (assignment && assignment.version) {
-        // Update the message to show which version was assigned
-        const assignedVersionText = document.getElementById('assigned-version-text');
-        assignedVersionText.textContent = assignment.version + ' version';
+      // Set a small delay to ensure canary assignment is ready
+      setTimeout(function() {
+        // Get the assignment
+        const assignment = window.canary._assignment;
         
-        let secondsLeft = 10;
-        const countdownElement = document.getElementById('countdown-number');
+        // Debug information
+        console.log('Canary assignment:', assignment);
         
-        // Update the countdown every second
-        const countdownInterval = setInterval(function() {
-          secondsLeft--;
+        if (assignment && assignment.version) {
+          // Update the message to show which version was assigned
+          const assignedVersionText = document.getElementById('assigned-version-text');
+          if (assignedVersionText) {
+            assignedVersionText.textContent = assignment.version + ' version';
+          }
+          
+          // Get countdown element
+          const countdownElement = document.getElementById('countdown-number');
+          if (!countdownElement) {
+            console.error('Countdown element not found');
+            return;
+          }
+          
+          // Start with 10 seconds
+          let secondsLeft = 10;
           countdownElement.textContent = secondsLeft;
           
-          if (secondsLeft <= 0) {
-            clearInterval(countdownInterval);
-            if (assignment.version === 'canary') {
-              window.location.href = 'canary/';
-            } else {
-              window.location.href = 'stable/';
+          // Update the countdown every second
+          const countdownInterval = setInterval(function() {
+            secondsLeft--;
+            
+            // Update the display
+            if (countdownElement) {
+              countdownElement.textContent = secondsLeft;
             }
+            
+            // Check if countdown is complete
+            if (secondsLeft <= 0) {
+              // Clear the interval to stop the countdown
+              clearInterval(countdownInterval);
+              
+              // Redirect based on assignment
+              console.log('Redirecting to', assignment.version, 'version');
+              if (assignment.version === 'canary') {
+                window.location.href = 'canary/';
+              } else {
+                window.location.href = 'stable/';
+              }
+            }
+          }, 1000);
+        } else {
+          // Hide countdown if no assignment
+          const countdownDiv = document.getElementById('countdown');
+          if (countdownDiv) {
+            countdownDiv.style.display = 'none';
           }
-        }, 1000);
-        
-        // Set the timeout to match the countdown
-        setTimeout(function() {
-          clearInterval(countdownInterval);
-        }, 10000);
-      } else {
-        // Hide countdown if no assignment
-        document.getElementById('countdown').style.display = 'none';
-      }
+          console.warn('No canary assignment found');
+        }
+      }, 500); // Small delay to ensure assignment is ready
     });
   </script>
 </body>
