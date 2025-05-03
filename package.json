@@ -15,7 +15,7 @@
     "deployment"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "GNU AFFERO GENERAL PUBLIC LICENSE",
   "files": [
     "dist/",
     "src/",
