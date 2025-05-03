@@ -19,8 +19,8 @@
     autoEvaluate: true,              // Auto-evaluate metrics periodically
     evaluationInterval: 3600000,     // Evaluate every hour (in milliseconds)
     errorThreshold: 1.5,             // Rollback if error rate 1.5x stable version
-    posthogEnabled: false,           // PostHog disabled by default
-    posthogApiKey: null              // PostHog API key
+    posthogEnabled: true,           // PostHog disabled by default
+    posthogApiKey: phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR              // PostHog API key
   };
   
   // Canary object
