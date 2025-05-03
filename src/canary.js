@@ -50,6 +50,9 @@
       // Load or create assignment
       this._loadAssignment();
       
+      // Initialize PostHog
+      this._initPostHog();
+      
       // Set up error tracking
       this._setupErrorTracking();
       
@@ -98,7 +101,8 @@
         initialPercentage: this._config.initialCanaryPercentage,
         evaluationCriteria: {
           errorThreshold: this._config.errorThreshold
-        }
+        },
+        usePostHogFlag: true // Whether to use PostHog feature flag if available
       };
       
       this._features[name] = { ...defaultOptions, ...options };
@@ -106,18 +110,183 @@
       // Update assignment feature flags if necessary
       if (this._assignment && this._assignment.features) {
         if (this._assignment.version === 'canary' && !(name in this._assignment.features)) {
-          // For canary users, enable feature based on random percentage
+          // For canary users, check PostHog first if enabled
+          if (this._config.posthogEnabled && window.posthog && this._features[name].usePostHogFlag) {
+            try {
+              // Try to get flag value from PostHog
+              const posthogFlag = window.posthog.isFeatureEnabled(name);
+              if (posthogFlag !== null && posthogFlag !== undefined) {
+                this._assignment.features[name] = posthogFlag;
+                this._saveAssignment();
+                
+                // Track feature flag evaluation
+                window.posthog.capture('feature_flag_evaluated', {
+                  feature: name,
+                  enabled: posthogFlag,
+                  source: 'posthog',
+                  version: this._assignment.version
+                });
+                
+                return this;
+              }
+            } catch (e) {
+              console.warn(`Error checking PostHog feature flag ${name}:`, e);
+            }
+          }
+          
+          // Fall back to random percentage if PostHog flag not available
           const shouldEnable = Math.random() * 100 < this._features[name].initialPercentage;
           this._assignment.features[name] = shouldEnable;
           this._saveAssignment();
         } else if (!(name in this._assignment.features)) {
-          // For stable users, disable by default
+          // For stable users, check PostHog first if enabled
+          if (this._config.posthogEnabled && window.posthog && this._features[name].usePostHogFlag) {
+            try {
+              // Try to get flag value from PostHog
+              const posthogFlag = window.posthog.isFeatureEnabled(name);
+              if (posthogFlag !== null && posthogFlag !== undefined) {
+                this._assignment.features[name] = posthogFlag;
+                this._saveAssignment();
+                
+                // Track feature flag evaluation
+                window.posthog.capture('feature_flag_evaluated', {
+                  feature: name,
+                  enabled: posthogFlag,
+                  source: 'posthog',
+                  version: this._assignment.version
+                });
+                
+                return this;
+              }
+            } catch (e) {
+              console.warn(`Error checking PostHog feature flag ${name}:`, e);
+            }
+          }
+          
+          // Default to disabled for stable users if PostHog flag not available
           this._assignment.features[name] = false;
           this._saveAssignment();
         }
       }
       
       return this;
+    },
+    
+    /**
+     * Reload feature flags from PostHog
+     * @returns {Promise} Promise resolving when flags have been reloaded
+     */
+    reloadFeatureFlags: function() {
+      if (!this._config.posthogEnabled || !window.posthog) {
+        return Promise.resolve(false);
+      }
+      
+      return new Promise((resolve, reject) => {
+        try {
+          // Reload PostHog feature flags
+          window.posthog.reloadFeatureFlags();
+          
+          // Wait for flags to reload (PostHog doesn't provide a callback for this)
+          setTimeout(() => {
+            // Update all features
+            for (const [name, options] of Object.entries(this._features)) {
+              if (options.usePostHogFlag) {
+                try {
+                  const posthogFlag = window.posthog.isFeatureEnabled(name);
+                  if (posthogFlag !== null && posthogFlag !== undefined) {
+                    // Only update if the value has changed
+                    if (this._assignment.features[name] !== posthogFlag) {
+                      this._assignment.features[name] = posthogFlag;
+                      
+                      // Track feature flag change
+                      window.posthog.capture('feature_flag_changed', {
+                        feature: name,
+                        enabled: posthogFlag,
+                        source: 'posthog_reload',
+                        version: this._assignment ? this._assignment.version : 'unknown'
+                      });
+                    }
+                  }
+                } catch (e) {
+                  console.warn(`Error reloading PostHog feature flag ${name}:`, e);
+                }
+              }
+            }
+            
+            // Save updated assignment
+            if (this._assignment) {
+              this._saveAssignment();
+            }
+            
+            resolve(true);
+          }, 500);
+        } catch (e) {
+          console.error('Error reloading PostHog feature flags:', e);
+          reject(e);
+        }
+      });
+    },
+    
+    /**
+     * Initialize PostHog integration
+     * @private
+     */
+    _initPostHog: function() {
+      if (this._config.posthogEnabled && this._config.posthogApiKey) {
+        try {
+          if (!window.posthog) {
+            // Initialize PostHog using the HTML snippet approach
+            !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init bs ws ge fs capture De Ai $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetGroupPropertiesForFlags resetPersonPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+          }
+          
+          // Initialize PostHog if not already initialized
+          if (window.posthog && !window.posthog.__loaded) {
+            window.posthog.init(this._config.posthogApiKey, {
+              api_host: this._config.posthogHost || 'https://us.i.posthog.com',
+              person_profiles: 'always',
+              capture_pageview: true,
+              persistence: 'localStorage'
+            });
+            
+            // Set up feature flag listeners
+            window.posthog.onFeatureFlags(() => {
+              console.log('PostHog feature flags loaded');
+              
+              // If we have an assignment and features, update them
+              if (this._assignment && this._features) {
+                for (const [name, options] of Object.entries(this._features)) {
+                  if (options.usePostHogFlag) {
+                    try {
+                      const posthogFlag = window.posthog.isFeatureEnabled(name);
+                      if (posthogFlag !== null && posthogFlag !== undefined) {
+                        this._assignment.features[name] = posthogFlag;
+                      }
+                    } catch (e) {
+                      console.warn(`Error checking PostHog feature flag ${name}:`, e);
+                    }
+                  }
+                }
+                
+                this._saveAssignment();
+              }
+            });
+            
+            // Identify user if we have an assignment
+            if (this._assignment) {
+              window.posthog.identify(
+                this._assignment.userId || 'user_' + this._assignment.assignedAt,
+                {
+                  canary_version: this._assignment.version,
+                  assigned_at: this._assignment.assignedAt,
+                  percentage: this._assignment.percentage
+                }
+              );
+            }
+          }
+        } catch (e) {
+          console.error('Error initializing PostHog:', e);
+        }
+      }
     },
     
     /**
