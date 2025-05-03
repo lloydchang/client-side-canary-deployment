@@ -30,9 +30,24 @@ jobs:
       
       - name: Replace PostHog Keys
         run: |
-          # Replace placeholder values with actual keys from secrets
-          sed -i 's/__POSTHOG_PUBLIC_KEY__/${{ secrets.POSTHOG_PUBLIC_KEY }}/g' config/canary-config.json
-          sed -i 's/__POSTHOG_PROJECT_ID__/${{ secrets.POSTHOG_PROJECT_ID }}/g' config/canary-config.json
+          # Create config directory if it doesn't exist
+          mkdir -p config
+          
+          # Create canary config file with PostHog keys
+          cat > config/canary-config.json << EOF
+          {
+            "posthog": {
+              "apiKey": "${{ secrets.POSTHOG_PUBLIC_KEY }}",
+              "projectId": "${{ secrets.POSTHOG_PROJECT_ID }}",
+              "host": "https://us.i.posthog.com"
+            },
+            "canary": {
+              "initialPercentage": 5,
+              "maxPercentage": 50,
+              "incrementStep": 5
+            }
+          }
+          EOF
       
       - name: Configure Base Path
         run: |

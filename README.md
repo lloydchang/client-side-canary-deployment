@@ -1,5 +1,7 @@
 # Client-Side Canary Deployment
 
+One-line solution for client-side canary deployments and feature flags.
+
 ## Overview
 
 This project demonstrates how to implement canary deployments for static web applications primarily on the client side. It enables gradual feature rollouts to a subset of users without requiring server-side infrastructure such as load balancers, service meshes, or global accelerators. Traffic-shaping decisions—such as whether a user sees the new or old version—are made directly in the user's browser using JavaScript, potentially based on client-side cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
@@ -78,6 +80,32 @@ graph TD
     style EP2 fill:#ccf,stroke:#333
     style J fill:#af9,stroke:#333
 ```
+
+## PostHog Analytics Integration
+
+This project uses PostHog for analytics tracking in canary deployments. The system automatically:
+
+- Tracks pageviews and events for stable and canary versions
+- Reports errors and interactions
+- Manages feature flag state
+
+### GitHub Actions Integration
+
+Our GitHub Actions workflows interact with PostHog in several ways:
+
+1. **Deployment**: The workflow injects PostHog API keys from GitHub secrets
+2. **Analytics Reporting**: A scheduled workflow fetches analytics data to monitor canary performance
+3. **Automated Rollbacks**: If error rates in the canary version exceed thresholds, an automated rollback can be triggered
+
+### Setup Requirements
+
+To set up PostHog integration:
+
+1. Create a PostHog account and project
+2. Add the following secrets to your GitHub repository:
+   - `POSTHOG_API_KEY`: Your PostHog API key for server-side operations
+   - `POSTHOG_PUBLIC_KEY`: Your PostHog public key for client-side tracking
+   - `POSTHOG_PROJECT_ID`: Your PostHog project ID
 
 ## Installation
 
@@ -198,6 +226,15 @@ View them anytime:
 ```html
 <button onclick="console.table(canary.getResults())">Show Canary Results</button>
 ```
+
+## Workflows
+
+The following GitHub Actions workflows interact with PostHog:
+
+- `deploy-gh-pages.yml`: Deploys the application and injects PostHog keys
+- `canary-analytics.yml`: Scheduled task to analyze canary deployment performance
+
+For more details on the analytics integration, see [ANALYTICS.md](./docs/ANALYTICS.md).
 
 ## Want More Control?
 
