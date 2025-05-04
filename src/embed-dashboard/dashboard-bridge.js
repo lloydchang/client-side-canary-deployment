@@ -42,23 +42,56 @@
         // Make data globally available
         window.dashboardData = dashboardData;
         
-        // Give Next.js some time to initialize before calling init
-        setTimeout(() => {
-          // Initialize the React application
-          if (window.__NEXT_DASHBOARD_INIT__) {
-            try {
-              window.__NEXT_DASHBOARD_INIT__(dashboardData);
-              console.log('Dashboard bridge: React dashboard initialized successfully');
-            } catch(e) {
-              console.error('Dashboard bridge: Failed to initialize React dashboard:', e);
-              // The global data is still available via window.dashboardData
-            }
-          } else {
-            console.error('Dashboard bridge: Dashboard initialization function not found');
+        // Create a function to safely initialize the dashboard
+        const safeInitDashboard = () => {
+          // Only initialize if Next.js is ready
+          if (typeof self.__NEXT_LOADED_PAGES__ === 'undefined' || 
+              !Array.isArray(self.__NEXT_LOADED_PAGES__) || 
+              self.__NEXT_LOADED_PAGES__.length === 0) {
+            console.log('Dashboard bridge: Next.js not fully loaded yet, waiting...');
+            return false;
           }
-        }, 300); // Short delay to let Next.js initialize
+          
+          try {
+            window.__NEXT_DASHBOARD_INIT__(dashboardData);
+            console.log('Dashboard bridge: React dashboard initialized successfully');
+            return true;
+          } catch(e) {
+            console.error('Dashboard bridge: Failed to initialize React dashboard:', e);
+            // Make sure data is still available via the global variable
+            window.dashboardData = dashboardData;
+            window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
+            return false;
+          }
+        };
         
-        // Set up periodic refresh
+        // Try to initialize with increasing timeouts to ensure Next.js is ready
+        let attempts = 0;
+        const maxAttempts = 5;
+        
+        const attemptInit = () => {
+          if (attempts >= maxAttempts) {
+            console.warn('Dashboard bridge: Max init attempts reached. Using fallback.');
+            window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
+            return;
+          }
+          
+          attempts++;
+          const timeoutMs = 300 * attempts; // Increasing timeout: 300ms, 600ms, 900ms, etc.
+          
+          console.log(`Dashboard bridge: Init attempt ${attempts}/${maxAttempts} in ${timeoutMs}ms`);
+          
+          setTimeout(() => {
+            if (!safeInitDashboard()) {
+              attemptInit(); // Try again with a longer timeout
+            }
+          }, timeoutMs);
+        };
+        
+        // Start the initialization attempts
+        attemptInit();
+        
+        // Set up periodic refresh regardless of initialization status
         setInterval(() => {
           if (window.canary) {
             // Update the dashboard data
