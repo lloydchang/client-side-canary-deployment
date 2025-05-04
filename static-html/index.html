@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canary Version</title>
+  
+  <!-- Add version checker script before other scripts -->
+  <script>
+    // Check for updated version and refresh if needed
+    (function() {
+      const checkForUpdates = async () => {
+        try {
+          // Add a cache-busting query parameter
+          const response = await fetch('../version.json?nocache=' + new Date().getTime());
+          if (!response.ok) return;
+          
+          const data = await response.json();
+          const currentVersion = localStorage.getItem('app-version');
+          
+          // Update footer version and timestamp display
+          const versionElement = document.getElementById('app-version');
+          const lastUpdatedElement = document.getElementById('last-updated');
+          
+          if (versionElement) {
+            versionElement.textContent = data.version;
+          }
+          
+          if (lastUpdatedElement && data.lastUpdated) {
+            try {
+              // Parse the date and format it in a more compatible way
+              const date = new Date(data.lastUpdated);
+              
+              // Create a more compatible date formatting approach
+              const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+              };
+              
+              lastUpdatedElement.textContent = date.toLocaleString(undefined, options);
+            } catch (err) {
+              console.error('Error formatting date:', err);
+              // Fallback to displaying the raw timestamp
+              lastUpdatedElement.textContent = data.lastUpdated;
+            }
+          }
+          
+          if (currentVersion && currentVersion !== data.version) {
+            console.log('New version detected, refreshing page...');
+            localStorage.setItem('app-version', data.version);
+            window.location.reload(true); // Force reload from server
+          } else {
+            localStorage.setItem('app-version', data.version);
+          }
+        } catch (err) {
+          console.error('Failed to check for updates:', err);
+        }
+      };
+      
+      // Check immediately and then every 5 minutes
+      checkForUpdates();
+      setInterval(checkForUpdates, 5 * 60 * 1000);
+    })();
+  </script>
+  
+  <script src="../src/canary.js"></script>
+  <script>
+    // Initialize canary with proper error handling
+    try {
+      if (window.canary) {
+        window.canary.init({
+          posthogEnabled: true,
+          posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR',
+          version: 'canary'
+        });
+        console.log('Canary initialized in canary version');
+      } else {
+        console.error('Canary object not found. Check that canary.js loaded correctly.');
+      }
+    } catch (e) {
+      console.error('Error initializing canary:', e);
+    }
+  </script>
+  <script src="../src/analytics.js"></script>
+  <script src="../src/config/canary-config.js"></script>
+  <script src="../src/components/version-switcher.js"></script>
+  <style>
+    /* Red text on black background for canary version */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: black;
+      color: red;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1, h2, h3 {
+      color: #ff5555;
+      margin-top: 0;
+    }
+    
+    .card {
+      border: 1px solid #500;
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background-color: #1a0000;
+    }
+    
+    button {
+      background-color: #800;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    
+    button:hover {
+      background-color: #a00;
+    }
+    
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .feature-item {
+      padding: 5px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .feature-enabled {
+      color: #00ff00;
+    }
+    
+    .feature-disabled {
+      color: #ff5555;
+    }
+    
+    pre {
+      background-color: #300;
+      color: #f55;
+      padding: 10px;
+      border-radius: 4px;
+      overflow: auto;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 8px;
+      background-color: #f00;
+      color: #fff;
+    }
+
+    /* Footer styles */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #ff5555;
+      font-size: 14px;
+      border-top: 1px solid #500;
+    }
+  </style>
+  <!-- Dashboard Assets -->
+  <link rel="stylesheet" href="../src/embed-dashboard/dashboard.css">
+  <script src="../src/embed-dashboard/dashboard.js"></script>
+  <script src="../src/embed-dashboard/dashboard-bridge.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Canary Version</h1>
+    <p>This is the canary version of the application with red text on black background.</p>
+    
+    <div class="card">
+      <h2>About This Application</h2>
+      <p>This demonstrates client-side canary deployment functionality. You can switch back to the stable version using the Version Switcher in the bottom right corner.</p>
+      
+      <h3>Enabled Features:</h3>
+      <ul id="feature-list" class="feature-list"></ul>
+    </div>
+    
+    <div class="card">
+      <h2>Test Controls</h2>
+      <button id="track-click">Track Click</button>
+      <button id="simulate-error">Simulate Error</button>
+      <button id="show-metrics">Show Metrics</button>
+      <pre id="metrics-output" style="display: none;"></pre>
+    </div>
+    
+    <!-- Dashboard Container -->
+    <div class="card">
+      <h2>Dashboard</h2>
+      <div id="dashboard-root" style="margin: 10px 0;"></div>
+    </div>
+    
+    <!-- Add version footer -->
+    <div class="footer">
+      <p>Version: <span id="app-version">Loading...</span> | Last Updated: <span id="last-updated">Loading...</span></p>
+    </div>
+  </div>
+
+  <script>
+    // Initialize version switcher
+    try {
+      window.versionSwitcher = new VersionSwitcher({
+        onVersionSwitch: function(newVersion) {
+          if (window.canary && window.canary.trackEvent) {
+            window.canary.trackEvent('manual_version_switch', {
+              fromVersion: 'canary',
+              toVersion: newVersion,
+            });
+          } else {
+            console.error('Canary not initialized properly, cannot track version switch');
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Error initializing version switcher:', e);
+    }
+    
+    // Display feature flags
+    function displayFeatureFlags() {
+      const featureList = document.getElementById('feature-list');
+      if (featureList && window.CanaryConfig && window.CanaryConfig.featureFlags) {
+        featureList.innerHTML = '';
+        
+        for (const [name, enabled] of Object.entries(window.CanaryConfig.featureFlags)) {
+          const item = document.createElement('li');
+          item.className = 'feature-item';
+          item.innerHTML = `
+            <span class="${enabled ? 'feature-enabled' : 'feature-disabled'}">
+              ${enabled ? '✓' : '✗'} ${name}
+            </span>
+          `;
+          featureList.appendChild(item);
+        }
+      }
+    }
+    
+    // Set up event handlers
+    document.getElementById('track-click').addEventListener('click', function() {
+      window.canary.trackEvent('button_click', {
+        button: 'track-click',
+        version: 'canary'
+      });
+      alert('Event tracked in canary version!');
+    });
+    
+    document.getElementById('simulate-error').addEventListener('click', function() {
+      window.canary.trackEvent('simulated_error_triggered', {
+        type: 'user_initiated'
+      });
+      try {
+        throw new Error('Simulated canary testing error');
+      } catch (error) {
+        alert('Simulated error tracked! Check the console.');
+        console.error('Simulated error for canary testing:', error);
+      }
+    });
+    
+    document.getElementById('show-metrics').addEventListener('click', function() {
+      const output = document.getElementById('metrics-output');
+      if (window.canary) {
+        const metrics = window.canary._metrics;
+        const posthogStatus = window.canary._posthogBlocked ? 
+          'BLOCKED' : 'Working';
+        
+        output.innerHTML = 
+          '<h3>Metrics</h3>' +
+          '<p><strong>PostHog Status:</strong> ' + posthogStatus + '</p>' +
+          '<h4>Stable Version:</h4>' +
+          '<ul>' +
+            '<li>Pageviews: ' + metrics.stable.pageviews + '</li>' +
+            '<li>Errors: ' + metrics.stable.errors + '</li>' +
+            '<li>Clicks: ' + metrics.stable.clicks + '</li>' +
+          '</ul>' +
+          '<h4>Canary Version:</h4>' +
+          '<ul>' +
+            '<li>Pageviews: ' + metrics.canary.pageviews + '</li>' +
+            '<li>Errors: ' + metrics.canary.errors + '</li>' +
+            '<li>Clicks: ' + metrics.canary.clicks + '</li>' +
+          '</ul>' +
+          '<h4>Last ' + (metrics.events ? metrics.events.length : 0) + ' Events:</h4>' +
+          '<pre>' + JSON.stringify(metrics.events, null, 2) + '</pre>';
+      } else {
+        output.textContent = 'Analytics not available';
+      }
+      
+      output.style.display = output.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    // Display feature flags on page load
+    document.addEventListener('DOMContentLoaded', displayFeatureFlags);
+    
+    // Track canary page view
+    try {
+      if (window.canary && window.canary.trackEvent) {
+        window.canary.trackEvent('page_view', {
+          page: 'canary_home'
+        });
+      } else {
+        console.error('Canary not initialized properly, cannot track page view');
+      }
+    } catch (e) {
+      console.error('Error tracking page view:', e);
+    }
+
+    // Initialize the dashboard after canary is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if the root element exists
+      const dashboardRoot = document.getElementById('dashboard-root');
+      if (!dashboardRoot) {
+        console.error('Dashboard root element not found');
+        return;
+      }
+
+      // Create React root element
+      const reactRoot = document.createElement('div');
+      reactRoot.id = 'dashboard';
+      dashboardRoot.appendChild(reactRoot);
+
+      // Wait for canary to be available before initializing
+      const checkCanary = setInterval(() => {
+        if (window.canary) {
+          clearInterval(checkCanary);
+          console.log('Initializing dashboard with dashboard data');
+          // The Next.js app will use the global canary object
+        }
+      }, 500);
+    });
+  </script>
+</body>
+</html>
