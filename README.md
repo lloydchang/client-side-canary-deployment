@@ -40,7 +40,7 @@ graph LR
         M -->|Yes| O{Can Increase Canary %?}
         O -->|Yes| P[Adjust Canary Percentage Upward]
         O -->|No| Q[Maintain Current State]
-        N --> R[Update version.json]
+        N --> R[Update version.json served by GitHub Pages]
         P --> R
     end
 ```
@@ -49,7 +49,7 @@ graph LR
 graph LR
     subgraph Client-Side: Update Detection & Reload
         U[User Loaded Web Page]
-        U --> V[Check version.json for updates]
+        U --> V[Check version.json for updates served by GitHub Pages]
         V -->|Version Changed| R["Trigger Page Reload via JS"]
         V -->|No Change| S[No Reload - Continue as Normal]
     end
