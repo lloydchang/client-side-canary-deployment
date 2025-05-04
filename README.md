@@ -249,7 +249,7 @@ For more details on the analytics integration, see [docs/ANALYTICS.md](./docs/AN
 
 ## React Dashboard Integration
 
-The project includes an embedded React dashboard for visualizing canary metrics.
+The project includes an embedded React dashboard for visualizing metrics.
 
 ### Building the Dashboard
 

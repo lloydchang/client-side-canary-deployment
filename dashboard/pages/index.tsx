@@ -6,6 +6,7 @@ import { CanaryData } from '../interfaces/types';
 declare global {
   interface Window {
     canary: any;
+    canaryDashboardData?: any;
   }
 }
 
@@ -61,4 +62,17 @@ export default function Home() {
       <Dashboard data={canaryData} />
     </>
   );
+}
+
+// This function will be called from the bridge script
+// It needs to be attached to the module exports
+export function initDashboard(canaryData: any) {
+  if (typeof window !== 'undefined') {
+    // Store the data in a global variable for the component
+    window.canaryDashboardData = canaryData;
+    
+    // Force re-render if needed
+    const event = new CustomEvent('canary-dashboard-data-ready');
+    window.dispatchEvent(event);
+  }
 }

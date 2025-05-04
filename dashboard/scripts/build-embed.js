@@ -30,10 +30,33 @@ function processDir() {
       .filter(file => file.startsWith('index-'));
     
     if (jsFiles.length > 0) {
-      copyFile(
-        path.join(outDir, '_next/static/chunks/pages', jsFiles[0]),
-        path.join(targetDir, 'dashboard.js')
-      );
+      const jsFilePath = path.join(outDir, '_next/static/chunks/pages', jsFiles[0]);
+      let jsContent = fs.readFileSync(jsFilePath, 'utf8');
+      
+      // Add initialization function to the JS file
+      jsContent = jsContent + `
+;(function(){
+  // Create global initialization function to be called from bridge
+  window.__NEXT_DASHBOARD_INIT__ = function(canaryData) {
+    // This assumes the Next.js app exports a default function 
+    // that can be called with the canary data
+    if (typeof self.__NEXT_LOADED_PAGES__[0][0].__N_SSG === "object") {
+      // Initialize with canary data
+      const appModule = self.__NEXT_LOADED_PAGES__[0][1];
+      if (typeof appModule.initDashboard === 'function') {
+        appModule.initDashboard(canaryData);
+      }
+    }
+    // Force hydration
+    if (window.__NEXT_HYDRATE) {
+      window.__NEXT_HYDRATE();
+    }
+  };
+})();`;
+      
+      // Write the modified JS file
+      fs.writeFileSync(path.join(targetDir, 'dashboard.js'), jsContent);
+      console.log(`Created modified dashboard.js at ${path.join(targetDir, 'dashboard.js')}`);
     }
 
     // Copy main CSS file
@@ -46,6 +69,13 @@ function processDir() {
         path.join(targetDir, 'dashboard.css')
       );
     }
+    
+    // Create the dashboard bridge file
+    const bridgeContent = fs.readFileSync(path.resolve(__dirname, '../../src/embed-dashboard/dashboard-bridge.js'), 'utf8');
+    if (!bridgeContent) {
+      console.error('Dashboard bridge file not found');
+      process.exit(1);
+    }
 
     // Create the HTML embed wrapper
     const embedHtml = `
@@ -55,31 +85,7 @@ function processDir() {
 <!-- Dashboard Assets -->
 <link rel="stylesheet" href="../src/embed-dashboard/dashboard.css">
 <script src="../src/embed-dashboard/dashboard.js"></script>
-<script>
-  // Initialize the dashboard after canary is loaded
-  document.addEventListener('DOMContentLoaded', function() {
-    // Check if the root element exists
-    const dashboardRoot = document.getElementById('dashboard-root');
-    if (!dashboardRoot) {
-      console.error('Dashboard root element not found');
-      return;
-    }
-
-    // Create React root element
-    const reactRoot = document.createElement('div');
-    reactRoot.id = 'dashboard';
-    dashboardRoot.appendChild(reactRoot);
-
-    // Wait for canary to be available before initializing
-    const checkCanary = setInterval(() => {
-      if (window.canary) {
-        clearInterval(checkCanary);
-        console.log('Initializing dashboard with canary data');
-        // The Next.js app will use the global canary object
-      }
-    }, 500);
-  });
-</script>`;
+<script src="../src/embed-dashboard/dashboard-bridge.js"></script>`;
 
     fs.writeFileSync(path.join(targetDir, 'embed.html'), embedHtml);
     console.log(`Created embed HTML at ${path.join(targetDir, 'embed.html')}`);
@@ -97,6 +103,7 @@ function processDir() {
 \`\`\`html
 <link rel="stylesheet" href="../src/embed-dashboard/dashboard.css">
 <script src="../src/embed-dashboard/dashboard.js"></script>
+<script src="../src/embed-dashboard/dashboard-bridge.js"></script>
 \`\`\`
 
 3. Or simply include the entire embed.html content.

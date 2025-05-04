@@ -76,6 +76,7 @@
   <!-- Dashboard Assets -->
   <link rel="stylesheet" href="../src/embed-dashboard/dashboard.css">
   <script src="../src/embed-dashboard/dashboard.js"></script>
+  <script src="../src/embed-dashboard/dashboard-bridge.js"></script>
 </head>
 <body>
   <div class="container">
@@ -150,7 +151,7 @@
           'BLOCKED' : 'Working';
         
         output.innerHTML = 
-          '<h3>Canary Metrics</h3>' +
+          '<h3>Metrics</h3>' +
           '<p><strong>PostHog Status:</strong> ' + posthogStatus + '</p>' +
           '<h4>Stable Version:</h4>' +
           '<ul>' +
