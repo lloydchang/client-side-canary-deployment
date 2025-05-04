@@ -24,6 +24,62 @@ This document explains how our client-side canary deployment system integrates w
 
 The system uses analytics data to make informed decisions about canary deployments:
 
+```mermaid
+graph TD
+    subgraph "PostHog Analytics"
+        PH[PostHog Analytics]
+        Stable[Stable Version Metrics]
+        Canary[Canary Version Metrics]
+        PH --> Stable
+        PH --> Canary
+    end
+    
+    subgraph "GitHub Actions Analysis"
+        GA[GitHub Actions Workflow]
+        Analysis[canary-analyzer.js]
+        Decision{Error Rate Analysis}
+        
+        GA --> Analysis
+        Analysis --> Stable
+        Analysis --> Canary
+        Analysis --> Decision
+        Decision -->|Errors Too High| Decrease[Decrease Canary %]
+        Decision -->|Errors Acceptable| Increase[Increase or Maintain Canary %]
+    end
+    
+    subgraph "File Updates"
+        Decrease --> JSON[Update config/canary-config.json]
+        Decrease --> JS[Update src/config/canary-config.js]
+        Increase --> JSON
+        Increase --> JS
+        JSON --> Version[Update version.json]
+        JS --> Version
+    end
+    
+    subgraph "Deployment & Client Updates"
+        Version --> Deploy[Deploy to GitHub Pages]
+        Deploy --> Clients[Client Browsers]
+        Clients --> Check[Check version.json every 5min]
+        Check -->|Version Changed| Reload[Reload Page]
+        Reload --> NewConfig[Apply New Configuration]
+    end
+    
+    style JSON fill:#f9f,stroke:#333,stroke-width:2px
+    style JS fill:#bbf,stroke:#333,stroke-width:2px
+    style Version fill:#ff9,stroke:#333,stroke-width:2px
+```
+
+The file update sequence:
+
+1. **Analytics collection**: Client interactions tracked in PostHog
+2. **Analysis**: `canary-analyzer.js` evaluates metrics and decides on percentage changes
+3. **Configuration updates**:
+   - `config/canary-config.json`: Updates the canary percentage settings
+   - `src/config/canary-config.js`: Updates client-side JavaScript configuration
+   - `version.json`: Increments version number to trigger client refreshes
+4. **Deployment**: Files are pushed to GitHub Pages
+5. **Client detection**: Pages detect version changes and reload
+
 1. **Automatic Analysis**:
    - Every 6 hours, the GitHub Actions workflow queries PostHog data
    - Compares error rates between stable and canary versions

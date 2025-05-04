@@ -33,16 +33,37 @@ graph LR
 ```
 
 ```mermaid
-graph LR
-    subgraph Server-Side: Canary Evaluation Logic
+graph TD
+    subgraph "GitHub Actions Workflow"
         L[GitHub Actions: Analyze PostHog Metrics]
         L --> M{Is Canary Healthy?}
-        M -->|No| N[Adjust Canary Percentage Downward in canary-config.js]
+        M -->|No| N[Decrease Canary Percentage]
         M -->|Yes| O{Can Increase Canary %?}
-        O -->|Yes| P[Adjust Canary Percentage Upward in canary-config.js]
+        O -->|Yes| P[Increase Canary Percentage]
         O -->|No| Q[Maintain Current State]
-        N --> R[Update version.json Version Number]
-        P --> R
+        
+        subgraph "File Updates"
+            N --> N1[Update config/canary-config.json]
+            N --> N2[Update src/config/canary-config.js]
+            P --> P1[Update config/canary-config.json] 
+            P --> P2[Update src/config/canary-config.js]
+            N1 --> V[Update version.json with new version number]
+            P1 --> V
+            N2 --> V
+            P2 --> V
+        end
+        
+        subgraph "GitHub Pages Deployment"
+            V --> G[Deploy updated files to GitHub Pages]
+        end
+    end
+
+    subgraph "Client-Side Detection"
+        G --> CL[Client browsers]
+        CL --> CL1[Poll version.json every 5 minutes]
+        CL1 -->|Version Changed| CL2[Reload page]
+        CL2 --> CL3[Load new configuration]
+        CL3 --> CL4[Apply new canary percentages]
     end
 ```
 

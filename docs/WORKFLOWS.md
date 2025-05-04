@@ -118,6 +118,78 @@ Script for updating the canary percentage configuration:
 node update-canary.js --percentage=20
 ```
 
+## File Update Process
+
+```mermaid
+flowchart TD
+    subgraph "GitHub Actions Jobs"
+        A["build-and-deploy job"]
+        B["analyze-canary job"]
+        C["adjust-canary job"]
+    end
+    
+    subgraph "File Updates"
+        A --> A1[Update version.json]
+        A --> A2[Create config/canary-config.json]
+        A --> A3[Deploy all files to gh-pages]
+        
+        B --> B1[Update version.json]
+        B --> B2[Update config/canary-config.json]
+        B --> B3[Update src/config/canary-config.js]
+        B --> B4[Selective deployment to gh-pages]
+        
+        C --> C1[Update version.json]
+        C --> C2[Update config/canary-config.json]
+        C --> C3[Update src/config/canary-config.js]
+        C --> C4[Selective deployment to gh-pages]
+        
+        B2 --"Contains canary percentage"--> Config
+        C2 --"Contains canary percentage"--> Config
+        B3 --"Contains canary feature flags"--> JSConfig
+        C3 --"Contains canary feature flags"--> JSConfig
+        A1 --"Increments version number"--> Version
+        B1 --"Increments version number"--> Version
+        C1 --"Increments version number"--> Version
+    end
+    
+    subgraph "GitHub Pages"
+        Config[config/canary-config.json]
+        JSConfig[src/config/canary-config.js]
+        Version[version.json]
+    end
+    
+    subgraph "Client Detection"
+        Version --> CheckVersion["Client checks version.json"]
+        CheckVersion --> Reload["Page reloads on version change"]
+        Reload --> LoadConfig["Loads updated config files"]
+    end
+    
+    style Config fill:#f9f,stroke:#333,stroke-width:2px
+    style JSConfig fill:#bbf,stroke:#333,stroke-width:2px
+    style Version fill:#ff9,stroke:#333,stroke-width:2px
+```
+
+### Selective Deployment Details
+
+When running `analyze-canary` or `adjust-canary` jobs, only specific files are updated in GitHub Pages:
+
+1. `version.json` - Updated to trigger client refreshes
+2. `config/canary-config.json` - Contains the updated canary percentage
+3. `src/config/canary-config.js` - JavaScript version of configuration for client use
+
+This selective deployment is implemented through the GitHub Pages deploy action with:
+
+```yaml
+clean: false
+clean-exclude: |
+  **/*
+  !version.json
+  !config/**
+  !src/config/**
+```
+
+The `!` prefix means "only include these files" in the deployment, leaving other files unchanged.
+
 ## Setting Up GitHub Secrets
 
 For the workflow to function properly, you need to set up the following secrets in your GitHub repository:
