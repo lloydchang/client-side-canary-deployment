@@ -175,37 +175,45 @@
                 <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
                   <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;">Metrics Comparison</h3>
                   
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <!-- Stable Metrics -->
-                    <div style="padding: 15px; border-radius: 5px; border-top: 3px solid #4CAF50; background-color: #000000; color: #ffffff;">
-                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #ffffff;">Stable Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0; color: #ffffff;" id="stable-metrics-list">
-                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${dashboardData.metrics.stable.pageviews}</span></li>
-                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${dashboardData.metrics.stable.clicks}</span></li>
-                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${dashboardData.metrics.stable.errors}</span></li>
-                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Error Rate:</span> <span>${
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr>
+                        <th style="text-align: left; padding: 8px; width: 25%;">Metric</th>
+                        <th style="text-align: left; padding: 8px;">Stable Version</th>
+                        <th style="text-align: left; padding: 8px;">Canary Version</th>
+                      </tr>
+                    </thead>
+                    <tbody id="metrics-comparison-table">
+                      <tr>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">Pageviews</td>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">${dashboardData.metrics.stable.pageviews}</td>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">${dashboardData.metrics.canary.pageviews}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">Clicks</td>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">${dashboardData.metrics.stable.clicks}</td>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">${dashboardData.metrics.canary.clicks}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">Errors</td>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">${dashboardData.metrics.stable.errors}</td>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">${dashboardData.metrics.canary.errors}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">Error Rate</td>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">${
                           dashboardData.metrics.stable.pageviews > 0 
                             ? ((dashboardData.metrics.stable.errors / dashboardData.metrics.stable.pageviews) * 100).toFixed(1) 
                             : '0.0'
-                        }%</span></li>
-                      </ul>
-                    </div>
-                    
-                    <!-- Canary Metrics -->
-                    <div style="padding: 15px; border-radius: 5px; border-top: 3px solid #FFC107; background-color: #000000; color: #ffffff;">
-                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #ffffff;">Canary Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0; color: #ffffff;" id="canary-metrics-list">
-                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${dashboardData.metrics.canary.pageviews}</span></li>
-                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${dashboardData.metrics.canary.clicks}</span></li>
-                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${dashboardData.metrics.canary.errors}</span></li>
-                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Error Rate:</span> <span>${
+                        }%</td>
+                        <td style="padding: 8px; border-top: 1px solid #eee;">${
                           dashboardData.metrics.canary.pageviews > 0 
                             ? ((dashboardData.metrics.canary.errors / dashboardData.metrics.canary.pageviews) * 100).toFixed(1) 
                             : '0.0'
-                        }%</span></li>
-                      </ul>
-                    </div>
-                  </div>
+                        }%</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
                 
                 <!-- Events Section -->
@@ -263,35 +271,39 @@
             
             // 2. UPDATE THE DIRECT HTML DASHBOARD
             try {
-              // Stable metrics update
-              const stableMetricsList = document.getElementById('stable-metrics-list');
-              if (stableMetricsList) {
+              // Update the metrics comparison table
+              const metricsTable = document.getElementById('metrics-comparison-table');
+              if (metricsTable) {
                 const stableMetrics = dashboardData.metrics.stable;
+                const canaryMetrics = dashboardData.metrics.canary;
                 const stableErrorRate = stableMetrics.pageviews > 0 
                   ? ((stableMetrics.errors / stableMetrics.pageviews) * 100).toFixed(1) 
                   : '0.0';
-                
-                stableMetricsList.innerHTML = `
-                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Pageviews:</span> <span>${stableMetrics.pageviews}</span></li>
-                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Clicks:</span> <span>${stableMetrics.clicks}</span></li>
-                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Errors:</span> <span>${stableMetrics.errors}</span></li>
-                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Error Rate:</span> <span>${stableErrorRate}%</span></li>
-                `;
-              }
-
-              // Canary metrics update
-              const canaryMetricsList = document.getElementById('canary-metrics-list');
-              if (canaryMetricsList) {
-                const canaryMetrics = dashboardData.metrics.canary;
                 const canaryErrorRate = canaryMetrics.pageviews > 0 
                   ? ((canaryMetrics.errors / canaryMetrics.pageviews) * 100).toFixed(1) 
                   : '0.0';
                 
-                canaryMetricsList.innerHTML = `
-                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Pageviews:</span> <span>${canaryMetrics.pageviews}</span></li>
-                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Clicks:</span> <span>${canaryMetrics.clicks}</span></li>
-                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Errors:</span> <span>${canaryMetrics.errors}</span></li>
-                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Error Rate:</span> <span>${canaryErrorRate}%</span></li>
+                metricsTable.innerHTML = `
+                  <tr>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">Pageviews</td>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">${stableMetrics.pageviews}</td>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">${canaryMetrics.pageviews}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">Clicks</td>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">${stableMetrics.clicks}</td>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">${canaryMetrics.clicks}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">Errors</td>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">${stableMetrics.errors}</td>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">${canaryMetrics.errors}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">Error Rate</td>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">${stableErrorRate}%</td>
+                    <td style="padding: 8px; border-top: 1px solid #eee;">${canaryErrorRate}%</td>
+                  </tr>
                 `;
               }
 
