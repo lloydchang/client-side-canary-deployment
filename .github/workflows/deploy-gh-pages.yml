@@ -105,6 +105,16 @@ jobs:
           clean: true                  # Automatically remove deleted files
           single-commit: true          # Delete previous deployment history
           token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Commit Updated Version 💾
+        run: |
+          git config --local user.name "lloydchang"
+          git config --local user.email "lloydchang@gmail.com"
+          git add version.json
+          git commit -m "Update version to $(jq -r .version version.json)" || echo "No changes to commit"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Analytics job
   analyze-canary:
