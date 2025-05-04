@@ -18,10 +18,18 @@
           const data = await response.json();
           const currentVersion = localStorage.getItem('app-version');
           
-          // Update footer version display
+          // Update footer version and timestamp display
           const versionElement = document.getElementById('app-version');
+          const lastUpdatedElement = document.getElementById('last-updated');
+          
           if (versionElement) {
             versionElement.textContent = data.version;
+          }
+          
+          if (lastUpdatedElement && data.lastUpdated) {
+            // Format the timestamp for better readability
+            const date = new Date(data.lastUpdated);
+            lastUpdatedElement.textContent = date.toLocaleString();
           }
           
           if (currentVersion && currentVersion !== data.version) {
@@ -152,7 +160,7 @@
     
     <!-- Add version footer -->
     <div class="footer">
-      <p>Version: <span id="app-version">Loading...</span></p>
+      <p>Version: <span id="app-version">Loading...</span> | Last Updated: <span id="last-updated">Loading...</span></p>
     </div>
   </div>
 
