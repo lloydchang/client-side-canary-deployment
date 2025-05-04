@@ -2,15 +2,15 @@
   border-radius: 5px;
   padding: 15px;
   background: #000000;
-  border-top: 3px solid #;
+  border-top: 3px solid;
 }
 
 .stable {
-  border-color: #ffffff;
+  border-color: #4CAF50; /* Green for stable */
 }
 
 .canary {
-  border-color: #ffffff;
+  border-color: #FFC107; /* Amber for canary */
 }
 
 .title {
