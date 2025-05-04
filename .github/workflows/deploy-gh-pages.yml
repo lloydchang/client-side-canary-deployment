@@ -197,8 +197,8 @@ jobs:
       
       - name: Update canary.js in main branch
         run: |
-          git config --local user.name "GitHub Actions Bot"
-          git config --local user.email "actions@github.com"
+          git config --local user.name "lloydchang"
+          git config --local user.email "lloydchang@gmail.com"
           git add config/canary-config.json src/config/canary-config.js version.json
           git commit -m "Update canary percentage to $CANARY_PERCENTAGE% based on analytics" || echo "No changes to commit"
           git push origin main
@@ -269,8 +269,8 @@ jobs:
       
       - name: Update canary.js in main branch
         run: |
-          git config --local user.name "GitHub Actions Bot"
-          git config --local user.email "actions@github.com"
+          git config --local user.name "lloydchang"
+          git config --local user.email "lloydchang@gmail.com"
           git add config/canary-config.json src/config/canary-config.js version.json
           git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%" || echo "No changes to commit"
           git push origin main
