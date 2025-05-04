@@ -36,9 +36,9 @@ graph LR
     subgraph Server-Side: Canary Evaluation Logic
         L[GitHub Actions: Analyze PostHog Metrics]
         L --> M{Is Canary Healthy?}
-        M -->|No| N[Adjust Canary Percentage Downward]
+        M -->|No| N[Adjust Canary Percentage Downward in canary.js served by GitHub Pages]
         M -->|Yes| O{Can Increase Canary %?}
-        O -->|Yes| P[Adjust Canary Percentage Upward]
+        O -->|Yes| P[Adjust Canary Percentage Upward in canary.js served by GitHub Pages]
         O -->|No| Q[Maintain Current State]
         N --> R[Update version.json served by GitHub Pages]
         P --> R
