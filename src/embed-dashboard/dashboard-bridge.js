@@ -18,31 +18,26 @@
       return;
     }
 
+    console.log('Dashboard bridge: Setting up dashboard containers');
+
     // Split the dashboard area to show both React and Direct HTML implementations
+    // Use inline styles to prevent external CSS from affecting the layout
     dashboardRoot.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 20px;">
-        <div>
-          <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #000; background-color: #fff;">
+      <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+        <div style="width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+          <h3 style="margin: 0; padding: 10px; background-color: #f5f5f5; color: #000; font-size: 16px; border-bottom: 1px solid #ddd;">
             React Dashboard (Original)
           </h3>
-          <div id="react-dashboard" style="min-height: 100px; border: 1px dashed #ccc; padding: 10px; position: relative; background-color: #fff; color: #000;">
+          <div id="react-dashboard" style="padding: 15px; background-color: #fff;">
             <div id="dashboard" style="width: 100%;"></div>
-            <div style="position: absolute; top: 0; right: 0; background: #fff; padding: 4px 8px; font-size: 12px; color: #000; border-radius: 0 0 0 4px;">
-              React Implementation
-            </div>
           </div>
         </div>
         
-        <div>
-          <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #000; background-color: #fff;">
+        <div style="width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+          <h3 style="margin: 0; padding: 10px; background-color: #f5f5f5; color: #000; font-size: 16px; border-bottom: 1px solid #ddd;">
             Direct HTML Dashboard (Fallback)
           </h3>
-          <div id="html-dashboard" style="min-height: 100px; border: 1px dashed #ccc; padding: 10px; position: relative; background-color: #fff; color: #000;">
-            <!-- This will be filled with our direct HTML implementation -->
-            <div style="position: absolute; top: 0; right: 0; background: #fff; padding: 4px 8px; font-size: 12px; color: #000; border-radius: 0 0 0 4px;">
-              Direct HTML Implementation
-            </div>
-          </div>
+          <div id="html-dashboard" style="padding: 15px; background-color: #fff;"></div>
         </div>
       </div>
     `;
@@ -76,21 +71,68 @@
         
         // 1. INITIALIZE THE REACT DASHBOARD
         try {
-          // Try to initialize the React app in its container
-          console.log('Dashboard bridge: Initializing React dashboard');
-          
-          // Try using the Next.js provided initialization function
-          if (window.__NEXT_DASHBOARD_INIT__) {
-            try {
-              window.__NEXT_DASHBOARD_INIT__(dashboardData);
-              console.log('Dashboard bridge: React dashboard initialized successfully');
-            } catch(e) {
-              console.error('Dashboard bridge: Failed to initialize React dashboard:', e);
-            }
+          const reactDashboardContainer = document.getElementById('react-dashboard');
+          if (!reactDashboardContainer) {
+            console.error('Dashboard bridge: React dashboard container not found');
           } else {
-            console.warn('Dashboard bridge: __NEXT_DASHBOARD_INIT__ not found');
+            const dashboardElement = document.getElementById('dashboard');
+            if (!dashboardElement) {
+              console.error('Dashboard bridge: Dashboard element not found');
+              reactDashboardContainer.innerHTML = '<div style="padding: 20px; color: #000; background: #fff;">React dashboard element not found</div>';
+            } else {
+              console.log('Dashboard bridge: Initializing React dashboard with data', dashboardData);
+              
+              // First ensure we can access the dashboard element
+              console.log('Dashboard element exists:', !!dashboardElement);
+              
+              // Try direct initialization through window.initDashboard
+              if (typeof window.initDashboard === 'function') {
+                try {
+                  window.initDashboard(dashboardData);
+                  console.log('Dashboard bridge: React dashboard initialized via window.initDashboard');
+                } catch (e) {
+                  console.error('Dashboard bridge: Error initializing via window.initDashboard', e);
+                }
+              } else {
+                console.log('Dashboard bridge: window.initDashboard not found');
+              }
+              
+              // Try via Next.js init function
+              if (window.__NEXT_DASHBOARD_INIT__) {
+                try {
+                  window.__NEXT_DASHBOARD_INIT__(dashboardData);
+                  console.log('Dashboard bridge: React dashboard initialized via __NEXT_DASHBOARD_INIT__');
+                } catch (e) {
+                  console.error('Dashboard bridge: Error initializing via __NEXT_DASHBOARD_INIT__', e);
+                }
+              } else {
+                console.warn('Dashboard bridge: __NEXT_DASHBOARD_INIT__ not found');
+              }
+              
+              // Also dispatch event for any event listeners
+              window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
+              console.log('Dashboard bridge: Dispatched dashboard-data-updated event');
+              
+              // Display a fallback message if the dashboard appears empty after initialization attempts
+              setTimeout(() => {
+                if (dashboardElement.childElementCount === 0) {
+                  dashboardElement.innerHTML = `
+                    <div style="padding: 15px; border: 1px solid #fcc; background-color: #fff; color: #000;">
+                      <p><strong>React initialization failed</strong></p>
+                      <p>The React dashboard could not be initialized. This might be because:</p>
+                      <ul>
+                        <li>The React bundle isn't compatible with this environment</li>
+                        <li>Next.js initialization hooks aren't available in static HTML</li>
+                        <li>There was an error during React component initialization</li>
+                      </ul>
+                      <p>See the Direct HTML implementation below for a working dashboard.</p>
+                    </div>
+                  `;
+                }
+              }, 1000);
+            }
           }
-        } catch(e) {
+        } catch (e) {
           console.error('Dashboard bridge: Error setting up React dashboard:', e);
         }
         
@@ -100,40 +142,179 @@
           try {
             // Create the dashboard with direct HTML - enforcing black on white
             const directDashboardContainer = document.createElement('div');
-            directDashboardContainer.className = 'Dashboard_dashboard__FnfVe';
-            // Inline styles to override any external CSS
-            directDashboardContainer.style = `
-              background-color: #ffffff !important;
-              color: #000000 !important;
+            directDashboardContainer.className = 'direct-html-dashboard';
+            // Set explicit inline styles for black on white
+            directDashboardContainer.style.cssText = `
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              border-radius: 8px;
-              padding: 20px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-              max-width: 800px;
-              margin: 0 auto;
+              color: #000000;
+              background-color: #ffffff;
+              padding: 0;
+              margin: 0;
+              width: 100%;
             `;
             
+            // Use a simpler HTML structure with explicit styling
             directDashboardContainer.innerHTML = `
-              <div class="Dashboard_grid__OoIFh" style="color: #000000 !important; background-color: #ffffff !important;">
-                <div class="Dashboard_section__6mn3y" style="background-color: #ffffff !important; color: #000000 !important; box-shadow: none; border: 1px solid #cccccc;">
-                  <div style="color: #000000 !important;">
-                    <h3 style="color: #000000 !important; margin-top: 0;">Current Version</h3>
-                    <div style="color: #000000 !important;">
-                      <div style="display: flex; align-items: center; margin-bottom: 8px; color: #000000 !important;">
-                        <span style="color: #000000 !important;">Assigned to: </span>
-                        <strong style="margin-left: 5px; color: #000000 !important;">${dashboardData.assignment.version}</strong>
-                      </div>
-                      <div style="color: #000000 !important;">
-                        <span style="color: #000000 !important;">Canary percentage: </span>
-                        <strong style="color: #000000 !important;">${dashboardData.config.initialCanaryPercentage}%</strong>
-                      </div>
+              <div style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Current Version Section -->
+                <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #ffffff;">
+                  <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 16px; color: #000000;">Current Version</h3>
+                  <div style="color: #000000;">
+                    <div style="margin-bottom: 8px; color: #000000;">
+                      <span style="color: #000000;">Assigned to: </span>
+                      <strong style="color: #000000;">${dashboardData.assignment.version}</strong>
+                    </div>
+                    <div style="color: #000000;">
+                      <span style="color: #000000;">Canary percentage: </span>
+                      <strong style="color: #000000;">${dashboardData.config.initialCanaryPercentage}%</strong>
                     </div>
                   </div>
                 </div>
-                <div class="Dashboard_section__6mn3y" style="background-color: #ffffff !important; color: #000000 !important; box-shadow: none; border: 1px solid #cccccc; margin-top: 15px;">
-                  <h3 style="color: #000000 !important; margin-top: 0;">Metrics Comparison</h3>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; color: #000000 !important;">
-                    <div style="border-radius: 5px; padding: 15px; background-color: #ffffff !important; border: 1px solid #cccccc; color: #000000 !important;">
-                      <h4 style="margin: 0 0 10px 0; color: #000000 !important;">Stable Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0; color: #000000 !important;">
-                        <li style="color: #000000 !important;"><span style="font-weight: 500; margin-right: 5px; color: #000000 !important;">Pageviews:</span> <span style="color: #000000 !important
+                
+                <!-- Metrics Section -->
+                <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #ffffff;">
+                  <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px; color: #000000;">Metrics Comparison</h3>
+                  
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <!-- Stable Metrics -->
+                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #ffffff;">
+                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #000000;">Stable Version</h4>
+                      <ul style="list-style: none; margin: 0; padding: 0; color: #000000;" id="stable-metrics-list">
+                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Pageviews:</span> <span style="color: #000000;">${dashboardData.metrics.stable.pageviews}</span></li>
+                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Clicks:</span> <span style="color: #000000;">${dashboardData.metrics.stable.clicks}</span></li>
+                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Errors:</span> <span style="color: #000000;">${dashboardData.metrics.stable.errors}</span></li>
+                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Error Rate:</span> <span style="color: #000000;">${
+                          dashboardData.metrics.stable.pageviews > 0 
+                            ? ((dashboardData.metrics.stable.errors / dashboardData.metrics.stable.pageviews) * 100).toFixed(1) 
+                            : '0.0'
+                        }%</span></li>
+                      </ul>
+                    </div>
+                    
+                    <!-- Canary Metrics -->
+                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #ffffff;">
+                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #000000;">Canary Version</h4>
+                      <ul style="list-style: none; margin: 0; padding: 0; color: #000000;" id="canary-metrics-list">
+                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Pageviews:</span> <span style="color: #000000;">${dashboardData.metrics.canary.pageviews}</span></li>
+                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Clicks:</span> <span style="color: #000000;">${dashboardData.metrics.canary.clicks}</span></li>
+                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Errors:</span> <span style="color: #000000;">${dashboardData.metrics.canary.errors}</span></li>
+                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Error Rate:</span> <span style="color: #000000;">${
+                          dashboardData.metrics.canary.pageviews > 0 
+                            ? ((dashboardData.metrics.canary.errors / dashboardData.metrics.canary.pageviews) * 100).toFixed(1) 
+                            : '0.0'
+                        }%</span></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Events Section -->
+                <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #ffffff;">
+                  <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px; color: #000000;">Recent Events</h3>
+                  <div id="events-list" style="color: #000000;">
+                    ${dashboardData.metrics.events && dashboardData.metrics.events.length > 0 ? 
+                      dashboardData.metrics.events.slice(0, 5).map(event => `
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; color: #000000;">
+                          <div style="font-weight: 500; color: #000000;">${event.event || 'Unknown Event'}</div>
+                          <div style="color: #000000;">${new Date(event.timestamp || Date.now()).toLocaleTimeString()}</div>
+                        </div>
+                      `).join('') :
+                      '<div style="text-align: center; padding: 10px 0; color: #000000;">No events recorded</div>'
+                    }
+                  </div>
+                </div>
+              </div>
+            `;
+            
+            // Clear any previous content and add the new dashboard
+            htmlDashboardContainer.innerHTML = '';
+            htmlDashboardContainer.appendChild(directDashboardContainer);
+            dashboardRendered = true;
+            
+            console.log('Dashboard bridge: Direct HTML dashboard rendered successfully');
+          } catch(e) {
+            console.error('Dashboard bridge: Error rendering direct HTML dashboard:', e);
+            htmlDashboardContainer.innerHTML = `
+              <div style="padding: 15px; color: #ff0000; background-color: #ffffff;">
+                Error rendering HTML dashboard: ${e.message}
+              </div>
+            `;
+          }
+        }
+
+        // Set up periodic refresh to update both dashboards
+        setInterval(() => {
+          if (window.canary) {
+            // Update the dashboard data
+            dashboardData.metrics = window.canary._metrics || dashboardData.metrics;
+            dashboardData.assignment = window.canary._assignment || dashboardData.assignment;
+            dashboardData.config = window.canary._config || dashboardData.config;
+            
+            // 1. UPDATE THE REACT DASHBOARD
+            try {
+              // Trigger React update via custom event and update function
+              window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
+              if (window.__NEXT_DASHBOARD_UPDATE__) {
+                window.__NEXT_DASHBOARD_UPDATE__(dashboardData);
+              }
+            } catch(e) {
+              console.error('Dashboard bridge: Error updating React dashboard:', e);
+            }
+            
+            // 2. UPDATE THE DIRECT HTML DASHBOARD
+            try {
+              // Stable metrics update
+              const stableMetricsList = document.getElementById('stable-metrics-list');
+              if (stableMetricsList) {
+                const stableMetrics = dashboardData.metrics.stable;
+                const stableErrorRate = stableMetrics.pageviews > 0 
+                  ? ((stableMetrics.errors / stableMetrics.pageviews) * 100).toFixed(1) 
+                  : '0.0';
+                
+                stableMetricsList.innerHTML = `
+                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Pageviews:</span> <span style="color: #000000;">${stableMetrics.pageviews}</span></li>
+                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Clicks:</span> <span style="color: #000000;">${stableMetrics.clicks}</span></li>
+                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Errors:</span> <span style="color: #000000;">${stableMetrics.errors}</span></li>
+                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Error Rate:</span> <span style="color: #000000;">${stableErrorRate}%</span></li>
+                `;
+              }
+
+              // Canary metrics update
+              const canaryMetricsList = document.getElementById('canary-metrics-list');
+              if (canaryMetricsList) {
+                const canaryMetrics = dashboardData.metrics.canary;
+                const canaryErrorRate = canaryMetrics.pageviews > 0 
+                  ? ((canaryMetrics.errors / canaryMetrics.pageviews) * 100).toFixed(1) 
+                  : '0.0';
+                
+                canaryMetricsList.innerHTML = `
+                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Pageviews:</span> <span style="color: #000000;">${canaryMetrics.pageviews}</span></li>
+                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Clicks:</span> <span style="color: #000000;">${canaryMetrics.clicks}</span></li>
+                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Errors:</span> <span style="color: #000000;">${canaryMetrics.errors}</span></li>
+                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Error Rate:</span> <span style="color: #000000;">${canaryErrorRate}%</span></li>
+                `;
+              }
+
+              // Events update
+              const eventsList = document.getElementById('events-list');
+              if (eventsList && dashboardData.metrics.events) {
+                if (dashboardData.metrics.events.length > 0) {
+                  eventsList.innerHTML = dashboardData.metrics.events.slice(0, 5).map(event => `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; color: #000000;">
+                      <div style="font-weight: 500; color: #000000;">${event.event || 'Unknown Event'}</div>
+                      <div style="color: #000000;">${new Date(event.timestamp || Date.now()).toLocaleTimeString()}</div>
+                    </div>
+                  `).join('');
+                } else {
+                  eventsList.innerHTML = '<div style="text-align: center; padding: 10px 0; color: #000000;">No events recorded</div>';
+                }
+              }
+            } catch(e) {
+              console.error('Dashboard bridge: Error updating direct HTML dashboard:', e);
+            }
+          }
+        }, 2000);
+      }
+    }, 500);
+  });
+})();
