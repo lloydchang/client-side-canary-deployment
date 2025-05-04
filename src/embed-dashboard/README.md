@@ -11,8 +11,6 @@
 
 2. Include the dashboard assets:
 ```html
-<link rel="stylesheet" href="../src/embed-dashboard/dashboard.css">
-<script src="../src/embed-dashboard/dashboard.js"></script>
 <script src="../src/embed-dashboard/dashboard-bridge.js"></script>
 ```
 
