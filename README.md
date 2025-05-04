@@ -22,9 +22,15 @@ graph LR
     C -->|95%| E[Stable Experience]
     C -->|5%| F[Canary Experience]
     D --> G[Consistent Experience]
-    E --> H[Collect Metrics]
+    E --> H["Collect Metrics - PostHog JS SDK"]
     F --> H
-    H --> I[Auto-Adjust Percentage]
+    G --> H
+    H --> J[Send Events to PostHog]
+    J --> K[PostHog Tracks Errors & Engagement]
+    K --> L[Auto-Adjust Percentage via GitHub Actions and Canary Analytics]
+    L --> M{Trigger Rollback?}
+    M -->|Yes| N[Reassign Users to Stable]
+    M -->|No| O[Continue Rollout]
 ```
 
  ## Client-Side vs. Server-Side Canary Deployments
