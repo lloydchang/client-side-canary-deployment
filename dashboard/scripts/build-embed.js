@@ -37,14 +37,14 @@ function processDir() {
       jsContent = jsContent + `
 ;(function(){
   // Create global initialization function to be called from bridge
-  window.__NEXT_DASHBOARD_INIT__ = function(DashboardData) {
-    // This assumes the Next.js app exports a default function 
-    // that can be called with the canary data
+  window.__NEXT_DASHBOARD_INIT__ = function(dashboardData) {
+    // This assumes the Next.js app exports an initDashboard function
+    // that can be called with the dashboard data
     if (typeof self.__NEXT_LOADED_PAGES__[0][0].__N_SSG === "object") {
-      // Initialize with canary data
+      // Initialize with dashboard data
       const appModule = self.__NEXT_LOADED_PAGES__[0][1];
       if (typeof appModule.initDashboard === 'function') {
-        appModule.initDashboard(DashboardData);
+        appModule.initDashboard(dashboardData);
       }
     }
     // Force hydration
@@ -69,18 +69,14 @@ function processDir() {
         path.join(targetDir, 'dashboard.css')
       );
     }
-    
-    // Create the dashboard bridge file
-    const bridgeContent = fs.readFileSync(path.resolve(__dirname, '../../src/embed-dashboard/dashboard-bridge.js'), 'utf8');
-    if (!bridgeContent) {
-      console.error('Dashboard bridge file not found');
-      process.exit(1);
-    }
 
     // Create the HTML embed wrapper
     const embedHtml = `
 <!-- Dashboard Container -->
-<div id="dashboard-root" style="margin: 30px 0;"></div>
+<div class="dashboard-container card">
+  <h2>Dashboard</h2>
+  <div id="dashboard-root" style="margin: 10px 0;"></div>
+</div>
 
 <!-- Dashboard Assets -->
 <link rel="stylesheet" href="../src/embed-dashboard/dashboard.css">
@@ -96,7 +92,10 @@ function processDir() {
 
 1. Add the dashboard container where you want it to appear:
 \`\`\`html
-<div id="dashboard-root"></div>
+<div class="dashboard-container card">
+  <h2>Dashboard</h2>
+  <div id="dashboard-root"></div>
+</div>
 \`\`\`
 
 2. Include the dashboard assets:

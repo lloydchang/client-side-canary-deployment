@@ -5,74 +5,77 @@ import { DashboardData } from '../interfaces/types';
 
 declare global {
   interface Window {
-    dashboard: any;
-    DashboardData?: any;
+    canary: any;
+    dashboardData: any;
+    __NEXT_DASHBOARD_UPDATE__: (data: any) => void;
   }
 }
 
 export default function Home() {
-  const [DashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   
   useEffect(() => {
     // Only runs in browser
     if (typeof window !== 'undefined') {
-      const getDashboardData = () => {
-        if (window.dashboard) {
-          try {
-            const metrics = window.dashboard._metrics || {
-              stable: { pageviews: 0, errors: 0, clicks: 0 },
-              dashboard: { pageviews: 0, errors: 0, clicks: 0 },
-              events: []
-            };
-            
-            const assignment = window.dashboard._assignment || {
-              version: 'stable',
-              timestamp: new Date().toISOString()
-            };
-            
-            const config = window.dashboard._config || {
-              initialCanaryPercentage: 5
-            };
-            
-            setDashboardData({
-              metrics,
-              assignment,
-              config
-            });
-          } catch (e) {
-            console.error('Error fetching dashboard data:', e);
-          }
-        }
+      // Use data from window.dashboardData if available (set by bridge)
+      if (window.dashboardData) {
+        setDashboardData(window.dashboardData);
+      } else if (window.canary) {
+        // Fallback to direct canary object access
+        const metrics = window.canary._metrics || {
+          stable: { pageviews: 0, errors: 0, clicks: 0 },
+          canary: { pageviews: 0, errors: 0, clicks: 0 },
+          events: []
+        };
+        
+        const assignment = window.canary._assignment || {
+          version: 'stable',
+          timestamp: new Date().toISOString()
+        };
+        
+        const config = window.canary._config || {
+          initialCanaryPercentage: 5
+        };
+        
+        setDashboardData({
+          metrics,
+          assignment,
+          config
+        });
+      }
+
+      // Set up update handler for bridge to call
+      window.__NEXT_DASHBOARD_UPDATE__ = (data) => {
+        setDashboardData(data);
       };
       
-      // Initial load
-      getDashboardData();
-      
-      // Set up polling
-      const interval = setInterval(getDashboardData, 5000);
-      return () => clearInterval(interval);
+      // Listen for custom event as backup
+      window.addEventListener('dashboard-data-updated', () => {
+        if (window.dashboardData) {
+          setDashboardData(window.dashboardData);
+        }
+      });
     }
   }, []);
   
   return (
     <>
       <Head>
-        <title>Dashboard</title>
+        <title>Canary Dashboard</title>
       </Head>
-      <Dashboard data={DashboardData} />
+      <Dashboard data={dashboardData} />
     </>
   );
 }
 
 // This function will be called from the bridge script
-// It needs to be attached to the module exports
-export function initDashboard(DashboardData: any) {
+export function initDashboard(data: any) {
   if (typeof window !== 'undefined') {
     // Store the data in a global variable for the component
-    window.DashboardData = DashboardData;
+    window.dashboardData = data;
     
     // Force re-render if needed
-    const event = new CustomEvent('dashboard-data-ready');
+    const event = new CustomEvent('dashboard-data-updated');
     window.dispatchEvent(event);
   }
 }

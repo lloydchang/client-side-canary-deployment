@@ -23,10 +23,29 @@
         clearInterval(checkInterval);
         console.log('Dashboard bridge: Canary data available, initializing dashboard');
         
+        // Prepare formatted data for the dashboard
+        const dashboardData = {
+          metrics: window.canary._metrics || {
+            stable: { pageviews: 0, errors: 0, clicks: 0 },
+            canary: { pageviews: 0, errors: 0, clicks: 0 },
+            events: []
+          },
+          assignment: window.canary._assignment || {
+            version: 'stable',
+            timestamp: new Date().toISOString()
+          },
+          config: window.canary._config || {
+            initialCanaryPercentage: 5
+          }
+        };
+        
+        // Make data globally available
+        window.dashboardData = dashboardData;
+        
         // Initialize the React application
         if (window.__NEXT_DASHBOARD_INIT__) {
           try {
-            window.__NEXT_DASHBOARD_INIT__(window.canary);
+            window.__NEXT_DASHBOARD_INIT__(dashboardData);
             console.log('Dashboard bridge: React dashboard initialized successfully');
           } catch(e) {
             console.error('Dashboard bridge: Failed to initialize React dashboard:', e);
@@ -34,6 +53,21 @@
         } else {
           console.error('Dashboard bridge: Dashboard initialization function not found');
         }
+        
+        // Set up periodic refresh
+        setInterval(() => {
+          if (window.canary) {
+            // Update the dashboard data
+            dashboardData.metrics = window.canary._metrics || dashboardData.metrics;
+            dashboardData.assignment = window.canary._assignment || dashboardData.assignment;
+            dashboardData.config = window.canary._config || dashboardData.config;
+            
+            // Trigger an update event if available
+            if (window.__NEXT_DASHBOARD_UPDATE__) {
+              window.__NEXT_DASHBOARD_UPDATE__(dashboardData);
+            }
+          }
+        }, 2000);
       }
     }, 500);
   });
