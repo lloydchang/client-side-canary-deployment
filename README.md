@@ -19,7 +19,7 @@ graph LR
     subgraph Client-Side: Version Assignment & Metrics
         A[User Visits Site] --> B{First Visit?}
         B -->|Yes| C{Assign Version}
-        B -->|No| D[Load Saved Assignment]
+        B -->|No| D[Load Saved Assignment: Stable or Canary]
         C -->|95%| E[Stable Experience]
         C -->|5%| F[Canary Experience]
         D --> G[Consistent Experience]
