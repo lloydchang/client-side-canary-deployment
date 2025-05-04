@@ -247,26 +247,6 @@ For detailed information on the workflow and supporting scripts, see [docs/WORKF
 
 For more details on the analytics integration, see [docs/ANALYTICS.md](./docs/ANALYTICS.md).
 
-## React Dashboard Integration
-
-The project includes an embedded React dashboard for visualizing metrics.
-
-### Building the Dashboard
-
-```bash
-cd dashboard
-npm install
-npm run export
-node scripts/build-embed.js
-```
-
-This will:
-1. Build the React app with Next.js
-2. Export the static assets
-3. Copy the necessary files to `src/embed-dashboard/`
-
-The dashboard is automatically embedded in all HTML pages and connects to the global canary object for data.
-
 ## Want More Control?
 
 The one-line approach works for most cases, but you can view advanced options in [docs/ADVANCED.md](docs/ADVANCED.md).
