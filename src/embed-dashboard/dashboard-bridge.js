@@ -42,56 +42,37 @@
         // Make data globally available
         window.dashboardData = dashboardData;
         
-        // Create a function to safely initialize the dashboard
-        const safeInitDashboard = () => {
-          // Only initialize if Next.js is ready
-          if (typeof self.__NEXT_LOADED_PAGES__ === 'undefined' || 
-              !Array.isArray(self.__NEXT_LOADED_PAGES__) || 
-              self.__NEXT_LOADED_PAGES__.length === 0) {
-            console.log('Dashboard bridge: Next.js not fully loaded yet, waiting...');
-            return false;
-          }
-          
+        // Safe direct initialization - bypass the problematic __NEXT_DASHBOARD_INIT__
+        setTimeout(() => {
           try {
-            window.__NEXT_DASHBOARD_INIT__(dashboardData);
-            console.log('Dashboard bridge: React dashboard initialized successfully');
-            return true;
-          } catch(e) {
-            console.error('Dashboard bridge: Failed to initialize React dashboard:', e);
-            // Make sure data is still available via the global variable
+            // First approach: Try direct access to exported initDashboard function
+            if (self.__NEXT_LOADED_PAGES__ && 
+                Array.isArray(self.__NEXT_LOADED_PAGES__) && 
+                self.__NEXT_LOADED_PAGES__[0] && 
+                Array.isArray(self.__NEXT_LOADED_PAGES__[0]) && 
+                self.__NEXT_LOADED_PAGES__[0].length > 1) {
+              
+              const appModule = self.__NEXT_LOADED_PAGES__[0][1];
+              if (appModule && typeof appModule.initDashboard === 'function') {
+                console.log('Dashboard bridge: Calling initDashboard directly');
+                appModule.initDashboard(dashboardData);
+              }
+            }
+            
+            // Second approach: Skip using the init function entirely
+            // This triggers a re-render by dispatching an event that the React component listens for
             window.dashboardData = dashboardData;
             window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
-            return false;
-          }
-        };
-        
-        // Try to initialize with increasing timeouts to ensure Next.js is ready
-        let attempts = 0;
-        const maxAttempts = 5;
-        
-        const attemptInit = () => {
-          if (attempts >= maxAttempts) {
-            console.warn('Dashboard bridge: Max init attempts reached. Using fallback.');
+            console.log('Dashboard bridge: Dashboard data updated via event');
+          } catch(e) {
+            console.error('Dashboard bridge: Error during initialization:', e);
+            // Still make the data available
+            window.dashboardData = dashboardData;
             window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
-            return;
           }
-          
-          attempts++;
-          const timeoutMs = 300 * attempts; // Increasing timeout: 300ms, 600ms, 900ms, etc.
-          
-          console.log(`Dashboard bridge: Init attempt ${attempts}/${maxAttempts} in ${timeoutMs}ms`);
-          
-          setTimeout(() => {
-            if (!safeInitDashboard()) {
-              attemptInit(); // Try again with a longer timeout
-            }
-          }, timeoutMs);
-        };
+        }, 500);
         
-        // Start the initialization attempts
-        attemptInit();
-        
-        // Set up periodic refresh regardless of initialization status
+        // Set up periodic refresh
         setInterval(() => {
           if (window.canary) {
             // Update the dashboard data
@@ -99,9 +80,17 @@
             dashboardData.assignment = window.canary._assignment || dashboardData.assignment;
             dashboardData.config = window.canary._config || dashboardData.config;
             
-            // Trigger an update event if available
-            if (window.__NEXT_DASHBOARD_UPDATE__) {
-              window.__NEXT_DASHBOARD_UPDATE__(dashboardData);
+            // Update directly
+            window.dashboardData = dashboardData;
+            window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
+            
+            // If NEXT_DASHBOARD_UPDATE exists and doesn't cause errors, use it too
+            try {
+              if (window.__NEXT_DASHBOARD_UPDATE__) {
+                window.__NEXT_DASHBOARD_UPDATE__(dashboardData);
+              }
+            } catch(e) {
+              console.error('Dashboard bridge: Error updating dashboard:', e);
             }
           }
         }, 2000);
