@@ -321,4 +321,4 @@ For more details on the analytics integration, see [docs/ANALYTICS.md](./docs/AN
 
 ## Want More Control?
 
-The one-line approach works for most cases, but you can view advanced options in [docs/ADVANCED.md](docs/ADVANCED.md).
+You can view advanced options in [docs/ADVANCED.md](docs/ADVANCED.md).
