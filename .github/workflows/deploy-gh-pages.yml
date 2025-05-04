@@ -49,7 +49,6 @@ jobs:
       
       - name: Update Version ⬆️
         run: |
-          # Make script executable
           # Run the version update script
           ./update-version.sh
           # Show the updated version
