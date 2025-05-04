@@ -20,7 +20,7 @@
     dashboardRoot.innerHTML = `
       <div style="width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
         <h3 style="margin: 0; padding: 10px; background-color: #f5f5f5; color: #000; font-size: 16px; border-bottom: 1px solid #ddd;">
-          Dashboard
+          Deployment Metrics Dashboard
         </h3>
         <div id="html-dashboard" style="padding: 15px; background-color: #fff;"></div>
       </div>
