@@ -37,12 +37,25 @@ Analyzes canary performance using PostHog data:
 - Creates a summary report with error rates and recommendations
 - Saves detailed results as artifacts
 - Can trigger automatic rollback if thresholds are exceeded
+- Automatically adjusts canary percentage based on analysis results
 
 #### 3. adjust-canary
-Allows manual adjustment of canary percentages:
-- Updates the canary configuration with new percentage
-- Deploys only the updated config file to GitHub Pages
+Provides manual control over canary percentages:
+- Allows immediate adjustment of canary traffic percentage via workflow dispatch
+- Serves as a critical override for the automated system
+- Updates the canary configuration with the specified percentage
+- Deploys only the updated configuration to GitHub Pages
 - Creates a summary report confirming the change
+
+**Why manual control alongside automation?**
+While the system includes automated analysis and adjustment through the `analyze-canary` job, the manual job serves several important purposes:
+- **Emergency control**: Quickly respond to issues by adjusting or rolling back canary percentages
+- **Special scenarios**: Handle business requirements that automated metrics can't account for
+- **Testing & validation**: Set specific percentages during development or QA processes
+- **Fine-grained control**: Allow product managers to directly influence rollout pace
+- **Safety mechanism**: Provide a "break glass in case of emergency" option when automation isn't sufficient
+
+This hybrid approach combining automated analysis with manual override capabilities is considered a best practice in progressive deployment systems.
 
 ## Supporting Scripts
 
