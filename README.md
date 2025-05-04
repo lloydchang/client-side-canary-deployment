@@ -27,10 +27,16 @@ graph LR
     G --> H
     H --> J[Send Events to PostHog]
     J --> K[PostHog Tracks Errors & Engagement]
-    K --> L[GitHub Actions: Analyze PostHog Analytics and Change Canary Distribution Percentage]
-    L --> M{Trigger Rollback?}
-    M -->|Yes| N[Reassign Users to Stable]
-    M -->|No| O[Continue Rollout]
+```
+
+```mermaid
+graph LR
+    L[GitHub Actions: Analyze PostHog Analytics]
+    L --> M{Is Canary Healthy?}
+    M -->|No| N[Trigger Rollback to Stable]
+    M -->|Yes| O{Can Increase Canary %?}
+    O -->|Yes| P[Adjust Canary Percentage Upward]
+    O -->|No| Q[Maintain Current State]
 ```
 
  ## Client-Side vs. Server-Side Canary Deployments
