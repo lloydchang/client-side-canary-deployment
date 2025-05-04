@@ -108,18 +108,45 @@ function processDir() {
 ;(function(){
   // Create global initialization function to be called from bridge
   window.__NEXT_DASHBOARD_INIT__ = function(dashboardData) {
-    // This assumes the Next.js app exports a default function 
-    // that can be called with the dashboard data
-    if (typeof self.__NEXT_LOADED_PAGES__[0][0].__N_SSG === "object") {
-      // Initialize with dashboard data
-      const appModule = self.__NEXT_LOADED_PAGES__[0][1];
-      if (typeof appModule.initDashboard === 'function') {
-        appModule.initDashboard(dashboardData);
+    try {
+      // First check if we have a global init function
+      if (typeof window.initDashboard === 'function') {
+        window.initDashboard(dashboardData);
+        return;
       }
+      
+      // Check for Next.js loaded pages with proper error handling
+      if (self.__NEXT_LOADED_PAGES__ && 
+          Array.isArray(self.__NEXT_LOADED_PAGES__) && 
+          self.__NEXT_LOADED_PAGES__.length > 0) {
+        
+        const pageData = self.__NEXT_LOADED_PAGES__[0];
+        
+        if (Array.isArray(pageData) && pageData.length > 1) {
+          const appModule = pageData[1];
+          if (appModule && typeof appModule.initDashboard === 'function') {
+            appModule.initDashboard(dashboardData);
+          }
+        }
+      }
+      
+      // Always update the global data as fallback
+      window.dashboardData = dashboardData;
+      window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
+    } catch (err) {
+      console.error('Error initializing dashboard:', err);
+      // Fallback - just update the global data
+      window.dashboardData = dashboardData;
+      window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
     }
-    // Force hydration
-    if (window.__NEXT_HYDRATE) {
-      window.__NEXT_HYDRATE();
+    
+    // Try hydration if available
+    try {
+      if (window.__NEXT_HYDRATE) {
+        window.__NEXT_HYDRATE();
+      }
+    } catch (err) {
+      console.error('Hydration error:', err);
     }
   };
 

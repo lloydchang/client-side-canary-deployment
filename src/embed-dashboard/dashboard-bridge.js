@@ -21,7 +21,7 @@
     const checkInterval = setInterval(() => {
       if (window.canary) {
         clearInterval(checkInterval);
-        console.log('Dashboard bridge: Dashboard data available, initializing dashboard');
+        console.log('Dashboard bridge: Dashboard data available, preparing dashboard');
         
         // Prepare formatted data for the dashboard
         const dashboardData = {
@@ -42,17 +42,21 @@
         // Make data globally available
         window.dashboardData = dashboardData;
         
-        // Initialize the React application
-        if (window.__NEXT_DASHBOARD_INIT__) {
-          try {
-            window.__NEXT_DASHBOARD_INIT__(dashboardData);
-            console.log('Dashboard bridge: React dashboard initialized successfully');
-          } catch(e) {
-            console.error('Dashboard bridge: Failed to initialize React dashboard:', e);
+        // Give Next.js some time to initialize before calling init
+        setTimeout(() => {
+          // Initialize the React application
+          if (window.__NEXT_DASHBOARD_INIT__) {
+            try {
+              window.__NEXT_DASHBOARD_INIT__(dashboardData);
+              console.log('Dashboard bridge: React dashboard initialized successfully');
+            } catch(e) {
+              console.error('Dashboard bridge: Failed to initialize React dashboard:', e);
+              // The global data is still available via window.dashboardData
+            }
+          } else {
+            console.error('Dashboard bridge: Dashboard initialization function not found');
           }
-        } else {
-          console.error('Dashboard bridge: Dashboard initialization function not found');
-        }
+        }, 300); // Short delay to let Next.js initialize
         
         // Set up periodic refresh
         setInterval(() => {
