@@ -77,8 +77,9 @@ function processDir() {
       const jsFilePath = path.join(outDir, '_next/static/chunks/pages', jsFiles[0]);
       let jsContent = fs.readFileSync(jsFilePath, 'utf8');
       
-      // Add initialization function to the JS file
-      jsContent = jsContent + `
+      try {
+        // Add initialization function to the JS file
+        jsContent = jsContent + `
 ;(function(){
   // Create global initialization function to be called from bridge
   window.__NEXT_DASHBOARD_INIT__ = function(dashboardData) {
@@ -104,10 +105,14 @@ function processDir() {
     window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
   };
 })();`;
-      
-      // Write the modified JS file
-      fs.writeFileSync(path.join(targetDir, 'dashboard.js'), jsContent);
-      console.log(`Created modified dashboard.js at ${path.join(targetDir, 'dashboard.js')}`);
+        
+        // Write the modified JS file
+        fs.writeFileSync(path.join(targetDir, 'dashboard.js'), jsContent);
+        console.log(`Created modified dashboard.js at ${path.join(targetDir, 'dashboard.js')}`);
+      } catch (error) {
+        console.error('Error modifying JS file:', error);
+        throw error;
+      }
     }
 
     // Copy main CSS file
