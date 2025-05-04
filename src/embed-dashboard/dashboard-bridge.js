@@ -2,7 +2,7 @@
  * Dashboard Bridge
  * 
  * This script bridges the embedded dashboard React application with the canary system.
- * It initializes the React application when canary data becomes available.
+ * It initializes the React application when dashboard data becomes available.
  */
 
 (function() {
@@ -15,13 +15,13 @@
       return;
     }
 
-    console.log('Dashboard bridge: Waiting for canary data...');
+    console.log('Dashboard bridge: Waiting for dashboard data...');
     
     // Wait for canary to be available before initializing
     const checkInterval = setInterval(() => {
       if (window.canary) {
         clearInterval(checkInterval);
-        console.log('Dashboard bridge: Canary data available, initializing dashboard');
+        console.log('Dashboard bridge: Dashboard data available, initializing dashboard');
         
         // Prepare formatted data for the dashboard
         const dashboardData = {

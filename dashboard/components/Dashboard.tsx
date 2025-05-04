@@ -11,7 +11,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   if (!data) {
-    return <div className={styles.loading}>Loading canary data...</div>;
+    return <div className={styles.loading}>Loading dashboard data...</div>;
   }
 
   return (

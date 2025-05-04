@@ -84,9 +84,9 @@ function processDir() {
   // Create global initialization function to be called from bridge
   window.__NEXT_DASHBOARD_INIT__ = function(dashboardData) {
     // This assumes the Next.js app exports a default function 
-    // that can be called with the canary data
+    // that can be called with the dashboard data
     if (typeof self.__NEXT_LOADED_PAGES__[0][0].__N_SSG === "object") {
-      // Initialize with canary data
+      // Initialize with dashboard data
       const appModule = self.__NEXT_LOADED_PAGES__[0][1];
       if (typeof appModule.initDashboard === 'function') {
         appModule.initDashboard(dashboardData);
