@@ -40,6 +40,7 @@ graph LR
  
 ### How It Differs From Server-Side Canary Deployment
 
+```mermaid
 graph TD
     subgraph "Server-Side Canary Deployment"
         A[User Request] --> GA[Global Accelerator]
