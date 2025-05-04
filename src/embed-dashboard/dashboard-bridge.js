@@ -250,6 +250,28 @@
           }
         }
 
+        // Ensure React dashboard gets initialized properly
+        // Check if the React dashboard container already has the dashboard init script
+        const dashboardElement = document.getElementById('dashboard');
+        if (dashboardElement && dashboardElement.childElementCount === 0) {
+          console.log('Dashboard bridge: Initializing React dashboard');
+          
+          // Try direct initialization
+          if (typeof window.initDashboard === 'function') {
+            try {
+              window.initDashboard(dashboardData);
+              console.log('Dashboard bridge: React dashboard initialized manually');
+            } catch (e) {
+              console.error('Dashboard bridge: Error manually initializing React dashboard:', e);
+            }
+          }
+
+          // Dispatch event for any event listeners
+          window.dispatchEvent(new CustomEvent('dashboard-data-updated', {
+            detail: dashboardData
+          }));
+        }
+
         // Set up periodic refresh to update both dashboards
         setInterval(() => {
           if (window.canary) {
