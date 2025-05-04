@@ -177,13 +177,13 @@
                   
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <!-- Stable Metrics -->
-                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #ffffff;">
-                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #000000;">Stable Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0; color: #000000;" id="stable-metrics-list">
-                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Pageviews:</span> <span style="color: #000000;">${dashboardData.metrics.stable.pageviews}</span></li>
-                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Clicks:</span> <span style="color: #000000;">${dashboardData.metrics.stable.clicks}</span></li>
-                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Errors:</span> <span style="color: #000000;">${dashboardData.metrics.stable.errors}</span></li>
-                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Error Rate:</span> <span style="color: #000000;">${
+                    <div style="padding: 15px; border-radius: 5px; background-color: #000000; color: #ffffff; border-top: 3px solid #4CAF50;">
+                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #ffffff;">Stable Version</h4>
+                      <ul style="list-style: none; margin: 0; padding: 0; color: #ffffff;" id="stable-metrics-list">
+                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${dashboardData.metrics.stable.pageviews}</span></li>
+                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${dashboardData.metrics.stable.clicks}</span></li>
+                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${dashboardData.metrics.stable.errors}</span></li>
+                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Error Rate:</span> <span>${
                           dashboardData.metrics.stable.pageviews > 0 
                             ? ((dashboardData.metrics.stable.errors / dashboardData.metrics.stable.pageviews) * 100).toFixed(1) 
                             : '0.0'
@@ -192,13 +192,13 @@
                     </div>
                     
                     <!-- Canary Metrics -->
-                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #ffffff;">
-                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #000000;">Canary Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0; color: #000000;" id="canary-metrics-list">
-                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Pageviews:</span> <span style="color: #000000;">${dashboardData.metrics.canary.pageviews}</span></li>
-                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Clicks:</span> <span style="color: #000000;">${dashboardData.metrics.canary.clicks}</span></li>
-                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Errors:</span> <span style="color: #000000;">${dashboardData.metrics.canary.errors}</span></li>
-                        <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Error Rate:</span> <span style="color: #000000;">${
+                    <div style="padding: 15px; border-radius: 5px; background-color: #000000; color: #ffffff; border-top: 3px solid #FFC107;">
+                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #ffffff;">Canary Version</h4>
+                      <ul style="list-style: none; margin: 0; padding: 0; color: #ffffff;" id="canary-metrics-list">
+                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${dashboardData.metrics.canary.pageviews}</span></li>
+                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${dashboardData.metrics.canary.clicks}</span></li>
+                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${dashboardData.metrics.canary.errors}</span></li>
+                        <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Error Rate:</span> <span>${
                           dashboardData.metrics.canary.pageviews > 0 
                             ? ((dashboardData.metrics.canary.errors / dashboardData.metrics.canary.pageviews) * 100).toFixed(1) 
                             : '0.0'
