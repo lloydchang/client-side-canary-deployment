@@ -40,7 +40,6 @@ graph LR
  
 ### How It Differs From Server-Side Canary Deployment
 
-```mermaid
 graph TD
     subgraph "Server-Side Canary Deployment"
         A[User Request] --> GA[Global Accelerator]
@@ -54,6 +53,7 @@ graph TD
             SM1 --> EP1[Envoy Proxy / Linkerd2-proxy - Stable]
             EP1 --> C[Stable Version Server]
             C --> E[Response with Stable Version]
+            E --> PSA[PostHog Server SDK]
         end
 
         subgraph "Canary Traffic Flow"
@@ -62,6 +62,7 @@ graph TD
             SM2 --> EP2[Envoy Proxy / Linkerd2-proxy - Canary]
             EP2 --> D[Canary Version Server]
             D --> F[Response with Canary Version]
+            F --> PSC[PostHog Server SDK]
         end
     end
 
@@ -71,13 +72,16 @@ graph TD
         I --> J{Client-Side Decision Logic}
         J -->|95% of users| K[Load Stable Version Assets]
         J -->|5% of users| L[Load Canary Version Assets]
+
+        K --> PHK[PostHog JS SDK - Stable]
+        L --> PHL[PostHog JS SDK - Canary]
     end
 
-    %% Styles for key components
-    style GA fill:#fdd,stroke:#333
-    style SSDL fill:#af9,stroke:#333
-    style EP1 fill:#cff,stroke:#333
-    style EP2 fill:#ccf,stroke:#333
+    %% Styles for PostHog components
+    style PHK fill:#ffefc6,stroke:#333,stroke-width:1px
+    style PHL fill:#ffe6cc,stroke:#333,stroke-width:1px
+    style PSA fill:#ffefc6,stroke:#333,stroke-width:1px
+    style PSC fill:#ffe6cc,stroke:#333,stroke-width:1px
     style J fill:#af9,stroke:#333
 ```
 
