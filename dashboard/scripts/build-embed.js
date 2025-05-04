@@ -37,14 +37,14 @@ function processDir() {
       jsContent = jsContent + `
 ;(function(){
   // Create global initialization function to be called from bridge
-  window.__NEXT_DASHBOARD_INIT__ = function(canaryData) {
+  window.__NEXT_DASHBOARD_INIT__ = function(DashboardData) {
     // This assumes the Next.js app exports a default function 
     // that can be called with the canary data
     if (typeof self.__NEXT_LOADED_PAGES__[0][0].__N_SSG === "object") {
       // Initialize with canary data
       const appModule = self.__NEXT_LOADED_PAGES__[0][1];
       if (typeof appModule.initDashboard === 'function') {
-        appModule.initDashboard(canaryData);
+        appModule.initDashboard(DashboardData);
       }
     }
     // Force hydration

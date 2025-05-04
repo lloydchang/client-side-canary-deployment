@@ -22,7 +22,7 @@ export interface Config {
   [key: string]: any;
 }
 
-export interface CanaryData {
+export interface DashboardData {
   metrics: Metrics;
   assignment: Assignment;
   config: Config;

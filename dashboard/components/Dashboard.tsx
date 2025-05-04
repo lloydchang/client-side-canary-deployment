@@ -1,12 +1,12 @@
 import React from 'react';
-import { CanaryData } from '../interfaces/types';
+import { DashboardData } from '../interfaces/types';
 import MetricsCard from './MetricsCard';
 import VersionInfo from './VersionInfo';
 import EventsList from './EventsList';
 import styles from './Dashboard.module.css';
 
 interface DashboardProps {
-  data: CanaryData | null;
+  data: DashboardData | null;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ data }) => {
