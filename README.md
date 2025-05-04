@@ -42,20 +42,18 @@ graph TD
         O -->|Yes| P[Increase Canary Percentage]
         O -->|No| Q[Maintain Current State]
         
-        subgraph "File Updates"
-            N --> N1[Update config/canary-config.json]
-            N --> N2[Update src/config/canary-config.js]
-            P --> P1[Update config/canary-config.json] 
-            P --> P2[Update src/config/canary-config.js]
-            N1 --> V[Update version.json with new version number]
-            P1 --> V
-            N2 --> V
-            P2 --> V
+        N --> F[File Updates]
+        P --> F
+        Q --> Q1[No Changes Required]
+        
+        subgraph "File Updates Process"
+            F --> F1[Update config/canary-config.json]
+            F --> F2[Update src/config/canary-config.js]
+            F1 --> V[Update version.json]
+            F2 --> V
         end
         
-        subgraph "GitHub Pages Deployment"
-            V --> G[Deploy updated files to GitHub Pages]
-        end
+        V --> G[Deploy updated files to GitHub Pages]
     end
 
     subgraph "Client-Side Detection"
@@ -65,16 +63,8 @@ graph TD
         CL2 --> CL3[Load new configuration]
         CL3 --> CL4[Apply new canary percentages]
     end
-```
-
-```mermaid
-graph LR
-    subgraph Client-Side: Update Detection & Reload
-        U[User Loaded Web Page]
-        U --> V[Periodically Check version.json]
-        V -->|Version Changed| R["Trigger Page Reload via JS"]
-        V -->|No Change| S[No Reload - Continue as Normal]
-    end
+    
+    Q1 -.-> G
 ```
 
 ## Automatic Version Detection & Client Refresh
