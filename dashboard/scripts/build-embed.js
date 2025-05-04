@@ -3,7 +3,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 // Paths to the required files
-const outDir = path.resolve(__dirname, '../out');
+let outDir = path.resolve(__dirname, '../out');
 const targetDir = path.resolve(__dirname, '../../src/embed-dashboard');
 
 // Create embed directory if it doesn't exist
@@ -33,7 +33,11 @@ function buildNextProject() {
     } else if (fs.existsSync(path.resolve(__dirname, '../.next'))) {
       console.log('Found ".next" directory but no "out" subdirectory');
       console.log('Files in .next directory:');
-      execSync('ls -la ../.next', { stdio: 'inherit' });
+      try {
+        execSync('ls -la ../.next', { stdio: 'inherit' });
+      } catch (e) {
+        console.log('Could not list files in .next directory');
+      }
     } else {
       console.log('Could not find any output directories');
     }
@@ -69,32 +73,60 @@ function processDir() {
       }
     }
 
-    // Copy main JS file
-    const jsFiles = fs.readdirSync(path.join(outDir, '_next/static/chunks/pages'))
-      .filter(file => file.startsWith('index-'));
-    
-    if (jsFiles.length > 0) {
-      const jsFilePath = path.join(outDir, '_next/static/chunks/pages', jsFiles[0]);
-      let jsContent = fs.readFileSync(jsFilePath, 'utf8');
+    try {
+      // Copy main JS file
+      const jsFiles = fs.readdirSync(path.join(outDir, '_next/static/chunks/pages'))
+        .filter(file => file.startsWith('index-'));
       
-      try {
-        // Add initialization function to the JS file
-        jsContent = jsContent + `
+      if (jsFiles.length > 0) {
+        const jsFilePath = path.join(outDir, '_next/static/chunks/pages', jsFiles[0]);
+        let jsContent = fs.readFileSync(jsFilePath, 'utf8');
+        
+        try {
+          // Add initialization function to the JS file
+          jsContent = jsContent + `
 ;(function(){
   // Create global initialization function to be called from bridge
   window.__NEXT_DASHBOARD_INIT__ = function(dashboardData) {
-    // This assumes the Next.js app exports a default function 
-    // that can be called with the dashboard data
-    if (typeof self.__NEXT_LOADED_PAGES__[0][0].__N_SSG === "object") {
-      // Initialize with dashboard data
-      const appModule = self.__NEXT_LOADED_PAGES__[0][1];
-      if (typeof appModule.initDashboard === 'function') {
-        appModule.initDashboard(dashboardData);
+    try {
+      // First check if we have a global init function
+      if (typeof window.initDashboard === 'function') {
+        window.initDashboard(dashboardData);
+        return;
       }
+      
+      // Check for Next.js loaded pages with proper error handling
+      if (self.__NEXT_LOADED_PAGES__ && 
+          Array.isArray(self.__NEXT_LOADED_PAGES__) && 
+          self.__NEXT_LOADED_PAGES__.length > 0) {
+        
+        const pageData = self.__NEXT_LOADED_PAGES__[0];
+        
+        if (Array.isArray(pageData) && pageData.length > 1) {
+          const appModule = pageData[1];
+          if (appModule && typeof appModule.initDashboard === 'function') {
+            appModule.initDashboard(dashboardData);
+          }
+        }
+      }
+      
+      // Always update the global data as fallback
+      window.dashboardData = dashboardData;
+      window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
+    } catch (err) {
+      console.error('Error initializing dashboard:', err);
+      // Fallback - just update the global data
+      window.dashboardData = dashboardData;
+      window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
     }
-    // Force hydration
-    if (window.__NEXT_HYDRATE) {
-      window.__NEXT_HYDRATE();
+    
+    // Try hydration if available
+    try {
+      if (window.__NEXT_HYDRATE) {
+        window.__NEXT_HYDRATE();
+      }
+    } catch (err) {
+      console.error('Hydration error:', err);
     }
   };
 
@@ -105,25 +137,33 @@ function processDir() {
     window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
   };
 })();`;
-        
-        // Write the modified JS file
-        fs.writeFileSync(path.join(targetDir, 'dashboard.js'), jsContent);
-        console.log(`Created modified dashboard.js at ${path.join(targetDir, 'dashboard.js')}`);
-      } catch (error) {
-        console.error('Error modifying JS file:', error);
-        throw error;
+          
+          // Write the modified JS file
+          fs.writeFileSync(path.join(targetDir, 'dashboard.js'), jsContent);
+          console.log(`Created modified dashboard.js at ${path.join(targetDir, 'dashboard.js')}`);
+        } catch (error) {
+          console.error('Error modifying JS file:', error);
+          throw error;
+        }
+      } else {
+        console.error('No index JS files found in output directory');
       }
-    }
 
-    // Copy main CSS file
-    const cssFiles = fs.readdirSync(path.join(outDir, '_next/static/css'))
-      .filter(file => file.endsWith('.css'));
-    
-    if (cssFiles.length > 0) {
-      copyFile(
-        path.join(outDir, '_next/static/css', cssFiles[0]),
-        path.join(targetDir, 'dashboard.css')
-      );
+      // Copy main CSS file
+      const cssFiles = fs.readdirSync(path.join(outDir, '_next/static/css'))
+        .filter(file => file.endsWith('.css'));
+      
+      if (cssFiles.length > 0) {
+        copyFile(
+          path.join(outDir, '_next/static/css', cssFiles[0]),
+          path.join(targetDir, 'dashboard.css')
+        );
+      } else {
+        console.log('No CSS files found - dashboard might be unstyled');
+      }
+    } catch (error) {
+      console.error('Error processing build files:', error);
+      throw error;
     }
 
     // Create the HTML embed wrapper
