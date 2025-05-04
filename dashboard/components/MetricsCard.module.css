@@ -1,16 +1,16 @@
 .card {
   border-radius: 5px;
   padding: 15px;
-  background: #fafafa;
+  background: #777777;
   border-top: 3px solid #ccc;
 }
 
 .stable {
-  border-color: #0366d6;
+  border-color: white;
 }
 
 .canary {
-  border-color: #f9a825;
+  border-color: #ff5555;
 }
 
 .title {
