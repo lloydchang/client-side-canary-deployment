@@ -5,6 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Client-Side Canary Deployment</title>
   
+  <!-- Add version checker script before other scripts -->
+  <script>
+    // Check for updated version and refresh if needed
+    (function() {
+      const checkForUpdates = async () => {
+        try {
+          // Add a cache-busting query parameter
+          const response = await fetch('version.json?nocache=' + new Date().getTime());
+          if (!response.ok) return;
+          
+          const data = await response.json();
+          const currentVersion = localStorage.getItem('app-version');
+          
+          if (currentVersion && currentVersion !== data.version) {
+            console.log('New version detected, refreshing page...');
+            localStorage.setItem('app-version', data.version);
+            window.location.reload(true); // Force reload from server
+          } else {
+            localStorage.setItem('app-version', data.version);
+          }
+        } catch (err) {
+          console.error('Failed to check for updates:', err);
+        }
+      };
+      
+      // Check immediately and then every 5 minutes
+      checkForUpdates();
+      setInterval(checkForUpdates, 5 * 60 * 1000);
+    })();
+  </script>
+  
   <!-- Include the core canary.js script -->
   <script src="src/canary.js"></script>
   

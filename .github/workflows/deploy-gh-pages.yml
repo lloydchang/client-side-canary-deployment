@@ -47,6 +47,14 @@ jobs:
       - name: Install Dependencies 📦
         run: npm install
       
+      - name: Update Version ⬆️
+        run: |
+          # Make script executable
+          # Run the version update script
+          ./update-version.sh
+          # Show the updated version
+          cat version.json
+      
       - name: Build Dashboard with build-dashboard.js 📊
         run: |
           echo "Building dashboard with unified script..."
