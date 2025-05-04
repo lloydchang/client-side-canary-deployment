@@ -6,6 +6,9 @@
   "module": "src/index.js",
   "scripts": {
     "build": "rollup -c",
+    "dev": "next dev",
+    "build-next": "next build",
+    "start": "next start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -31,7 +34,7 @@
   },
   "dependencies": {
     "next": "^14.2.28",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
