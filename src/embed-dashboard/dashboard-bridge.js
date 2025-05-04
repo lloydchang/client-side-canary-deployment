@@ -22,7 +22,7 @@
     dashboardRoot.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 20px;">
         <div>
-          <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #000;">
+          <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #000; background-color: #fff;">
             React Dashboard (Original)
           </h3>
           <div id="react-dashboard" style="min-height: 100px; border: 1px dashed #ccc; padding: 10px; position: relative; background-color: #fff; color: #000;">
@@ -34,7 +34,7 @@
         </div>
         
         <div>
-          <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #000;">
+          <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #000; background-color: #fff;">
             Direct HTML Dashboard (Fallback)
           </h3>
           <div id="html-dashboard" style="min-height: 100px; border: 1px dashed #ccc; padding: 10px; position: relative; background-color: #fff; color: #000;">
@@ -98,165 +98,42 @@
         const htmlDashboardContainer = document.getElementById('html-dashboard');
         if (htmlDashboardContainer) {
           try {
-            // Create the dashboard with direct HTML - using black text on white background
+            // Create the dashboard with direct HTML - enforcing black on white
             const directDashboardContainer = document.createElement('div');
             directDashboardContainer.className = 'Dashboard_dashboard__FnfVe';
-            directDashboardContainer.style.backgroundColor = '#fff';
-            directDashboardContainer.style.color = '#000';
-            directDashboardContainer.innerHTML = `
-              <div class="Dashboard_grid__OoIFh">
-                <div class="Dashboard_section__6mn3y" style="background-color: #fff; color: #000;">
-                  <div>
-                    <h3 style="color: #000; margin-top: 0;">Current Version</h3>
-                    <div>
-                      <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                        <span>Assigned to: </span>
-                        <strong style="margin-left: 5px;">${dashboardData.assignment.version}</strong>
-                      </div>
-                      <div>
-                        <span>Canary percentage: </span>
-                        <strong>${dashboardData.config.initialCanaryPercentage}%</strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="Dashboard_section__6mn3y" style="background-color: #fff; color: #000;">
-                  <h3 style="color: #000; margin-top: 0;">Metrics Comparison</h3>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div style="border-radius: 5px; padding: 15px; background: #fff; border: 1px solid #ccc; color: #000;">
-                      <h4 style="margin: 0 0 10px 0; color: #000;">Stable Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0; color: #000;">
-                        <li><span style="font-weight: 500; margin-right: 5px;">Pageviews:</span> ${dashboardData.metrics.stable.pageviews}</li>
-                        <li><span style="font-weight: 500; margin-right: 5px;">Clicks:</span> ${dashboardData.metrics.stable.clicks}</li>
-                        <li><span style="font-weight: 500; margin-right: 5px;">Errors:</span> ${dashboardData.metrics.stable.errors}</li>
-                        <li><span style="font-weight: 500; margin-right: 5px;">Error Rate:</span> ${
-                          dashboardData.metrics.stable.pageviews > 0 
-                            ? ((dashboardData.metrics.stable.errors / dashboardData.metrics.stable.pageviews) * 100).toFixed(1) 
-                            : '0.0'
-                        }%</li>
-                      </ul>
-                    </div>
-                    <div style="border-radius: 5px; padding: 15px; background: #fff; border: 1px solid #ccc; color: #000;">
-                      <h4 style="margin: 0 0 10px 0; color: #000;">Canary Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0; color: #000;">
-                        <li><span style="font-weight: 500; margin-right: 5px;">Pageviews:</span> ${dashboardData.metrics.canary.pageviews}</li>
-                        <li><span style="font-weight: 500; margin-right: 5px;">Clicks:</span> ${dashboardData.metrics.canary.clicks}</li>
-                        <li><span style="font-weight: 500; margin-right: 5px;">Errors:</span> ${dashboardData.metrics.canary.errors}</li>
-                        <li><span style="font-weight: 500; margin-right: 5px;">Error Rate:</span> ${
-                          dashboardData.metrics.canary.pageviews > 0 
-                            ? ((dashboardData.metrics.canary.errors / dashboardData.metrics.canary.pageviews) * 100).toFixed(1) 
-                            : '0.0'
-                        }%</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                <div class="Dashboard_section__6mn3y" style="background-color: #fff; color: #000;">
-                  <h3 style="color: #000; margin-top: 0;">Recent Events</h3>
-                  <div style="color: #000;">
-                    ${dashboardData.metrics.events && dashboardData.metrics.events.length > 0 ? 
-                      dashboardData.metrics.events.slice(0, 5).map(event => `
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; color: #000;">
-                          <div style="font-weight: 500; color: #000;">${event.event || 'Unknown Event'}</div>
-                          <div style="color: #000;">${new Date(event.timestamp || Date.now()).toLocaleTimeString()}</div>
-                        </div>
-                      `).join('') :
-                      '<div style="text-align: center; padding: 10px 0; color: #000;">No events recorded</div>'
-                    }
-                  </div>
-                </div>
-              </div>
+            // Inline styles to override any external CSS
+            directDashboardContainer.style = `
+              background-color: #ffffff !important;
+              color: #000000 !important;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              border-radius: 8px;
+              padding: 20px;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              max-width: 800px;
+              margin: 0 auto;
             `;
             
-            // Add our direct HTML dashboard to its container
-            htmlDashboardContainer.appendChild(directDashboardContainer);
-            dashboardRendered = true;
-            
-            console.log('Dashboard bridge: Direct HTML dashboard rendered');
-          } catch(e) {
-            console.error('Dashboard bridge: Error rendering direct HTML dashboard:', e);
-          }
-        }
-
-        // Set up periodic refresh to update both dashboards
-        setInterval(() => {
-          if (window.canary) {
-            // Update the dashboard data
-            dashboardData.metrics = window.canary._metrics || dashboardData.metrics;
-            dashboardData.assignment = window.canary._assignment || dashboardData.assignment;
-            dashboardData.config = window.canary._config || dashboardData.config;
-            
-            // 1. UPDATE THE REACT DASHBOARD
-            try {
-              // Trigger React update via custom event and update function
-              window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
-              if (window.__NEXT_DASHBOARD_UPDATE__) {
-                window.__NEXT_DASHBOARD_UPDATE__(dashboardData);
-              }
-            } catch(e) {
-              console.error('Dashboard bridge: Error updating React dashboard:', e);
-            }
-            
-            // 2. UPDATE THE DIRECT HTML DASHBOARD
-            try {
-              const htmlDashboardContainer = document.getElementById('html-dashboard');
-              if (htmlDashboardContainer) {
-                const directDashboard = htmlDashboardContainer.querySelector('.Dashboard_dashboard__FnfVe');
-                if (directDashboard) {
-                  // Stable metrics update
-                  const stableMetricsList = directDashboard.querySelector('div:nth-child(2) > div > div:first-child > ul');
-                  if (stableMetricsList) {
-                    const stableMetrics = dashboardData.metrics.stable;
-                    const stableErrorRate = stableMetrics.pageviews > 0 
-                      ? ((stableMetrics.errors / stableMetrics.pageviews) * 100).toFixed(1) 
-                      : '0.0';
-                    
-                    stableMetricsList.innerHTML = `
-                      <li><span style="font-weight: 500; margin-right: 5px;">Pageviews:</span> ${stableMetrics.pageviews}</li>
-                      <li><span style="font-weight: 500; margin-right: 5px;">Clicks:</span> ${stableMetrics.clicks}</li>
-                      <li><span style="font-weight: 500; margin-right: 5px;">Errors:</span> ${stableMetrics.errors}</li>
-                      <li><span style="font-weight: 500; margin-right: 5px;">Error Rate:</span> ${stableErrorRate}%</li>
-                    `;
-                  }
-
-                  // Canary metrics update
-                  const canaryMetricsList = directDashboard.querySelector('div:nth-child(2) > div > div:last-child > ul');
-                  if (canaryMetricsList) {
-                    const canaryMetrics = dashboardData.metrics.canary;
-                    const canaryErrorRate = canaryMetrics.pageviews > 0 
-                      ? ((canaryMetrics.errors / canaryMetrics.pageviews) * 100).toFixed(1) 
-                      : '0.0';
-                    
-                    canaryMetricsList.innerHTML = `
-                      <li><span style="font-weight: 500; margin-right: 5px;">Pageviews:</span> ${canaryMetrics.pageviews}</li>
-                      <li><span style="font-weight: 500; margin-right: 5px;">Clicks:</span> ${canaryMetrics.clicks}</li>
-                      <li><span style="font-weight: 500; margin-right: 5px;">Errors:</span> ${canaryMetrics.errors}</li>
-                      <li><span style="font-weight: 500; margin-right: 5px;">Error Rate:</span> ${canaryErrorRate}%</li>
-                    `;
-                  }
-
-                  // Events update
-                  const eventsSection = directDashboard.querySelector('div:nth-child(3) > div');
-                  if (eventsSection && dashboardData.metrics.events) {
-                    if (dashboardData.metrics.events.length > 0) {
-                      eventsSection.innerHTML = dashboardData.metrics.events.slice(0, 5).map(event => `
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; color: #000;">
-                          <div style="font-weight: 500; color: #000;">${event.event || 'Unknown Event'}</div>
-                          <div style="color: #000;">${new Date(event.timestamp || Date.now()).toLocaleTimeString()}</div>
-                        </div>
-                      `).join('');
-                    } else {
-                      eventsSection.innerHTML = '<div style="text-align: center; padding: 10px 0; color: #000;">No events recorded</div>';
-                    }
-                  }
-                }
-              }
-            } catch(e) {
-              console.error('Dashboard bridge: Error updating direct HTML dashboard:', e);
-            }
-          }
-        }, 2000);
-      }
-    }, 500);
-  });
-})();
+            directDashboardContainer.innerHTML = `
+              <div class="Dashboard_grid__OoIFh" style="color: #000000 !important; background-color: #ffffff !important;">
+                <div class="Dashboard_section__6mn3y" style="background-color: #ffffff !important; color: #000000 !important; box-shadow: none; border: 1px solid #cccccc;">
+                  <div style="color: #000000 !important;">
+                    <h3 style="color: #000000 !important; margin-top: 0;">Current Version</h3>
+                    <div style="color: #000000 !important;">
+                      <div style="display: flex; align-items: center; margin-bottom: 8px; color: #000000 !important;">
+                        <span style="color: #000000 !important;">Assigned to: </span>
+                        <strong style="margin-left: 5px; color: #000000 !important;">${dashboardData.assignment.version}</strong>
+                      </div>
+                      <div style="color: #000000 !important;">
+                        <span style="color: #000000 !important;">Canary percentage: </span>
+                        <strong style="color: #000000 !important;">${dashboardData.config.initialCanaryPercentage}%</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="Dashboard_section__6mn3y" style="background-color: #ffffff !important; color: #000000 !important; box-shadow: none; border: 1px solid #cccccc; margin-top: 15px;">
+                  <h3 style="color: #000000 !important; margin-top: 0;">Metrics Comparison</h3>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; color: #000000 !important;">
+                    <div style="border-radius: 5px; padding: 15px; background-color: #ffffff !important; border: 1px solid #cccccc; color: #000000 !important;">
+                      <h4 style="margin: 0 0 10px 0; color: #000000 !important;">Stable Version</h4>
+                      <ul style="list-style: none; margin: 0; padding: 0; color: #000000 !important;">
+                        <li style="color: #000000 !important;"><span style="font-weight: 500; margin-right: 5px; color: #000000 !important;">Pageviews:</span> <span style="color: #000000 !important
