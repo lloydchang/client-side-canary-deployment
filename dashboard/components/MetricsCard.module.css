@@ -2,6 +2,7 @@
   border-radius: 5px;
   padding: 15px;
   background: #000000;
+  color: #ffffff; /* Add white text color to contrast with black background */
   border-top: 3px solid;
 }
 
