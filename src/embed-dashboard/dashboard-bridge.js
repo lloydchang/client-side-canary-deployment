@@ -45,7 +45,6 @@
         // Insert dashboard CSS directly into the root element to ensure styling
         dashboardRoot.innerHTML = `
           <div class="Dashboard_dashboard__FnfVe">
-            <h2 class="Dashboard_title__UZeKr">Canary Deployment Dashboard</h2>
             <div class="Dashboard_grid__OoIFh">
               <div class="Dashboard_section__6mn3y">
                 <div class="VersionInfo_versionInfo__3S_vS">

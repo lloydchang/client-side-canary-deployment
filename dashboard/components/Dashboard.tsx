@@ -15,9 +15,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   }
 
   return (
-    <div className={styles.dashboard}>
-      <h2 className={styles.title}>Canary Deployment Dashboard</h2>
-      
+    <div className={styles.dashboard}>      
       <div className={styles.grid}>
         <div className={styles.section}>
           <VersionInfo 
@@ -25,7 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             percentage={data.config.initialCanaryPercentage} 
           />
         </div>
-        
+
         <div className={styles.section}>
           <h3>Metrics Comparison</h3>
           <div className={styles.metricsGrid}>
