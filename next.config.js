@@ -5,9 +5,22 @@ const nextConfig = {
   // This will make canary.js, analytics.js and other scripts available
   staticPageGenerationTimeout: 180,
   
-  // Don't let Next.js handle static HTML
+  // Handle the embed dashboard path
   async rewrites() {
-    return [];
+    return [
+      {
+        source: '/src/embed-dashboard/:path*',
+        destination: '/api/embed-dashboard/:path*'
+      },
+      {
+        source: '/stable',
+        destination: '/stable-page'
+      },
+      {
+        source: '/canary',
+        destination: '/canary-page'
+      }
+    ]
   }
 }
 
