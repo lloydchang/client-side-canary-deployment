@@ -21,6 +21,52 @@ canary.config({
 });
 ```
 
+## Version Management & Client Updates
+
+The system includes automatic version detection and refresh capabilities:
+
+```javascript
+// Check for updated versions programmatically
+async function checkForVersionUpdates() {
+  // Add cache-busting to ensure fresh data
+  const response = await fetch('version.json?nocache=' + Date.now());
+  const data = await response.json();
+  
+  // Compare with locally stored version
+  const currentVersion = localStorage.getItem('app-version');
+  
+  if (currentVersion && currentVersion !== data.version) {
+    // Version has changed - reload to get updated configs
+    localStorage.setItem('app-version', data.version);
+    window.location.reload(true); // Force reload from server
+  }
+}
+
+// Schedule periodic checks (system default is 5 minutes)
+setInterval(checkForVersionUpdates, 5 * 60 * 1000);
+```
+
+## Configuration Update Hooks
+
+Monitor configuration changes in real-time:
+
+```javascript
+// React to configuration updates
+canary.on('configUpdated', function(newConfig) {
+  console.log('Canary configuration was updated:', newConfig);
+  
+  // Optionally take custom actions when config changes
+  if (newConfig.initialCanaryPercentage > 20) {
+    notifyTeam('Canary percentage exceeds 20%');
+  }
+});
+
+// Listen specifically for version changes
+canary.on('versionChanged', function(versionInfo) {
+  console.log(`Version changed from ${versionInfo.previous} to ${versionInfo.current}`);
+});
+```
+
 ## Feature-Specific Configuration
 
 Features can be configured individually:

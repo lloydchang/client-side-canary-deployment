@@ -22,6 +22,36 @@ This consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of the ca
   - `analyze`: Evaluate canary performance
   - `adjust-canary`: Change canary percentage
 
+### Version Management & Client Updates
+
+The workflow ensures that clients always get the latest configuration:
+
+1. **Version File Updates**:
+   - Each job runs `update-version.sh` which:
+     - Reads current version from `version.json`
+     - Increments the patch version (e.g., 1.0.3 → 1.0.4)
+     - Updates the timestamp
+   - This happens for all jobs: deployment, analysis, and adjustments
+
+2. **Configuration Updates**:
+   - The `canary-analyzer.js` script updates:
+     - `config/canary-config.json`: Main JSON configuration 
+     - `src/config/canary-config.js`: JavaScript configuration for client use
+
+3. **Clean Deployment**:
+   - For full deployments, all files are pushed to `gh-pages`
+   - For config-only updates, selective deployment targets only:
+     - `version.json`
+     - `config/**`
+     - `src/config/**`
+
+4. **Client Detection**:
+   - All HTML pages (index, stable, canary) check for version changes
+   - Pages reload automatically when version changes are detected
+   - 5-minute polling interval ensures timely updates
+
+This creates a seamless update pipeline where configuration changes are automatically propagated to all clients.
+
 ### Jobs
 
 #### 1. build-and-deploy

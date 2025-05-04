@@ -20,6 +20,31 @@ This document explains how our client-side canary deployment system integrates w
    - Generate reports for stakeholders
    - Trigger automatic rollbacks if needed
 
+## Analytics-Driven Configuration Updates
+
+The system uses analytics data to make informed decisions about canary deployments:
+
+1. **Automatic Analysis**:
+   - Every 6 hours, the GitHub Actions workflow queries PostHog data
+   - Compares error rates between stable and canary versions
+   - Makes decisions based on configurable thresholds
+
+2. **Configuration Updates**:
+   - Updates `config/canary-config.json` and `src/config/canary-config.js` with new percentages
+   - Increments `version.json` to trigger client refreshes
+   - Deploys changes to GitHub Pages automatically
+
+3. **Client Propagation**:
+   - All client pages periodically check for version updates every 5 minutes
+   - When changes are detected, pages automatically reload
+   - Users instantly receive updated canary assignments
+
+This creates a fully automated feedback loop where:
+- User interactions and errors are tracked in PostHog
+- Analytics data drives canary percentage adjustments
+- Changes are automatically propagated to all clients
+- The system continuously optimizes the deployment
+
 ## Setup Instructions
 
 ### 1. PostHog Setup

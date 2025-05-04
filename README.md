@@ -13,6 +13,7 @@ This project demonstrates how to implement canary deployments for static web app
 3. Gradually increases canary percentage when metrics look good
 4. Rolls back features if error rates increase
 5. Persists user assignments in localStorage
+6. Uses automatic version detection to refresh clients when configuration changes
 
 ```mermaid
 graph LR
@@ -36,11 +37,11 @@ graph LR
     subgraph Server-Side: Canary Evaluation Logic
         L[GitHub Actions: Analyze PostHog Metrics]
         L --> M{Is Canary Healthy?}
-        M -->|No| N[Adjust Canary Percentage Downward in canary.js served by GitHub Pages]
+        M -->|No| N[Adjust Canary Percentage Downward in canary-config.js]
         M -->|Yes| O{Can Increase Canary %?}
-        O -->|Yes| P[Adjust Canary Percentage Upward in canary.js served by GitHub Pages]
+        O -->|Yes| P[Adjust Canary Percentage Upward in canary-config.js]
         O -->|No| Q[Maintain Current State]
-        N --> R[Update version.json served by GitHub Pages]
+        N --> R[Update version.json Version Number]
         P --> R
     end
 ```
@@ -49,23 +50,39 @@ graph LR
 graph LR
     subgraph Client-Side: Update Detection & Reload
         U[User Loaded Web Page]
-        U --> V[Check version.json for updates served by GitHub Pages]
+        U --> V[Periodically Check version.json]
         V -->|Version Changed| R["Trigger Page Reload via JS"]
         V -->|No Change| S[No Reload - Continue as Normal]
     end
 ```
 
+## Automatic Version Detection & Client Refresh
 
- ## Client-Side vs. Server-Side Canary Deployments
+The system ensures all clients stay up-to-date with the latest canary configurations:
+
+1. **Server-Side Updates**:
+   - Every deployment updates `version.json` with an incremented version number
+   - Configuration changes update both `config/canary-config.json` and `src/config/canary-config.js`
+   - All changes are deployed to GitHub Pages automatically
+
+2. **Client-Side Detection**:
+   - All pages poll for changes to `version.json` every 5 minutes
+   - A cache-busting query parameter ensures fresh data: `?nocache=[timestamp]`
+   - When version changes are detected, the page triggers a hard reload
+   - Local version information is stored in localStorage for comparison
+
+This ensures that when canary percentages are adjusted (either automatically or manually), all users receive the updated configuration without manual intervention.
+
+## Client-Side vs. Server-Side Canary Deployments
  
- ### What is a Client-Side Canary Deployment?
+### What is a Client-Side Canary Deployment?
  
- In this approach, the traffic shaping decision (which version a user receives) happens mostly in the user's browser:
+In this approach, the traffic shaping decision (which version a user receives) happens mostly in the user's browser:
  
- - **No specialized server infrastructure required**: No need for global accelerators, load balancers, or service meshes
- - **Works with static hosting**: Compatible with GitHub Pages
- - **JavaScript-based assignment**: Uses browser's localStorage (not server-side sessions) and JavaScript for user assignment
- - **Analytics-driven**: Collects metrics to evaluate stable vs. canary versions
+- **No specialized server infrastructure required**: No need for global accelerators, load balancers, or service meshes
+- **Works with static hosting**: Compatible with GitHub Pages
+- **JavaScript-based assignment**: Uses browser's localStorage (not server-side sessions) and JavaScript for user assignment
+- **Analytics-driven**: Collects metrics to evaluate stable vs. canary versions
  
 ### How It Differs From Server-Side Canary Deployment
 
