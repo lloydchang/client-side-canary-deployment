@@ -272,10 +272,10 @@
                   : '0.0';
                 
                 stableMetricsList.innerHTML = `
-                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Pageviews:</span> <span style="color: #000000;">${stableMetrics.pageviews}</span></li>
-                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Clicks:</span> <span style="color: #000000;">${stableMetrics.clicks}</span></li>
-                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Errors:</span> <span style="color: #000000;">${stableMetrics.errors}</span></li>
-                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Error Rate:</span> <span style="color: #000000;">${stableErrorRate}%</span></li>
+                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${stableMetrics.pageviews}</span></li>
+                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${stableMetrics.clicks}</span></li>
+                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${stableMetrics.errors}</span></li>
+                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Error Rate:</span> <span>${stableErrorRate}%</span></li>
                 `;
               }
 
@@ -288,10 +288,10 @@
                   : '0.0';
                 
                 canaryMetricsList.innerHTML = `
-                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Pageviews:</span> <span style="color: #000000;">${canaryMetrics.pageviews}</span></li>
-                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Clicks:</span> <span style="color: #000000;">${canaryMetrics.clicks}</span></li>
-                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Errors:</span> <span style="color: #000000;">${canaryMetrics.errors}</span></li>
-                  <li style="margin-bottom: 5px; color: #000000;"><span style="font-weight: 500; color: #000000;">Error Rate:</span> <span style="color: #000000;">${canaryErrorRate}%</span></li>
+                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${canaryMetrics.pageviews}</span></li>
+                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${canaryMetrics.clicks}</span></li>
+                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${canaryMetrics.errors}</span></li>
+                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Error Rate:</span> <span>${canaryErrorRate}%</span></li>
                 `;
               }
 
