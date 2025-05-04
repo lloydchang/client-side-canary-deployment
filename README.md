@@ -16,28 +16,45 @@ This project demonstrates how to implement canary deployments for static web app
 
 ```mermaid
 graph LR
-    A[User Visits Site] --> B{First Visit?}
-    B -->|Yes| C{Assign Version}
-    B -->|No| D[Load Saved Assignment]
-    C -->|95%| E[Stable Experience]
-    C -->|5%| F[Canary Experience]
-    D --> G[Consistent Experience]
-    E --> H["Collect Metrics - PostHog JS SDK"]
-    F --> H
-    G --> H
-    H --> J[Send Events to PostHog]
-    J --> K[PostHog Tracks Errors & Engagement]
+    subgraph Client-Side: Version Assignment & Metrics
+        A[User Visits Site] --> B{First Visit?}
+        B -->|Yes| C{Assign Version}
+        B -->|No| D[Load Saved Assignment]
+        C -->|95%| E[Stable Experience]
+        C -->|5%| F[Canary Experience]
+        D --> G[Consistent Experience]
+        E --> H["Collect Metrics - PostHog JS SDK"]
+        F --> H
+        G --> H
+        H --> J[Send Events to PostHog]
+        J --> K[PostHog Tracks Errors & Engagement]
+    end
 ```
 
 ```mermaid
 graph LR
-    L[GitHub Actions: Analyze PostHog Analytics]
-    L --> M{Is Canary Healthy?}
-    M -->|No| N[Adjust Canary Percentage Downward]
-    M -->|Yes| O{Can Increase Canary %?}
-    O -->|Yes| P[Adjust Canary Percentage Upward]
-    O -->|No| Q[Maintain Current State]
+    subgraph Server-Side: Canary Evaluation Logic
+        L[GitHub Actions: Analyze PostHog Analytics]
+        L --> M{Is Canary Healthy?}
+        M -->|No| N[Adjust Canary Percentage Downward]
+        M -->|Yes| O{Can Increase Canary %?}
+        O -->|Yes| P[Adjust Canary Percentage Upward]
+        O -->|No| Q[Maintain Current State]
+        N --> R[Update version.json]
+        P --> R
+    end
 ```
+
+```mermaid
+graph LR
+    subgraph Client-Side: Update Detection & Reload
+        U[User Loaded Web Page]
+        U --> V[Check version.json for updates]
+        V -->|Version Changed| R["Trigger Page Reload via JS"]
+        V -->|No Change| S[No Reload - Continue as Normal]
+    end
+```
+
 
  ## Client-Side vs. Server-Side Canary Deployments
  
