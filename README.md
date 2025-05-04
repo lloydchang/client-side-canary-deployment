@@ -42,15 +42,14 @@ graph TD
         O -->|Yes| P[Increase Canary Percentage]
         O -->|No| Q[Maintain Current State]
         
-        N --> F[File Updates]
-        P --> F
+        N --> F1
+        P --> F1
         Q --> Q1[No Changes Required]
         
         subgraph "File Updates Process"
-            F --> F1[Update config/canary-config.json]
-            F --> F2[Update src/config/canary-config.js]
-            F1 --> V[Update version.json]
-            F2 --> V
+            F1[Update config/canary-config.json]
+            F1 --> F2[Update src/config/canary-config.js]
+            F2 --> V[Update version.json]
         end
         
         V --> G[Deploy updated files to GitHub Pages]
