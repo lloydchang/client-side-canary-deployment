@@ -61,9 +61,7 @@ graph TD
         CL1 -->|Version Changed| CL2[Reload page]
         CL2 --> CL3[Load new configuration]
         CL3 --> CL4[Apply new canary percentages]
-    end
-    
-    Q1 -.-> G
+    end    
 ```
 
 ## Automatic Version Detection & Client Refresh
