@@ -177,9 +177,9 @@
                   
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <!-- Stable Metrics -->
-                    <div style="padding: 15px; border-radius: 5px; border-top: 3px solid #4CAF50;">
-                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px;">Stable Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0;" id="stable-metrics-list">
+                    <div style="padding: 15px; border-radius: 5px; border-top: 3px solid #4CAF50; background-color: #000000; color: #ffffff;">
+                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #ffffff;">Stable Version</h4>
+                      <ul style="list-style: none; margin: 0; padding: 0; color: #ffffff;" id="stable-metrics-list">
                         <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${dashboardData.metrics.stable.pageviews}</span></li>
                         <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${dashboardData.metrics.stable.clicks}</span></li>
                         <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${dashboardData.metrics.stable.errors}</span></li>
@@ -192,9 +192,9 @@
                     </div>
                     
                     <!-- Canary Metrics -->
-                    <div style="padding: 15px; border-radius: 5px; border-top: 3px solid #FFC107;">
-                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px;">Canary Version</h4>
-                      <ul style="list-style: none; margin: 0; padding: 0;" id="canary-metrics-list">
+                    <div style="padding: 15px; border-radius: 5px; border-top: 3px solid #FFC107; background-color: #000000; color: #ffffff;">
+                      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #ffffff;">Canary Version</h4>
+                      <ul style="list-style: none; margin: 0; padding: 0; color: #ffffff;" id="canary-metrics-list">
                         <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${dashboardData.metrics.canary.pageviews}</span></li>
                         <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${dashboardData.metrics.canary.clicks}</span></li>
                         <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${dashboardData.metrics.canary.errors}</span></li>
@@ -272,10 +272,10 @@
                   : '0.0';
                 
                 stableMetricsList.innerHTML = `
-                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${stableMetrics.pageviews}</span></li>
-                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${stableMetrics.clicks}</span></li>
-                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${stableMetrics.errors}</span></li>
-                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Error Rate:</span> <span>${stableErrorRate}%</span></li>
+                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Pageviews:</span> <span>${stableMetrics.pageviews}</span></li>
+                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Clicks:</span> <span>${stableMetrics.clicks}</span></li>
+                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Errors:</span> <span>${stableMetrics.errors}</span></li>
+                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Error Rate:</span> <span>${stableErrorRate}%</span></li>
                 `;
               }
 
@@ -288,10 +288,10 @@
                   : '0.0';
                 
                 canaryMetricsList.innerHTML = `
-                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Pageviews:</span> <span>${canaryMetrics.pageviews}</span></li>
-                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Clicks:</span> <span>${canaryMetrics.clicks}</span></li>
-                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Errors:</span> <span>${canaryMetrics.errors}</span></li>
-                  <li style="margin-bottom: 5px;"><span style="font-weight: 500;">Error Rate:</span> <span>${canaryErrorRate}%</span></li>
+                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Pageviews:</span> <span>${canaryMetrics.pageviews}</span></li>
+                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Clicks:</span> <span>${canaryMetrics.clicks}</span></li>
+                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Errors:</span> <span>${canaryMetrics.errors}</span></li>
+                  <li style="margin-bottom: 5px; color: #ffffff;"><span style="font-weight: 500;">Error Rate:</span> <span>${canaryErrorRate}%</span></li>
                 `;
               }
 
