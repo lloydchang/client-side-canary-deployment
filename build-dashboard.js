@@ -48,8 +48,11 @@ function buildNextProject() {
     console.log('Looking for output files...');
     if (fs.existsSync(path.resolve(__dirname, '../out'))) {
       console.log('Found output in "out" directory');
+      return true;
     } else if (fs.existsSync(path.resolve(__dirname, '../.next/out'))) {
       console.log('Found output in ".next/out" directory');
+      outDir = path.resolve(__dirname, '../.next/out');
+      return true;
     } else if (fs.existsSync(path.resolve(__dirname, '../.next'))) {
       console.log('Found ".next" directory but no "out" subdirectory');
       console.log('Files in .next directory:');
@@ -58,11 +61,22 @@ function buildNextProject() {
       } catch (e) {
         console.log('Could not list files in .next directory');
       }
-    } else {
-      console.log('Could not find any output directories');
+      
+      // Try exporting from .next
+      console.log('Attempting to export from .next directory...');
+      try {
+        execSync('npm run export', { stdio: 'inherit' });
+        if (fs.existsSync(path.resolve(__dirname, '../out'))) {
+          console.log('Export successful, found output in "out" directory');
+          return true;
+        }
+      } catch (e) {
+        console.error('Error exporting Next.js project:', e);
+      }
     }
     
-    return true;
+    console.error('Could not find any output directories after build');
+    return false;
   } catch (error) {
     console.error('Error building Next.js project:', error);
     return false;
@@ -109,24 +123,45 @@ function processDir() {
   // Create global initialization function to be called from bridge
   window.__NEXT_DASHBOARD_INIT__ = function(dashboardData) {
     try {
+      console.log('Dashboard init called with data:', dashboardData);
+      
       // First check if we have a global init function
       if (typeof window.initDashboard === 'function') {
+        console.log('Calling window.initDashboard directly');
         window.initDashboard(dashboardData);
         return;
       }
       
-      // Check for Next.js loaded pages with proper error handling
+      // Next.js specific initialization
       if (self.__NEXT_LOADED_PAGES__ && 
           Array.isArray(self.__NEXT_LOADED_PAGES__) && 
           self.__NEXT_LOADED_PAGES__.length > 0) {
         
+        console.log('Found Next.js loaded pages, attempting to initialize');
         const pageData = self.__NEXT_LOADED_PAGES__[0];
         
         if (Array.isArray(pageData) && pageData.length > 1) {
           const appModule = pageData[1];
           if (appModule && typeof appModule.initDashboard === 'function') {
+            console.log('Calling Next.js module initDashboard');
             appModule.initDashboard(dashboardData);
+            return;
           }
+        }
+      }
+      
+      // Attempt Next.js hydration if available
+      if (typeof self.__NEXT_HYDRATE === 'function') {
+        console.log('Triggering Next.js hydration');
+        
+        // Set data first so components can access it during hydration
+        window.dashboardData = dashboardData;
+        
+        try {
+          self.__NEXT_HYDRATE();
+          console.log('Next.js hydration completed');
+        } catch (err) {
+          console.error('Error during Next.js hydration:', err);
         }
       }
       
@@ -139,23 +174,29 @@ function processDir() {
       window.dashboardData = dashboardData;
       window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
     }
-    
-    // Try hydration if available
-    try {
-      if (window.__NEXT_HYDRATE) {
-        window.__NEXT_HYDRATE();
-      }
-    } catch (err) {
-      console.error('Hydration error:', err);
-    }
   };
 
   // Create update function
   window.__NEXT_DASHBOARD_UPDATE__ = function(dashboardData) {
+    console.log('Dashboard update called with data:', dashboardData);
     // Dispatch custom event with updated data
     window.dashboardData = dashboardData;
     window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
   };
+  
+  // Add polyfill for Next.js hydration if it's not available
+  if (typeof self.__NEXT_HYDRATE !== 'function') {
+    self.__NEXT_HYDRATE = function() {
+      console.log('Polyfill hydration called');
+      // This is a simple polyfill - in a real implementation,
+      // this would attempt to hydrate React components
+      const dashboardElement = document.getElementById('dashboard');
+      if (dashboardElement && window.dashboardData) {
+        // Dispatch an event to notify that hydration was attempted
+        window.dispatchEvent(new CustomEvent('dashboard-hydrate-attempted'));
+      }
+    };
+  }
 })();\`;
           
           // Write the modified JS file
@@ -240,6 +281,119 @@ processDir();`;
     fs.writeFileSync(buildEmbedPath, fixedScript);
     console.log('Replaced build-embed.js script with fixed version');
   }
+  
+  // Create a Next.js build resolver file to help with build issues
+  const buildResolverPath = path.join(__dirname, 'dashboard', 'scripts', 'build-resolver.js');
+  console.log('Creating build resolver script...');
+  
+  const buildResolverScript = `
+/**
+ * Build resolver - helps fix build issues with Next.js
+ */
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+console.log('Running build resolver...');
+
+// Check Next.js configuration
+const nextConfigPath = path.resolve(__dirname, '../next.config.js');
+if (!fs.existsSync(nextConfigPath)) {
+  console.log('Next.js config not found, creating one...');
+  const nextConfig = \`
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  output: 'export',
+  // Fix hydration issues
+  experimental: {
+    esmExternals: 'loose',
+  },
+  // Force output to 'out' directory
+  distDir: 'out',
+}
+
+module.exports = nextConfig
+\`;
+  fs.writeFileSync(nextConfigPath, nextConfig);
+  console.log('Created Next.js config file');
+}
+
+// Check package.json for required scripts
+const packageJsonPath = path.resolve(__dirname, '../package.json');
+if (fs.existsSync(packageJsonPath)) {
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    
+    // Ensure required scripts exist
+    let modified = false;
+    if (!packageJson.scripts) {
+      packageJson.scripts = {};
+      modified = true;
+    }
+    
+    if (!packageJson.scripts.build || !packageJson.scripts.build.includes('export')) {
+      packageJson.scripts.build = 'next build';
+      modified = true;
+    }
+    
+    if (!packageJson.scripts.export) {
+      packageJson.scripts.export = 'next export';
+      modified = true;
+    }
+    
+    if (modified) {
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+      console.log('Updated package.json scripts');
+    }
+  } catch (e) {
+    console.error('Error processing package.json:', e);
+  }
+}
+
+// Check for TypeScript configuration
+const tsconfigPath = path.resolve(__dirname, '../tsconfig.json');
+if (fs.existsSync(tsconfigPath)) {
+  try {
+    const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
+    
+    // Ensure compiler options are set correctly for compatibility
+    let modified = false;
+    if (!tsconfig.compilerOptions) {
+      tsconfig.compilerOptions = {};
+      modified = true;
+    }
+    
+    // Ensure esModuleInterop is enabled for better compatibility
+    if (!tsconfig.compilerOptions.esModuleInterop) {
+      tsconfig.compilerOptions.esModuleInterop = true;
+      modified = true;
+    }
+    
+    // Set module resolution strategy
+    if (!tsconfig.compilerOptions.moduleResolution) {
+      tsconfig.compilerOptions.moduleResolution = "node";
+      modified = true;
+    }
+    
+    if (modified) {
+      fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2));
+      console.log('Updated tsconfig.json for better compatibility');
+    }
+  } catch (e) {
+    console.error('Error processing tsconfig.json:', e);
+  }
+}
+
+console.log('Build resolver completed');
+`;
+
+  fs.writeFileSync(buildResolverPath, buildResolverScript);
+  console.log('Created build resolver script');
+  
+  // Run the build resolver before the main build
+  console.log('Running build resolver...');
+  execSync('cd dashboard && node scripts/build-resolver.js', { stdio: 'inherit' });
   
   // Run the build script
   console.log('Running build script...');
