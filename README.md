@@ -27,7 +27,7 @@ graph LR
     G --> H
     H --> J[Send Events to PostHog]
     J --> K[PostHog Tracks Errors & Engagement]
-    K --> L[Auto-Adjust Percentage via GitHub Actions and Canary Analytics]
+    K --> L[GitHub Actions: Analyze PostHog Analytics and Change Canary Distribution Percentage]
     L --> M{Trigger Rollback?}
     M -->|Yes| N[Reassign Users to Stable]
     M -->|No| O[Continue Rollout]
