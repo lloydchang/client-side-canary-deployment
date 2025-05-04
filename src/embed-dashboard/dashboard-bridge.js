@@ -1,16 +1,10 @@
 /**
  * Dashboard Bridge
  * 
- * This script bridges the embedded dashboard React application with the canary system.
- * It initializes the React application when dashboard data becomes available.
+ * This script creates and updates a simple HTML dashboard for the canary system.
  */
 
 (function() {
-  // Flag to track if dashboard has been rendered
-  let dashboardRendered = false;
-  let initAttempts = 0;
-  const MAX_INIT_ATTEMPTS = 3;
-  
   // Wait for DOM content to be loaded
   document.addEventListener('DOMContentLoaded', function() {
     // Check if the root element exists
@@ -20,27 +14,15 @@
       return;
     }
 
-    console.log('Dashboard bridge: Setting up dashboard containers');
+    console.log('Dashboard bridge: Setting up dashboard container');
 
-    // Split the dashboard area to show both React and Direct HTML implementations
-    // Use inline styles to prevent external CSS from affecting the layout
+    // Create a simple container for the HTML dashboard
     dashboardRoot.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
-        <div style="width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
-          <h3 style="margin: 0; padding: 10px; background-color: #f5f5f5; color: #000; font-size: 16px; border-bottom: 1px solid #ddd;">
-            React Dashboard (Original)
-          </h3>
-          <div id="react-dashboard" style="padding: 15px; background-color: #fff;">
-            <div id="dashboard" style="width: 100%;"></div>
-          </div>
-        </div>
-        
-        <div style="width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
-          <h3 style="margin: 0; padding: 10px; background-color: #f5f5f5; color: #000; font-size: 16px; border-bottom: 1px solid #ddd;">
-            Direct HTML Dashboard (Fallback)
-          </h3>
-          <div id="html-dashboard" style="padding: 15px; background-color: #fff;"></div>
-        </div>
+      <div style="width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+        <h3 style="margin: 0; padding: 10px; background-color: #f5f5f5; color: #000; font-size: 16px; border-bottom: 1px solid #ddd;">
+          Dashboard
+        </h3>
+        <div id="html-dashboard" style="padding: 15px; background-color: #fff;"></div>
       </div>
     `;
 
@@ -48,15 +30,8 @@
     
     // Function to attempt dashboard initialization
     function attemptDashboardInit() {
-      if (!window.canary || initAttempts >= MAX_INIT_ATTEMPTS) {
-        if (initAttempts >= MAX_INIT_ATTEMPTS) {
-          console.warn('Dashboard bridge: Maximum initialization attempts reached');
-          renderDirectHtmlDashboardOnly();
-        }
-        setTimeout(() => {
-          initAttempts++;
-          attemptDashboardInit();
-        }, 500);
+      if (!window.canary) {
+        setTimeout(attemptDashboardInit, 500);
         return;
       }
       
@@ -79,129 +54,24 @@
       };
       
       // Make data globally available
-      window.dashboardData = dashboardData;
-      
-      // Make sure the global data is deeply cloned to avoid reference issues
       window.dashboardData = JSON.parse(JSON.stringify(dashboardData));
       
-      // INITIALIZE THE REACT DASHBOARD
-      initializeReactDashboard(dashboardData);
+      // RENDER THE HTML DASHBOARD
+      renderHtmlDashboard(dashboardData);
       
-      // RENDER THE DIRECT HTML DASHBOARD
-      renderDirectHtmlDashboard(dashboardData);
-      
-      // Set up periodic refresh to update both dashboards
+      // Set up periodic refresh to update the dashboard
       setupPeriodicRefresh();
     }
     
-    // Function to initialize React dashboard
-    function initializeReactDashboard(dashboardData) {
-      try {
-        const reactDashboardContainer = document.getElementById('react-dashboard');
-        if (!reactDashboardContainer) {
-          console.error('Dashboard bridge: React dashboard container not found');
-          return;
-        }
-        
-        const dashboardElement = document.getElementById('dashboard');
-        if (!dashboardElement) {
-          console.error('Dashboard bridge: Dashboard element not found');
-          reactDashboardContainer.innerHTML = '<div style="padding: 20px; color: #000; background: #fff;">React dashboard element not found</div>';
-          return;
-        }
-        
-        console.log('Dashboard bridge: Initializing React dashboard with data', dashboardData);
-        
-        // Check if Next.js/React is available by testing for key features
-        const reactAvailable = typeof React !== 'undefined' || typeof window.__NEXT_DATA__ !== 'undefined';
-        console.log('Dashboard bridge: React available:', reactAvailable);
-        
-        // Try multiple initialization approaches in sequence
-        let initialized = false;
-        
-        // 1. Try direct initialization through window.initDashboard
-        if (typeof window.initDashboard === 'function') {
-          try {
-            window.initDashboard(dashboardData);
-            console.log('Dashboard bridge: React dashboard initialized via window.initDashboard');
-            initialized = true;
-          } catch (e) {
-            console.error('Dashboard bridge: Error initializing via window.initDashboard', e);
-          }
-        } else {
-          console.log('Dashboard bridge: window.initDashboard not found');
-        }
-        
-        // 2. Try via Next.js init function
-        if (!initialized && window.__NEXT_DASHBOARD_INIT__) {
-          try {
-            window.__NEXT_DASHBOARD_INIT__(dashboardData);
-            console.log('Dashboard bridge: React dashboard initialized via __NEXT_DASHBOARD_INIT__');
-            initialized = true;
-          } catch (e) {
-            console.error('Dashboard bridge: Error initializing via __NEXT_DASHBOARD_INIT__', e);
-          }
-        } else if (!initialized) {
-          console.warn('Dashboard bridge: __NEXT_DASHBOARD_INIT__ not found or not used');
-        }
-        
-        // 3. Try Next.js hydration API
-        if (!initialized && typeof window.__NEXT_HYDRATE === 'function') {
-          try {
-            window.__NEXT_HYDRATE();
-            console.log('Dashboard bridge: Next.js hydration triggered');
-            
-            // Still need to update data
-            window.dashboardData = dashboardData;
-            window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
-            initialized = true;
-          } catch (e) {
-            console.error('Dashboard bridge: Error during Next.js hydration', e);
-          }
-        }
-        
-        // 4. Final attempt - dispatch event for any event listeners
-        window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
-        console.log('Dashboard bridge: Dispatched dashboard-data-updated event');
-        
-        // Display a fallback message if the dashboard appears empty after initialization attempts
-        setTimeout(() => {
-          if (dashboardElement.childElementCount === 0) {
-            dashboardElement.innerHTML = `
-              <div style="padding: 15px; border: 1px solid #fcc; background-color: #fff; color: #000;">
-                <p><strong>React initialization failed</strong></p>
-                <p>The React dashboard could not be initialized. This might be because:</p>
-                <ul>
-                  <li>The React bundle isn't compatible with this environment</li>
-                  <li>Next.js initialization hooks aren't available in static HTML</li>
-                  <li>There was an error during React component initialization</li>
-                </ul>
-                <p>See the Direct HTML implementation below for a working dashboard.</p>
-                <div id="react-debug-info" style="margin-top: 15px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 10px;">
-                  <p><strong>Debug Info:</strong></p>
-                  <p>React Available: ${typeof React !== 'undefined'}</p>
-                  <p>Next.js Data Available: ${typeof window.__NEXT_DATA__ !== 'undefined'}</p>
-                  <p>Init Function Available: ${typeof window.__NEXT_DASHBOARD_INIT__ === 'function'}</p>
-                  <p>Hydrate Function Available: ${typeof window.__NEXT_HYDRATE === 'function'}</p>
-                </div>
-              </div>
-            `;
-          }
-        }, 1000);
-      } catch (e) {
-        console.error('Dashboard bridge: Error setting up React dashboard:', e);
-      }
-    }
-    
-    // Function to render direct HTML dashboard
-    function renderDirectHtmlDashboard(dashboardData) {
+    // Function to render HTML dashboard
+    function renderHtmlDashboard(dashboardData) {
       const htmlDashboardContainer = document.getElementById('html-dashboard');
       if (!htmlDashboardContainer) return;
       
       try {
         // Create the dashboard with direct HTML - enforcing black on white
         const directDashboardContainer = document.createElement('div');
-        directDashboardContainer.className = 'direct-html-dashboard';
+        directDashboardContainer.className = 'html-dashboard';
         // Set explicit inline styles for black on white
         directDashboardContainer.style.cssText = `
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -296,49 +166,15 @@
         // Clear any previous content and add the new dashboard
         htmlDashboardContainer.innerHTML = '';
         htmlDashboardContainer.appendChild(directDashboardContainer);
-        dashboardRendered = true;
         
-        console.log('Dashboard bridge: Direct HTML dashboard rendered successfully');
+        console.log('Dashboard bridge: HTML dashboard rendered successfully');
       } catch(e) {
-        console.error('Dashboard bridge: Error rendering direct HTML dashboard:', e);
+        console.error('Dashboard bridge: Error rendering HTML dashboard:', e);
         htmlDashboardContainer.innerHTML = `
           <div style="padding: 15px; color: #ff0000; background-color: #ffffff;">
             Error rendering HTML dashboard: ${e.message}
           </div>
         `;
-      }
-    }
-    
-    // Function to render only the direct HTML dashboard when React fails
-    function renderDirectHtmlDashboardOnly() {
-      try {
-        // Hide the React container
-        const reactContainer = document.querySelector('#react-dashboard').parentElement;
-        if (reactContainer) {
-          reactContainer.style.display = 'none';
-        }
-        
-        // If we have canary data, render the HTML dashboard
-        if (window.canary) {
-          const dashboardData = {
-            metrics: window.canary._metrics || {
-              stable: { pageviews: 0, errors: 0, clicks: 0 },
-              canary: { pageviews: 0, errors: 0, clicks: 0 },
-              events: []
-            },
-            assignment: window.canary._assignment || {
-              version: 'stable',
-              timestamp: new Date().toISOString()
-            },
-            config: window.canary._config || {
-              initialCanaryPercentage: 5
-            }
-          };
-          
-          renderDirectHtmlDashboard(dashboardData);
-        }
-      } catch (e) {
-        console.error('Dashboard bridge: Error rendering HTML-only dashboard', e);
       }
     }
     
@@ -362,21 +198,7 @@
             }
           };
           
-          // 1. UPDATE THE REACT DASHBOARD
-          try {
-            // Make a deep clone to avoid reference issues
-            window.dashboardData = JSON.parse(JSON.stringify(dashboardData));
-            
-            // Trigger React update via custom event and update function
-            window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
-            if (window.__NEXT_DASHBOARD_UPDATE__) {
-              window.__NEXT_DASHBOARD_UPDATE__(dashboardData);
-            }
-          } catch(e) {
-            console.error('Dashboard bridge: Error updating React dashboard:', e);
-          }
-          
-          // 2. UPDATE THE DIRECT HTML DASHBOARD
+          // UPDATE THE HTML DASHBOARD
           try {
             // Update the metrics comparison table
             const metricsTable = document.getElementById('metrics-comparison-table');
@@ -429,7 +251,7 @@
               }
             }
           } catch(e) {
-            console.error('Dashboard bridge: Error updating direct HTML dashboard:', e);
+            console.error('Dashboard bridge: Error updating HTML dashboard:', e);
           }
         }
       }, 2000);
@@ -439,4 +261,3 @@
     attemptDashboardInit();
   });
 })();
-```

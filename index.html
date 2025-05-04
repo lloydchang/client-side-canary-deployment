@@ -188,9 +188,7 @@
     }
   </style>
   
-  <!-- Dashboard Assets -->
-  <link rel="stylesheet" href="src/embed-dashboard/dashboard.css">
-  <script src="src/embed-dashboard/dashboard.js"></script>
+  <!-- Dashboard Assets - Now simplified -->
   <script src="src/embed-dashboard/dashboard-bridge.js"></script>
 </head>
 <body>
@@ -389,20 +387,8 @@
         console.error('Dashboard root element not found');
         return;
       }
-
-      // Create React root element
-      const reactRoot = document.createElement('div');
-      reactRoot.id = 'dashboard';
-      dashboardRoot.appendChild(reactRoot);
-
-      // Wait for canary to be available before initializing
-      const checkCanary = setInterval(() => {
-        if (window.canary) {
-          clearInterval(checkCanary);
-          console.log('Initializing dashboard with dashboard data');
-          // The Next.js app will use the global canary object
-        }
-      }, 500);
+      
+      // The dashboard-bridge.js will handle initialization
     });
   </script>
 </body>
