@@ -33,7 +33,7 @@ graph LR
 graph LR
     L[GitHub Actions: Analyze PostHog Analytics]
     L --> M{Is Canary Healthy?}
-    M -->|No| N[Trigger Rollback to Stable]
+    M -->|No| N[Adjust Canary Percentage Downward]
     M -->|Yes| O{Can Increase Canary %?}
     O -->|Yes| P[Adjust Canary Percentage Upward]
     O -->|No| Q[Maintain Current State]
