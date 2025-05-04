@@ -8,7 +8,7 @@ config/keys.json
 
 ### NextJS ###
 # dependencies
-/node_modules
+**/node_modules
 /.pnp
 .pnp.js
 
@@ -16,8 +16,8 @@ config/keys.json
 /coverage
 
 # next.js
-/.next/
-/out/
+**/.next/
+**/out/
 
 # production
 /build

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 // Paths to the required files
 const outDir = path.resolve(__dirname, '../out');
@@ -16,13 +17,56 @@ function copyFile(source, target) {
   console.log(`Copied ${source} to ${target}`);
 }
 
+// Function to build the Next.js project
+function buildNextProject() {
+  console.log('Building Next.js project...');
+  try {
+    // Just use 'npm run build' since export is configured in next.config.js
+    execSync('npm run build', { stdio: 'inherit' });
+    
+    // Check where the output files are
+    console.log('Looking for output files...');
+    if (fs.existsSync(path.resolve(__dirname, '../out'))) {
+      console.log('Found output in "out" directory');
+    } else if (fs.existsSync(path.resolve(__dirname, '../.next/out'))) {
+      console.log('Found output in ".next/out" directory');
+    } else if (fs.existsSync(path.resolve(__dirname, '../.next'))) {
+      console.log('Found ".next" directory but no "out" subdirectory');
+      console.log('Files in .next directory:');
+      execSync('ls -la ../.next', { stdio: 'inherit' });
+    } else {
+      console.log('Could not find any output directories');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error building Next.js project:', error);
+    return false;
+  }
+}
+
 // Main function to process the build directory
 function processDir() {
   try {
-    // Ensure the output directory exists
-    if (!fs.existsSync(outDir)) {
-      console.error('Build output directory not found. Run "npm run export" first.');
+    // Build the Next.js project first
+    if (!buildNextProject()) {
+      console.error('Failed to build Next.js project. Aborting.');
       process.exit(1);
+    }
+    
+    // Ensure the output directory exists after build
+    if (!fs.existsSync(outDir)) {
+      console.error('Build output directory not found after running build. Something went wrong.');
+      console.log('Checking if output is in a different location...');
+      
+      // Next.js 14+ might output to '.next/out' instead of 'out'
+      const altOutDir = path.resolve(__dirname, '../.next/out');
+      if (fs.existsSync(altOutDir)) {
+        console.log(`Found output directory at ${altOutDir}`);
+        outDir = altOutDir;
+      } else {
+        process.exit(1);
+      }
     }
 
     // Copy main JS file
@@ -38,10 +82,10 @@ function processDir() {
 ;(function(){
   // Create global initialization function to be called from bridge
   window.__NEXT_DASHBOARD_INIT__ = function(dashboardData) {
-    // This assumes the Next.js app exports an initDashboard function
-    // that can be called with the dashboard data
+    // This assumes the Next.js app exports a default function 
+    // that can be called with the canary data
     if (typeof self.__NEXT_LOADED_PAGES__[0][0].__N_SSG === "object") {
-      // Initialize with dashboard data
+      // Initialize with canary data
       const appModule = self.__NEXT_LOADED_PAGES__[0][1];
       if (typeof appModule.initDashboard === 'function') {
         appModule.initDashboard(dashboardData);
@@ -51,6 +95,13 @@ function processDir() {
     if (window.__NEXT_HYDRATE) {
       window.__NEXT_HYDRATE();
     }
+  };
+
+  // Create update function
+  window.__NEXT_DASHBOARD_UPDATE__ = function(dashboardData) {
+    // Dispatch custom event with updated data
+    window.dashboardData = dashboardData;
+    window.dispatchEvent(new CustomEvent('dashboard-data-updated'));
   };
 })();`;
       
@@ -73,8 +124,8 @@ function processDir() {
     // Create the HTML embed wrapper
     const embedHtml = `
 <!-- Dashboard Container -->
-<div class="dashboard-container card">
-  <h2>Dashboard</h2>
+<div class="card">
+  <h2>Deployment Metrics Dashboard</h2>
   <div id="dashboard-root" style="margin: 10px 0;"></div>
 </div>
 
@@ -92,9 +143,9 @@ function processDir() {
 
 1. Add the dashboard container where you want it to appear:
 \`\`\`html
-<div class="dashboard-container card">
-  <h2>Dashboard</h2>
-  <div id="dashboard-root"></div>
+<div class="card">
+  <h2>Deployment Metrics Dashboard</h2>
+  <div id="dashboard-root" style="margin: 10px 0;"></div>
 </div>
 \`\`\`
 
