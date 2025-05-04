@@ -18,6 +18,12 @@
           const data = await response.json();
           const currentVersion = localStorage.getItem('app-version');
           
+          // Update footer version display
+          const versionElement = document.getElementById('app-version');
+          if (versionElement) {
+            versionElement.textContent = data.version;
+          }
+          
           if (currentVersion && currentVersion !== data.version) {
             console.log('New version detected, refreshing page...');
             localStorage.setItem('app-version', data.version);
@@ -144,6 +150,16 @@
       bottom: 20px !important;
       right: 20px !important;
     }
+
+    /* Footer styles */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #666;
+      font-size: 14px;
+      border-top: 1px solid #eaeaea;
+    }
   </style>
   
   <!-- Dashboard Assets -->
@@ -181,6 +197,11 @@
     
     <div id="countdown" class="countdown">
       Redirecting to <span id="assigned-version-text">your assigned version</span> in <span id="countdown-number" class="countdown-number">10</span> seconds...
+    </div>
+    
+    <!-- Add version footer -->
+    <div class="footer">
+      <p>Version: <span id="app-version">Loading...</span></p>
     </div>
   </div>
   

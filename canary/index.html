@@ -18,6 +18,12 @@
           const data = await response.json();
           const currentVersion = localStorage.getItem('app-version');
           
+          // Update footer version display
+          const versionElement = document.getElementById('app-version');
+          if (versionElement) {
+            versionElement.textContent = data.version;
+          }
+          
           if (currentVersion && currentVersion !== data.version) {
             console.log('New version detected, refreshing page...');
             localStorage.setItem('app-version', data.version);
@@ -138,6 +144,16 @@
       background-color: #f00;
       color: #fff;
     }
+
+    /* Footer styles */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #ff5555;
+      font-size: 14px;
+      border-top: 1px solid #500;
+    }
   </style>
   <!-- Dashboard Assets -->
   <link rel="stylesheet" href="../src/embed-dashboard/dashboard.css">
@@ -169,6 +185,11 @@
     <div class="card">
       <h2>Dashboard</h2>
       <div id="dashboard-root" style="margin: 10px 0;"></div>
+    </div>
+    
+    <!-- Add version footer -->
+    <div class="footer">
+      <p>Version: <span id="app-version">Loading...</span></p>
     </div>
   </div>
 
