@@ -1,7 +1,7 @@
 .card {
   border-radius: 5px;
   padding: 15px;
-  background: #777777;
+  background: #000000;
   border-top: 3px solid #ccc;
 }
 
@@ -10,7 +10,7 @@
 }
 
 .canary {
-  border-color: #ff5555;
+  border-color: #ffffff;
 }
 
 .title {
