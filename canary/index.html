@@ -27,9 +27,13 @@
           }
           
           if (lastUpdatedElement && data.lastUpdated) {
-            // Format the timestamp for better readability
+            // Format the timestamp with timezone information
             const date = new Date(data.lastUpdated);
-            lastUpdatedElement.textContent = date.toLocaleString();
+            lastUpdatedElement.textContent = date.toLocaleString(undefined, {
+              dateStyle: 'medium',
+              timeStyle: 'medium',
+              timeZoneName: 'short'
+            });
           }
           
           if (currentVersion && currentVersion !== data.version) {
