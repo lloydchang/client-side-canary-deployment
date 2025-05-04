@@ -34,7 +34,7 @@ graph LR
 ```mermaid
 graph LR
     subgraph Server-Side: Canary Evaluation Logic
-        L[GitHub Actions: Analyze PostHog Analytics]
+        L[GitHub Actions: Analyze PostHog Metrics]
         L --> M{Is Canary Healthy?}
         M -->|No| N[Adjust Canary Percentage Downward]
         M -->|Yes| O{Can Increase Canary %?}
