@@ -46,27 +46,6 @@ async function checkForVersionUpdates() {
 setInterval(checkForVersionUpdates, 5 * 60 * 1000);
 ```
 
-## Configuration Update Hooks
-
-Monitor configuration changes in real-time:
-
-```javascript
-// React to configuration updates
-canary.on('configUpdated', function(newConfig) {
-  console.log('Canary configuration was updated:', newConfig);
-  
-  // Optionally take custom actions when config changes
-  if (newConfig.initialCanaryPercentage > 20) {
-    notifyTeam('Canary percentage exceeds 20%');
-  }
-});
-
-// Listen specifically for version changes
-canary.on('versionChanged', function(versionInfo) {
-  console.log(`Version changed from ${versionInfo.previous} to ${versionInfo.current}`);
-});
-```
-
 ## Feature-Specific Configuration
 
 Features can be configured individually:
@@ -76,9 +55,9 @@ canary.defineFeature('advancedSearch', {
   description: 'New search algorithm with better results',
   initialPercentage: 2,            // Start with just 2% of canary users
   evaluationCriteria: {            // Custom evaluation criteria
-    errorThreshold: 1.2,           // More sensitive error threshold
-    performanceThreshold: 1.1      // Maximum allowed performance degradation
-  }
+    errorThreshold: 1.2            // More sensitive error threshold
+  },
+  usePostHogFlag: true             // Whether to use PostHog feature flag if available
 });
 ```
 
@@ -104,45 +83,6 @@ canary.identifyUser({
 });
 ```
 
-## Manual Metrics Submission
-
-```javascript
-// Track custom performance metrics
-canary.trackPerformance('api_response_time', 250); // milliseconds
-
-// Track business metrics
-canary.trackBusinessMetric('cart_value', 75.99);
-canary.trackBusinessMetric('items_per_cart', 3);
-```
-
-## Server-Side Integration
-
-For hybrid deployments with server analytics:
-
-```javascript
-// Submit metrics to your server
-canary.setMetricsEndpoint('https://your-api.example.com/canary-metrics');
-
-// Configure metrics submission frequency
-canary.config({
-  metricsSubmissionInterval: 60000, // Send every minute
-  batchMetrics: true                // Batch metrics together
-});
-```
-
-## Manual Feature Control
-
-```javascript
-// Force enable a feature for testing
-canary.forceFeature('newCheckout', true);
-
-// Reset to default behavior
-canary.resetFeature('newCheckout');
-
-// Get feature details
-const featureDetails = canary.getFeature('newCheckout');
-```
-
 ## Debugging
 
 ```javascript
@@ -163,13 +103,22 @@ console.log(JSON.stringify(exportData));
 
 ```javascript
 // React to canary events
-canary.on('featureEnabled', function(feature) {
-  console.log(`Feature ${feature.name} was enabled`);
+canary.on('rollback', function(data) {
+  console.log(`Rollback triggered - error rates: stable ${data.stableErrorRate}, canary ${data.canaryErrorRate}`);
 });
 
 canary.on('evaluationComplete', function(result) {
   if (result.recommendation === 'ROLLBACK') {
     notifyTeam('Canary deployment experiencing issues!');
   }
+});
+
+// Other available events
+canary.on('percentageIncrease', function(data) {
+  console.log(`Canary percentage increased to ${data.newPercentage}%`);
+});
+
+canary.on('analyticsBlocked', function(data) {
+  console.log(`Analytics blocked: ${data.reason}`);
 });
 ```
