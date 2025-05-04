@@ -1,0 +1,38 @@
+.eventsContainer {
+  margin-bottom: 10px;
+}
+
+.eventsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.eventItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.eventItem:last-child {
+  border-bottom: none;
+}
+
+.eventType {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.eventTime {
+  color: #888;
+  font-size: 14px;
+}
+
+.empty {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 10px 0;
+}

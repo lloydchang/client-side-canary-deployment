@@ -114,6 +114,9 @@
       right: 20px !important;
     }
   </style>
+  
+  <!-- Dashboard Assets -->
+  <link rel="stylesheet" href="src/embed-dashboard/dashboard.css">
 </head>
 <body>
   <div class="container">
@@ -137,12 +140,16 @@
       
       <pre id="metrics-output" style="display: none; background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 20px;"></pre>
       
+      <!-- Dashboard Container -->
+      <div id="dashboard-root" style="margin: 30px 0;"></div>
+      
       <div id="countdown" class="countdown">
         Redirecting to <span id="assigned-version-text">your assigned version</span> in <span id="countdown-number" class="countdown-number">10</span> seconds...
       </div>
     </div>
   </div>
   
+  <script src="src/embed-dashboard/dashboard.js"></script>
   <script>
     // Add event listener for the show metrics button
     document.addEventListener('DOMContentLoaded', function() {
@@ -291,6 +298,30 @@
           window.location.href = targetVersion + '/';
         }
       }, 1000);
+    });
+
+    // Initialize the dashboard after canary is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if the root element exists
+      const dashboardRoot = document.getElementById('dashboard-root');
+      if (!dashboardRoot) {
+        console.error('Dashboard root element not found');
+        return;
+      }
+
+      // Create React root element
+      const reactRoot = document.createElement('div');
+      reactRoot.id = 'dashboard';
+      dashboardRoot.appendChild(reactRoot);
+
+      // Wait for canary to be available before initializing
+      const checkCanary = setInterval(() => {
+        if (window.canary) {
+          clearInterval(checkCanary);
+          console.log('Initializing dashboard with canary data');
+          // The Next.js app will use the global canary object
+        }
+      }, 500);
     });
   </script>
 </body>
