@@ -1,7 +1,6 @@
 name: Canary Deployment & Analytics
 
 on:
-  # For deployment
   push:
     branches: [ main ]
   workflow_dispatch:
@@ -19,15 +18,19 @@ on:
         description: 'New canary percentage (only for adjust-canary task)'
         required: false
         type: number
-  # For analytics
   schedule:
     - cron: '0 */6 * * *' # Run every 6 hours
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: write
   pages: write
   id-token: write
+
+# Define reusable values
+env:
+  NODE_VERSION: '22'
+  GIT_USER_NAME: 'lloydchang'
+  GIT_USER_EMAIL: 'lloydchang@gmail.com'
 
 jobs:
   # Deployment job
@@ -41,7 +44,7 @@ jobs:
       - name: Setup Node.js ⚙️
         uses: actions/setup-node@v3
         with:
-          node-version: '22'  # Updated to Node 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
       - name: Install Dependencies 📦
@@ -49,9 +52,7 @@ jobs:
       
       - name: Update Version ⬆️
         run: |
-          # Run the version update script
           ./update-version.sh
-          # Show the updated version
           cat version.json
       
       - name: Build Dashboard with build-dashboard.js 📊
@@ -59,7 +60,6 @@ jobs:
           echo "Building dashboard with unified script..."
           node build-dashboard.js
           echo "Dashboard build completed successfully"
-          # Verify the output exists
           if [ ! -d "src/embed-dashboard" ]; then
             echo "::error::Dashboard build failed - output directory not found"
             exit 1
@@ -70,10 +70,8 @@ jobs:
       
       - name: Replace PostHog Keys
         run: |
-          # Create config directory if it doesn't exist
           mkdir -p config
           
-          # Create canary config file with PostHog keys
           cat > config/canary-config.json << EOF
           {
             "posthog": {
@@ -91,25 +89,22 @@ jobs:
       
       - name: Configure Base Path
         run: |
-          # Create a .nojekyll file to disable Jekyll processing
           touch .nojekyll
-          
-          # Create a config file for GitHub Pages with the correct base path
           echo '{ "baseUrl": "/client-side-canary-deployment" }' > config/gh-pages.json
       
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: .                    # The folder to deploy
-          branch: gh-pages             # The branch to deploy to
-          clean: true                  # Automatically remove deleted files
-          single-commit: true          # Delete previous deployment history
+          folder: .
+          branch: gh-pages
+          clean: true
+          single-commit: true
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Commit Updated Version 💾
         run: |
-          git config --local user.name "lloydchang"
-          git config --local user.email "lloydchang@gmail.com"
+          git config --local user.name "${{ env.GIT_USER_NAME }}"
+          git config --local user.email "${{ env.GIT_USER_EMAIL }}"
           git add version.json
           git commit -m "Update version to $(jq -r .version version.json)" || echo "No changes to commit"
           git push origin main
@@ -121,12 +116,13 @@ jobs:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'analyze')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout and setup
+        uses: actions/checkout@v3
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22'
+          node-version: ${{ env.NODE_VERSION }}
       
       - name: Install Dependencies
         run: npm install
@@ -191,67 +187,56 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: analytics-results
-          path: |
-            canary-analysis.json
+          path: canary-analysis.json
           retention-days: 30
       
-      - name: Update canary.js in main branch
+      # Combined step for updating repos and deploying to both branches
+      - name: Update repositories and deploy
         run: |
-          git config --local user.name "lloydchang"
-          git config --local user.email "lloydchang@gmail.com"
+          # 1. Update version.json to trigger client refresh
+          ./update-version.sh
+          
+          # 2. Configure git
+          git config --local user.name "${{ env.GIT_USER_NAME }}"
+          git config --local user.email "${{ env.GIT_USER_EMAIL }}"
+          
+          # 3. Commit changes to main
           git add config/canary-config.json src/config/canary-config.js version.json
           git commit -m "Update canary percentage to $CANARY_PERCENTAGE% based on analytics" || echo "No changes to commit"
           git push origin main
+          
+          # 4. Deploy config folders to gh-pages in one command with multiple targets
+          echo "Deploying updated files to gh-pages branch..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Deploy updated config to gh-pages
+      # Combined deployment steps for gh-pages
+      - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: config              # Deploy the config folder
-          branch: gh-pages             # The branch to deploy to
-          target-folder: config        # Deploy to the config folder on gh-pages
-          clean: false                 # Don't remove other files
+          branch: gh-pages
+          clean: false
           token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Deploy updated src/config to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: src/config          # Deploy the src/config folder
-          branch: gh-pages             # The branch to deploy to
-          target-folder: src/config    # Deploy to the src/config folder on gh-pages
-          clean: false                 # Don't remove other files
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Update version.json to trigger client refresh
-        run: |
-          # Run the version update script
-          ./update-version.sh
-          # Show the updated version
-          cat version.json
-      
-      - name: Deploy updated version.json to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: .                    # Deploy from root to get version.json
-          branch: gh-pages             # The branch to deploy to
-          clean: false                 # Don't remove other files
-          token: ${{ secrets.GITHUB_TOKEN }}
-          clean-exclude: |             # Keep existing files except version.json
+          folder: .
+          target-folder: .
+          clean-exclude: |
             **/*
             !version.json
+            !config/**
+            !src/config/**
 
   # Adjust canary job - manual
   adjust-canary:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'adjust-canary'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout and setup
+        uses: actions/checkout@v3
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22'
+          node-version: ${{ env.NODE_VERSION }}
       
       - name: Install Dependencies
         run: npm install
@@ -264,47 +249,40 @@ jobs:
           chmod +x ./.github/scripts/canary-analyzer.js
           node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
       
-      - name: Update version.json to trigger client refresh
-        run: ./update-version.sh
-      
-      - name: Update canary.js in main branch
+      # Combined step for updating repos and deploying to both branches
+      - name: Update repositories and deploy
         run: |
-          git config --local user.name "lloydchang"
-          git config --local user.email "lloydchang@gmail.com"
+          # 1. Update version.json to trigger client refresh
+          ./update-version.sh
+          
+          # 2. Configure git
+          git config --local user.name "${{ env.GIT_USER_NAME }}"
+          git config --local user.email "${{ env.GIT_USER_EMAIL }}"
+          
+          # 3. Commit changes to main
           git add config/canary-config.json src/config/canary-config.js version.json
           git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%" || echo "No changes to commit"
           git push origin main
+          
+          # 4. Note for the deployment step
+          echo "Deploying updated files to gh-pages branch..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Deploy Updated Config to gh-pages
+      # Combined deployment steps for gh-pages
+      - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: config              # Only deploy the config folder
-          branch: gh-pages             # The branch to deploy to
-          target-folder: config        # Deploy to the config folder on gh-pages
-          clean: false                 # Don't remove other files
+          branch: gh-pages
+          clean: false
           token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Deploy Updated src/config to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: src/config           # Deploy the src/config folder
-          branch: gh-pages             # The branch to deploy to
-          target-folder: src/config    # Deploy to the src/config folder on gh-pages
-          clean: false                 # Don't remove other files
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Deploy updated version.json to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: .                    # Deploy from root to get version.json
-          branch: gh-pages             # The branch to deploy to
-          clean: false                 # Don't remove other files
-          token: ${{ secrets.GITHUB_TOKEN }}
-          clean-exclude: |             # Keep existing files except version.json
+          folder: .
+          target-folder: .
+          clean-exclude: |
             **/*
             !version.json
+            !config/**
+            !src/config/**
       
       - name: Create summary report
         run: |
