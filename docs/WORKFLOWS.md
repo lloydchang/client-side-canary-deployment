@@ -121,7 +121,7 @@ node update-canary.js --percentage=20
 ## File Update Process
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph "GitHub Actions Jobs"
         A["build-and-deploy job"]
         B["analyze-canary job"]
@@ -170,7 +170,7 @@ flowchart TD
 ```
 
 ```mermaid
-graph TD
+graph LR
     A[GitHub Actions] -->|Reads/Updates| B[config/canary-config.json]
     A -->|Generates| C[src/config/canary-config.js]
     C -->|Loaded by| D[Browser]
