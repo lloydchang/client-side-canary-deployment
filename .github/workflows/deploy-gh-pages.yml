@@ -18,11 +18,11 @@ on:
         description: 'New canary percentage (only for adjust-canary task)'
         required: false
         type: number
-  # schedule:
-  #   - cron: '0 */6 * * *' # Run every 6 hours
   schedule:
-    - cron: '0 */1 * * *' # Run every hour instead of every minute
-
+  #   - cron: '0 */6 * * *' # Run every 6 hours
+  #   - cron: '0 */1 * * *' # Run every hour instead of every minute
+    - cron: '0 * * * *' # Run every minute
+  
 permissions:
   contents: write
   pages: write
