@@ -2,7 +2,7 @@
   "name": "client-side-canary-deployment",
   "version": "1.0.0",
   "description": "One-line solution for client-side canary deployments and feature flags",
-  "main": "dist/canary.js",
+  "main": "frontend/assets/js/bundle.js",
   "module": "src/index.js",
   "scripts": {
     "start": "serve frontend",
@@ -19,7 +19,6 @@
   "author": "",
   "license": "AGPL-3.0-or-later",
   "files": [
-    "dist/",
     "src/",
     "js/",
     "README.md",
