@@ -147,7 +147,6 @@ This project uses PostHog for analytics tracking in canary deployments. The syst
 
 - Tracks pageviews and events for stable and canary versions
 - Reports errors and interactions
-- Manages feature flag state
 
 ### GitHub Actions Integration
 
@@ -191,7 +190,7 @@ Add the following script tags to your HTML:
 
 This library consists of two main components:
 
-1. **Core Canary System** (`src/canary.js`): Handles feature flagging, metrics tracking, and version assignments
+1. **Core Canary System** (`src/canary.js`): Handles metrics tracking and version assignments
 2. **Version Switcher** (`src/components/version-switcher.js`): Optional UI component that allows users to manually switch between versions
 
 ### Using the Version Switcher
@@ -215,46 +214,6 @@ This library consists of two main components:
 </script>
 ```
 
-## Usage
-
-### Basic Feature Flags
-
-```html
-<!-- Check if a feature should be enabled for this user -->
-<script>
-  if (canary.isEnabled('newDesign')) {
-    // Show the new design
-    document.body.classList.add('new-design');
-  }
-</script>
-```
-
-### Define Multiple Features
-
-```html
-<script>
-  // Features defined with sensible defaults (5% of users initially)
-  const features = {
-    'newHeader': { description: 'Updated navigation header' },
-    'betaCheckout': { description: 'Streamlined checkout process', initialPercentage: 2 }
-  };
-  
-  canary.defineFeatures(features);
-</script>
-```
-
-## Enhanced Analytics (Optional)
-
-Add PostHog analytics with one extra line:
-
-```html
-<!-- Make sure analytics.js is loaded -->
-<script src="https://cdn.example.com/analytics.js"></script>
-<script>
-  canary.analytics('phc_YOUR_KEY_HERE');
-</script>
-```
-
 ## Configuration (Optional)
 
 ```html
@@ -267,16 +226,6 @@ Add PostHog analytics with one extra line:
     storageKey: 'my_app_canary' // Custom storage key
   });
 </script>
-```
-
-## Viewing Results
-
-Results are automatically collected and stored in-memory or in localStorage (depending on setup).
-
-View them anytime:
-
-```html
-<button onclick="console.table(canary.getResults())">Show Canary Results</button>
 ```
 
 ## Workflows
@@ -306,7 +255,3 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
 For detailed information on the workflow and supporting scripts, see [docs/WORKFLOWS.md](./docs/WORKFLOWS.md).
 
 For more details on the analytics integration, see [docs/ANALYTICS.md](./docs/ANALYTICS.md).
-
-## Want More Control?
-
-You can view advanced options in [docs/ADVANCED.md](docs/ADVANCED.md).

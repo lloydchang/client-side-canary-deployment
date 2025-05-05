@@ -3,69 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Canary Version</title>
+  <title>Stable Version</title>
   
-  <style>
-    /* Red text on black background for canary version */
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      background-color: black;
-      color: red;
-      margin: 0;
-      padding: 20px;
-      line-height: 1.6;
-    }
-    
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    h1, h2, h3 {
-      color: #ff5555;
-      margin-top: 0;
-    }
-    
-    .card {
-      border: 1px solid #500;
-      border-radius: 4px;
-      padding: 16px;
-      margin-bottom: 16px;
-      background-color: #1a0000;
-    }
-
-    /* Footer styles */
-    .footer {
-      text-align: center;
-      margin-top: 40px;
-      padding: 20px;
-      color: #ff5555;
-      font-size: 14px;
-      border-top: 1px solid #500;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Canary Version</h1>
-    <p>This is the canary version of the application with red text on black background.</p>
-    
-    <div class="card">
-      <h2>About This Application</h2>
-      <p>This demonstrates client-side canary deployment functionality. You can switch back to the stable version using the Version Switcher in the bottom right corner.</p>
-    </div>
-    
-    <!-- Add version footer -->
-    <div class="footer">
-      <p>Version: <span id="app-version">Loading...</span> | Last Updated: <span id="last-updated">Loading...</span></p>
-    </div>
-  </div>
-
   <script src="../src/canary.js"></script>
   <script src="../src/config/canary-config.js"></script>
   <script src="../src/analytics.js"></script>
+  <script src="../src/components/version-switcher.js"></script>
   
-  <!-- Initialize canary -->
+  <!-- Initialize canary with config-based percentage -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       try {
@@ -87,14 +32,84 @@
     });
   </script>
   
-  <script src="../assets/js/components/version-switcher.js"></script>
+  <style>
+    /* Black text on white background for stable version */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: white;
+      color: black;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* Footer styles */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #666;
+      font-size: 14px;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stable Version</h1>
+    <p>This is the stable version of the application with black text on white background.</p>
+    
+    <div class="card">
+      <h2>About This Application</h2>
+      <p>This demonstrates client-side canary deployment functionality. You can switch to the canary version using the Version Switcher in the bottom right corner.</p>
+    </div>
+    
+    <!-- Add version footer -->
+    <div class="footer">
+      <p>Version: <span id="app-version">Loading...</span> | Last Updated: <span id="last-updated">Loading...</span></p>
+    </div>
+  </div>
 
   <script>
-    // Track canary page view
+    // Initialize version switcher
+    try {
+      window.versionSwitcher = new VersionSwitcher({
+        onVersionSwitch: function(newVersion) {
+          if (window.canary && window.canary.trackEvent) {
+            window.canary.trackEvent('manual_version_switch', {
+              fromVersion: 'stable',
+              toVersion: newVersion,
+            });
+          } else {
+            console.error('Canary not initialized properly, cannot track version switch');
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Error initializing version switcher:', e);
+    }
+    
+    // Track stable page view
     try {
       if (window.canary && window.canary.trackEvent) {
         window.canary.trackEvent('page_view', {
-          page: 'canary_home'
+          page: 'stable_home'
         });
       } else {
         console.error('Canary not initialized properly, cannot track page view');
@@ -102,8 +117,10 @@
     } catch (e) {
       console.error('Error tracking page view:', e);
     }
-
-    // Version checker script - moved to end of body for guaranteed DOM access
+  </script>
+  
+  <!-- Version checker script - moved to end of body for guaranteed DOM access -->
+  <script>
     (function() {
       const checkForUpdates = async () => {
         let data;
