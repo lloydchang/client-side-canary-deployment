@@ -236,7 +236,7 @@
             configPath: 'frontend/assets/config/canary-config.json' // Explicitly set corrected config path
           });
           window.versionSwitcherInitialized = true;
-          console.log('[Version Switcher] Initialized for home page');  // Updated logging format for consistency
+          console.log('[Variant Switcher] Initialized for home page');
           
           // Force visibility - existing code is fine
           const switcherElement = document.getElementById('version-switcher');
@@ -261,7 +261,7 @@
             });
           }
         } catch (e) {
-          console.error('Error initializing version switcher:', e);
+          console.error('Error initializing variant switcher:', e);
         }
       }
       

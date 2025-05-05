@@ -1,7 +1,7 @@
 /**
- * Version Switcher Module
+ * Variant Switcher Module
  * 
- * Allows users to manually switch between stable and canary versions
+ * Allows users to manually switch between stable and canary variants
  */
 
 class VersionSwitcher {
@@ -35,8 +35,8 @@ class VersionSwitcher {
         const maxAttempts = 20; // More retries
         const retryInterval = 200; // Slightly faster retries
         
-        console.log(`[Version Switcher] Init attempt ${attempts + 1}/${maxAttempts}`);
-        console.log(`[Version Switcher] Current URL path: ${window.location.pathname}`);
+        console.log(`[Variant Switcher] Init attempt ${attempts + 1}/${maxAttempts}`);
+        console.log(`[Variant Switcher] Current URL path: ${window.location.pathname}`);
         
         // Use a priority order for configuration sources
         let percentage = null;
@@ -44,22 +44,22 @@ class VersionSwitcher {
         
         // Debug all potential configuration sources
         if (window.CanaryConfigManager) {
-            console.log(`[Version Switcher] CanaryConfigManager exists, loaded: ${window.CanaryConfigManager._configLoaded}`);
+            console.log(`[Variant Switcher] CanaryConfigManager exists, loaded: ${window.CanaryConfigManager._configLoaded}`);
             if (window.CanaryConfigManager._configLoaded) {
-                console.log(`[Version Switcher] Config data:`, window.CanaryConfigManager._config);
+                console.log(`[Variant Switcher] Config data:`, window.CanaryConfigManager._config);
             }
         }
         
         if (window.CanaryConfig && window.CanaryConfig.distribution) {
-            console.log(`[Version Switcher] CanaryConfig.distribution:`, window.CanaryConfig.distribution);
+            console.log(`[Variant Switcher] CanaryConfig.distribution:`, window.CanaryConfig.distribution);
         }
         
         if (window.canary && window.canary._config) {
-            console.log(`[Version Switcher] canary._config:`, window.canary._config);
+            console.log(`[Variant Switcher] canary._config:`, window.canary._config);
         }
         
         if (window.DEFAULT_CONSTANTS) {
-            console.log(`[Version Switcher] DEFAULT_CONSTANTS.CANARY_PERCENTAGE:`, window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE);
+            console.log(`[Variant Switcher] DEFAULT_CONSTANTS.CANARY_PERCENTAGE:`, window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE);
         }
         
         // 1. Check ConfigManager (preferred)
@@ -71,7 +71,7 @@ class VersionSwitcher {
         else if (window.CanaryConfigManager) {
             // This is the most reliable approach - register for when config is actually ready
             window.CanaryConfigManager.onConfigReady(config => {
-                console.log('[Version Switcher] ConfigManager ready via callback with percentage:', config.CANARY_PERCENTAGE);
+                console.log('[Variant Switcher] ConfigManager ready via callback with percentage:', config.CANARY_PERCENTAGE);
                 this.canaryPercentage = config.CANARY_PERCENTAGE + '%';
                 this._completeInitialization();
             });
@@ -101,7 +101,7 @@ class VersionSwitcher {
         
         // If we found a percentage, use it
         if (percentage !== null) {
-            console.log(`[Version Switcher] Found percentage ${percentage} from ${source}`);
+            console.log(`[Variant Switcher] Found percentage ${percentage} from ${source}`);
             this.canaryPercentage = percentage + '%';
             this._completeInitialization();
             return;
@@ -109,7 +109,7 @@ class VersionSwitcher {
         
         // If we've exhausted retries, use a hard default
         if (attempts >= maxAttempts) {
-            console.warn('[Version Switcher] Could not get canary percentage from any source after maximum attempts');
+            console.warn('[Variant Switcher] Could not get canary percentage from any source after maximum attempts');
             this.canaryPercentage = '5%'; // Default fallback
             this._completeInitialization();
             return;
@@ -120,7 +120,7 @@ class VersionSwitcher {
     }
     
     /**
-     * Create the container for the version switcher UI
+     * Create the container for the variant switcher UI
      * @private
      */
     _createContainer() {
@@ -129,13 +129,13 @@ class VersionSwitcher {
         if (!container) {
             container = document.createElement('div');
             container.id = this.options.switcherContainerId;
-            container.className = 'version-switcher';
+            container.className = 'variant-switcher';
             document.body.appendChild(container);
             
             // Add loading indicator immediately
             container.innerHTML = `
                 <style>
-                    #version-switcher.version-switcher {
+                    #version-switcher.variant-switcher {
                         position: fixed;
                         bottom: 20px;
                         right: 20px;
@@ -156,7 +156,7 @@ class VersionSwitcher {
                     }
                 </style>
                 <div>
-                    <h4>Version Switcher</h4>
+                    <h4>Variant Switcher</h4>
                     <div class="version-info">
                         Canary distribution: ${this.canaryPercentage}
                     </div>
@@ -175,11 +175,11 @@ class VersionSwitcher {
     _completeInitialization() {
         this.createUI();
         this.attachEvents();
-        console.log('[Version Switcher] Fully initialized with percentage:', this.canaryPercentage);
+        console.log('[Variant Switcher] Fully initialized with percentage:', this.canaryPercentage);
     }
     
     /**
-     * Create the version switcher UI
+     * Create the variant switcher UI
      * @private
      */
     createUI() {
@@ -188,7 +188,7 @@ class VersionSwitcher {
         if (!container) {
             container = document.createElement('div');
             container.id = this.options.switcherContainerId;
-            container.className = 'version-switcher';
+            container.className = 'variant-switcher';
             document.body.appendChild(container);
         }
         
@@ -199,41 +199,41 @@ class VersionSwitcher {
         if (!activePage || activePage === 'home') {  // Modified this line to also check URL if currentPage is 'home'
             // Check if URL contains /canary/ or /stable/
             const path = window.location.pathname;
-            console.log('[Version Switcher] Current path for version detection:', path);
+            console.log('[Variant Switcher] Current path for variant detection:', path);
             
             // More robust detection for GitHub Pages and other environments
             // Check for /canary/ or /canary at the end of the URL
             if (path.includes('/canary/') || path.endsWith('/canary')) {
                 activePage = 'canary';
-                console.log('[Version Switcher] Detected canary version from URL');
+                console.log('[Variant Switcher] Detected canary variant from URL');
             } 
             // Check for /stable/ or /stable at the end of the URL
             else if (path.includes('/stable/') || path.endsWith('/stable')) {
                 activePage = 'stable';
-                console.log('[Version Switcher] Detected stable version from URL');
+                console.log('[Variant Switcher] Detected stable variant from URL');
             } 
             // Any other path is considered home
             else {
                 activePage = 'home';
-                console.log('[Version Switcher] Detected home version from URL');
+                console.log('[Variant Switcher] Detected home variant from URL');
             }
         }
         
         // Now, only check assignment if path detection didn't work
         if (!activePage && window.canary && window.canary._assignment) {
             activePage = window.canary._assignment.version;
-            console.log('[Version Switcher] Using assignment from localStorage:', activePage);
+            console.log('[Variant Switcher] Using assignment from localStorage:', activePage);
         }
         
         // If still no active page is determined, default to home
         if (!activePage) {
             activePage = 'home';
-            console.log('[Version Switcher] No specific version detected, defaulting to home');
+            console.log('[Variant Switcher] No specific variant detected, defaulting to home');
         }
 
         container.innerHTML = `
             <style>
-                #version-switcher.version-switcher {
+                #version-switcher.variant-switcher {
                     position: fixed;
                     bottom: 20px;
                     right: 20px;
@@ -253,12 +253,12 @@ class VersionSwitcher {
                     pointer-events: auto !important;
                 }
 
-                #version-switcher.version-switcher * {
+                #version-switcher.variant-switcher * {
                     box-sizing: border-box;
                     font-family: inherit;
                 }
 
-                #version-switcher.version-switcher h4 {
+                #version-switcher.variant-switcher h4 {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
@@ -267,18 +267,18 @@ class VersionSwitcher {
                     color: #333;
                 }
 
-                #version-switcher.version-switcher .version-info {
+                #version-switcher.variant-switcher .version-info {
                     font-size: 12px;
                     color: #666;
                     margin-bottom: 8px;
                 }
 
-                #version-switcher.version-switcher .version-switcher-options {
+                #version-switcher.variant-switcher .version-switcher-options {
                     display: flex;
                     gap: 8px;
                 }
 
-                #version-switcher.version-switcher button {
+                #version-switcher.variant-switcher button {
                     flex: 1;
                     background: #fff;
                     border: 1px solid #ccc;
@@ -297,17 +297,17 @@ class VersionSwitcher {
                     box-shadow: none;
                 }
 
-                #version-switcher.version-switcher button:hover {
+                #version-switcher.variant-switcher button:hover {
                     background: #f0f0f0;
                 }
 
-                #version-switcher.version-switcher button.active {
+                #version-switcher.variant-switcher button.active {
                     background: #0366d6;
                     color: white;
                     border-color: #0366d6;
                 }
 
-                #version-switcher.version-switcher .vs-tag {
+                #version-switcher.variant-switcher .vs-tag {
                     display: inline-block;
                     padding: 2px 4px;
                     font-size: 10px;
@@ -317,7 +317,7 @@ class VersionSwitcher {
                 }
             </style>
             <div>
-                <h4>Version Switcher</h4>
+                <h4>Variant Switcher</h4>
                 <div class="version-info">
                     Canary distribution: ${this.canaryPercentage || 'N/A'}
                 </div>
@@ -339,7 +339,7 @@ class VersionSwitcher {
     }
     
     /**
-     * Add event listeners to the version switcher buttons
+     * Add event listeners to the variant switcher buttons
      * @private
      */
     attachEvents() {
@@ -383,20 +383,20 @@ class VersionSwitcher {
     }
     
     /**
-     * Switch version and redirect
-     * @param {string} version - The version to switch to
+     * Switch variant and redirect
+     * @param {string} version - The variant to switch to
      * @private
      */
     _switchVersion(version) {
-        console.log('Switching to version:', version);
+        console.log('Switching to variant:', version);
         
-        // Check if we're already on the version - FIX: separate path and assignment checks
+        // Check if we're already on the variant - FIX: separate path and assignment checks
         const currentPath = window.location.pathname;
         const pathContainsVersion = currentPath.includes(`/${version}/`);
         
-        // Only skip if we're actually on the version's path
+        // Only skip if we're actually on the variant's path
         if (pathContainsVersion) {
-            console.log('Already on path for version', version, '- skipping redirect');
+            console.log('Already on path for variant', version, '- skipping redirect');
             return;
         }
         
@@ -425,10 +425,10 @@ class VersionSwitcher {
             normalizedPath = baseUrl;
         }
         
-        // Ensure we have exactly one slash before the version
+        // Ensure we have exactly one slash before the variant
         normalizedPath = normalizedPath.replace(/\/+$/, '');
         
-        // Redirect to the appropriate version with clean URLs
+        // Redirect to the appropriate variant with clean URLs
         if (version === 'canary') {
             window.location.href = normalizedPath + '/canary/';
         } else {
@@ -478,7 +478,7 @@ class VersionSwitcher {
     
     /**
      * Update the active button in the UI
-     * @param {string} version - The active version ('stable', 'canary', or 'home')
+     * @param {string} version - The active variant ('stable', 'canary', or 'home')
      * @private
      */
     _updateActiveButton(version) {
@@ -512,9 +512,9 @@ window.VersionSwitcher = VersionSwitcher;
     // Wait for DOM to be ready
     const initVersionSwitcher = function() {
         if (!window.versionSwitcherInitialized) {
-            console.log('[Version Switcher] Starting initialization');
+            console.log('[Variant Switcher] Starting initialization');
             
-            // Initialize the version switcher - it will handle waiting for config internally
+            // Initialize the variant switcher - it will handle waiting for config internally
             window.versionSwitcher = new VersionSwitcher();
             window.versionSwitcherInitialized = true;
         }

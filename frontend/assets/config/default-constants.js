@@ -100,11 +100,32 @@ if (typeof window !== 'undefined') {
     // Load JSON configuration asynchronously
     loadConfig: async function(configPath) {
       try {
-        // Use provided configPath or determine based on environment
-        const effectivePath = configPath || 
-          (window.location.pathname.includes('/client-side-canary-deployment/') ? 
-            '../frontend/assets/config/canary-config.json' : '../assets/config/canary-config.json');
-            
+        // Determine the most likely config path based on current URL
+        let effectivePath;
+        
+        if (configPath) {
+          // Use explicitly provided path if available
+          effectivePath = configPath;
+        } else {
+          const path = window.location.pathname;
+          
+          // Special handling for GitHub Pages deployment pattern
+          if (path.includes('/client-side-canary-deployment/')) {
+            // If we're at the root level of the app (landing page)
+            if (path.endsWith('/frontend/') || path.endsWith('/frontend')) {
+              effectivePath = 'frontend/assets/config/canary-config.json';
+            }
+            // If we're in a subdirectory (stable or canary)
+            else {
+              effectivePath = '../assets/config/canary-config.json';
+            }
+          } 
+          // Local development or other hosting
+          else {
+            effectivePath = '../assets/config/canary-config.json';
+          }
+        }
+        
         console.log('[ConfigManager] Loading config from:', effectivePath);
         
         // Fetch with cache busting

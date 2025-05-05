@@ -109,14 +109,14 @@
     if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
       try {
         window.versionSwitcher = new VersionSwitcher({
-          currentPage: 'stable',  // Explicitly set to stable
+          currentPage: 'stable',
           position: 'bottom-right',
           switcherContainerId: 'version-switcher'
         });
         window.versionSwitcherInitialized = true;
-        console.log('Version switcher initialized for stable page');
+        console.log('Variant switcher initialized for stable page');
       } catch (e) {
-        console.error('Error initializing version switcher:', e);
+        console.error('Error initializing variant switcher:', e);
       }
     }
 
