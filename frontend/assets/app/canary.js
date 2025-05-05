@@ -45,6 +45,8 @@
     },
     _debug: false,
     _analyticsInitialized: false,
+    _posthogBlocked: false,
+    _posthogErrorCount: 0,
     
     /**
      * Initialize the canary system
@@ -57,16 +59,11 @@
       // Load or create assignment
       this._loadAssignment();
       
-      // Initialize PostHog
-      this._initPostHog();
+      // Initialize analytics via the dedicated analytics module
+      this._initAnalytics();
       
       // Set up error tracking
       this._setupErrorTracking();
-      
-      // Start auto-evaluation if enabled
-      if (this._config.autoEvaluate) {
-        this._scheduleEvaluation();
-      }
       
       // Load metrics
       this._loadMetrics();
@@ -87,76 +84,37 @@
     },
     
     /**
+     * Initialize analytics integration
+     * @private
+     */
+    _initAnalytics: function() {
+      // Only initialize if analytics module exists and PostHog is enabled
+      if (this._config.posthogEnabled && window.canaryAnalytics && 
+          typeof window.canaryAnalytics.initialize === 'function') {
+        try {
+          window.canaryAnalytics.initialize(this._config);
+          this._analyticsInitialized = true;
+          
+          // If we have canary assignment, identify the user
+          if (this._assignment) {
+            window.canaryAnalytics.identifyUser(this._assignment);
+          }
+          
+          if (this._debug) console.log('Analytics initialized successfully');
+        } catch (e) {
+          console.error('Error initializing analytics:', e);
+          this._posthogBlocked = true;
+        }
+      }
+    },
+    
+    /**
      * Initialize PostHog integration
      * @private
      */
     _initPostHog: function() {
-      if (this._config.posthogEnabled && this._config.posthogApiKey) {
-        try {
-          // Set a flag to detect if loading fails
-          this._posthogAttempted = true;
-          this._posthogLoaded = false;
-          
-          // Create a timeout to check if PostHog loaded successfully
-          const posthogLoadTimeout = setTimeout(() => {
-            if (!window.posthog || !window.posthog.__loaded) {
-              if (this._debug) console.log('PostHog failed to load - possibly blocked by browser extension');
-              this._posthogBlocked = true;
-              
-              // Setup minimal mock for required functions to avoid errors
-              if (!window.posthog) {
-                window.posthog = {
-                  capture: () => {},
-                  identify: () => {},
-                  __blocked: true
-                };
-              }
-              
-              // Trigger event to notify about blocked analytics
-              this._triggerEvent('analyticsBlocked', {
-                reason: 'client_blocker',
-                timestamp: Date.now()
-              });
-            }
-          }, 2000);
-          
-          if (!window.posthog) {
-            // Initialize PostHog using the HTML snippet approach
-            !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init bs ws ge fs capture De Ai $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-          }
-          
-          // Initialize PostHog if not already initialized
-          if (window.posthog && !window.posthog.__loaded) {
-            window.posthog.init(this._config.posthogApiKey, {
-              api_host: this._config.posthogHost || 'https://us.i.posthog.com',
-              person_profiles: 'always',
-              capture_pageview: true,
-              persistence: 'localStorage',
-              loaded: (posthog) => {
-                // Clear the timeout when PostHog loads successfully
-                clearTimeout(posthogLoadTimeout);
-                this._posthogLoaded = true;
-                if (this._debug) console.log('PostHog loaded successfully');
-              }
-            });
-            
-            // Identify user if we have an assignment
-            if (this._assignment) {
-              window.posthog.identify(
-                this._assignment.userId || 'user_' + this._assignment.assignedAt,
-                {
-                  canary_version: this._assignment.version,
-                  assigned_at: this._assignment.assignedAt,
-                  percentage: this._assignment.percentage
-                }
-              );
-            }
-          }
-        } catch (e) {
-          console.error('Error initializing PostHog:', e);
-          this._posthogBlocked = true;
-        }
-      }
+      // This method is deprecated - use _initAnalytics instead
+      this._initAnalytics();
     },
     
     /**
@@ -512,84 +470,32 @@
     _setupErrorTracking: function() {
       const self = this;
       
-      // Capture unhandled errors
+      // Capture unhandled errors - just record them, don't auto-evaluate
       window.addEventListener('error', function(event) {
         if (self._assignment) {
           const version = self._assignment.version;
           self._metrics[version].errors = (self._metrics[version].errors || 0) + 1;
           self._saveMetrics();
-          
-          // Evaluate metrics after error
-          self._evaluateMetrics();
         }
       });
     },
     
     /**
-     * Schedule periodic evaluation of metrics
+     * Schedule periodic evaluation of metrics - DEPRECATED
+     * Server-side analytics now handles this task
      * @private
      */
     _scheduleEvaluation: function() {
-      const self = this;
-      
-      setInterval(function() {
-        self._evaluateMetrics();
-      }, this._config.evaluationInterval);
+      console.warn('Client-side evaluation is deprecated - rely on server analytics');
     },
     
     /**
-     * Evaluate metrics and make decisions
+     * Evaluate metrics and make decisions - DEPRECATED
+     * Server-side analytics now handles this task
      * @private
      */
     _evaluateMetrics: function() {
-      if (!this._metrics.stable || !this._metrics.canary) {
-        return;
-      }
-      
-      const stableErrors = this._metrics.stable.errors || 0;
-      const canaryErrors = this._metrics.canary.errors || 0;
-      const stableViews = this._metrics.stable.pageviews || 1;
-      const canaryViews = this._metrics.canary.pageviews || 1;
-      
-      // Calculate error rates
-      const stableErrorRate = stableViews > 0 ? stableErrors / stableViews : 0;
-      const canaryErrorRate = canaryViews > 0 ? canaryErrors / canaryViews : 0;
-      
-      // If canary error rate is significantly higher, consider rollback
-      if (canaryErrorRate > 0 && stableErrorRate > 0 && canaryErrorRate > (stableErrorRate * this._config.errorThreshold)) {
-        // Rollback - decrease canary percentage
-        this._config.initialCanaryPercentage = Math.max(
-          this._config.safetyThreshold, 
-          this._config.initialCanaryPercentage / 2
-        );
-        
-        // Trigger rollback event
-        this._triggerEvent('rollback', {
-          stableErrorRate,
-          canaryErrorRate,
-          newPercentage: this._config.initialCanaryPercentage
-        });
-      } else if (canaryErrorRate <= stableErrorRate && this._config.gradualRollout) {
-        // Success - slightly increase canary percentage if under max
-        if (this._config.initialCanaryPercentage < this._config.maxCanaryPercentage) {
-          this._config.initialCanaryPercentage = Math.min(
-            this._config.maxCanaryPercentage,
-            this._config.initialCanaryPercentage * 1.05
-          );
-          
-          // Trigger increase event
-          this._triggerEvent('percentageIncrease', {
-            newPercentage: this._config.initialCanaryPercentage
-          });
-        }
-      }
-      
-      // Trigger evaluation event
-      this._triggerEvent('evaluationComplete', {
-        stableErrorRate,
-        canaryErrorRate,
-        recommendation: canaryErrorRate > (stableErrorRate * this._config.errorThreshold) ? 'ROLLBACK' : 'CONTINUE'
-      });
+      console.warn('Client-side evaluation is deprecated - rely on server analytics');
     },
     
     /**
