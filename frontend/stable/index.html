@@ -31,27 +31,6 @@
       padding: 16px;
       margin-bottom: 16px;
     }
-    
-    button {
-      background-color: #333;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-right: 8px;
-    }
-    
-    button:hover {
-      background-color: #555;
-    }
-    
-    pre {
-      background-color: #f8f8f8;
-      padding: 10px;
-      border-radius: 4px;
-      overflow: auto;
-    }
 
     /* Footer styles */
     .footer {
@@ -63,8 +42,6 @@
       border-top: 1px solid #ddd;
     }
   </style>
-  <!-- Dashboard Assets - Vanilla JS -->
-  <link rel="stylesheet" href="../assets/css/simple-dashboard.css">
 </head>
 <body>
   <div class="container">
@@ -74,20 +51,6 @@
     <div class="card">
       <h2>About This Application</h2>
       <p>This demonstrates client-side canary deployment functionality. You can switch to the canary version using the Version Switcher in the bottom right corner.</p>
-    </div>
-    
-    <div class="card">
-      <h2>Test Controls</h2>
-      <button id="track-click">Track Click</button>
-      <button id="simulate-error">Simulate Error</button>
-      <button id="show-metrics">Show Metrics</button>
-      <pre id="metrics-output" style="display: none;"></pre>
-    </div>
-    
-    <!-- Dashboard Container -->
-    <div class="card">
-      <h2>Dashboard</h2>
-      <div id="dashboard-root" style="margin: 10px 0;"></div>
     </div>
     
     <!-- Add version footer -->
@@ -123,83 +86,10 @@
     });
   </script>
   
-  <script src="../assets/js/simple-dashboard.js"></script>
-  
   <!-- Include version switcher component LAST -->
   <script src="../assets/js/components/version-switcher.js"></script>
 
-  <!-- Initialize dashboard after scripts have loaded -->
   <script>
-    // Initialize version switcher
-    try {
-      window.versionSwitcher = new VersionSwitcher({
-        onVersionSwitch: function(newVersion) {
-          if (window.canary && window.canary.trackEvent) {
-            window.canary.trackEvent('manual_version_switch', {
-              fromVersion: 'stable',
-              toVersion: newVersion,
-            });
-          } else {
-            console.error('Canary not initialized properly, cannot track version switch');
-          }
-        }
-      });
-    } catch (e) {
-      console.error('Error initializing version switcher:', e);
-    }
-    
-    // Set up event handlers
-    document.getElementById('track-click').addEventListener('click', function() {
-      window.canary.trackEvent('button_click', {
-        button: 'track-click',
-        version: 'stable'
-      });
-      alert('Event tracked in stable version!');
-    });
-    
-    document.getElementById('simulate-error').addEventListener('click', function() {
-      window.canary.trackEvent('simulated_error_triggered', {
-        type: 'user_initiated'
-      });
-      try {
-        throw new Error('Simulated stable testing error');
-      } catch (error) {
-        alert('Simulated error tracked! Check the console.');
-        console.error('Simulated error for stable testing:', error);
-      }
-    });
-    
-    document.getElementById('show-metrics').addEventListener('click', function() {
-      const output = document.getElementById('metrics-output');
-      if (window.canary) {
-        const metrics = window.canary._metrics;
-        const posthogStatus = window.canary._posthogBlocked ? 
-          'BLOCKED' : 'Working';
-        
-        output.innerHTML = 
-          '<h3>Metrics</h3>' +
-          '<p><strong>PostHog Status:</strong> ' + posthogStatus + '</p>' +
-          '<h4>Stable Version:</h4>' +
-          '<ul>' +
-            '<li>Pageviews: ' + metrics.stable.pageviews + '</li>' +
-            '<li>Errors: ' + metrics.stable.errors + '</li>' +
-            '<li>Clicks: ' + metrics.stable.clicks + '</li>' +
-          '</ul>' +
-          '<h4>Canary Version:</h4>' +
-          '<ul>' +
-            '<li>Pageviews: ' + metrics.canary.pageviews + '</li>' +
-            '<li>Errors: ' + metrics.canary.errors + '</li>' +
-            '<li>Clicks: ' + metrics.canary.clicks + '</li>' +
-          '</ul>' +
-          '<h4>Last ' + (metrics.events ? metrics.events.length : 0) + ' Events:</h4>' +
-          '<pre>' + JSON.stringify(metrics.events, null, 2) + '</pre>';
-      } else {
-        output.textContent = 'Analytics not available';
-      }
-      
-      output.style.display = output.style.display === 'none' ? 'block' : 'none';
-    });
-    
     // Track stable page view
     try {
       if (window.canary && window.canary.trackEvent) {
@@ -212,23 +102,6 @@
     } catch (e) {
       console.error('Error tracking page view:', e);
     }
-
-    // Initialize the dashboard with vanilla JS instead of React
-    document.addEventListener('DOMContentLoaded', function() {
-      // Check if the root element exists
-      const dashboardRoot = document.getElementById('dashboard-root');
-      if (!dashboardRoot) {
-        console.error('Dashboard root element not found');
-        return;
-      }
-
-      // Use simple dashboard instead of React component
-      if (window.simpleDashboard && window.canary) {
-        window.simpleDashboard.init(dashboardRoot, window.canary);
-      } else {
-        console.warn('Simple dashboard or canary not available');
-      }
-    });
   </script>
   
   <!-- Version checker script - remains at end of body -->

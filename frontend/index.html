@@ -5,43 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Client-Side Canary Deployment</title>
   
-  <!-- Include default constants first -->
-  <script src="src/config/default-constants.js"></script>
-  
-  <!-- Include the core canary.js script -->
-  <script src="src/canary.js"></script>
-  
-  <!-- Include the config first to ensure it's available -->
-  <script src="src/config/canary-config.js"></script>
-  
-  <!-- Include the analytics integration -->
-  <script src="src/analytics.js"></script>
-  
-  <!-- Include the version switcher component -->
-  <script src="assets/js/components/version-switcher.js"></script>
-  
-  <!-- Initialize canary right after scripts are loaded -->
-  <script>
-    try {
-      if (window.canary) {
-        // Use percentage from CanaryConfig if available, otherwise use DEFAULT_CONSTANTS,
-        // and only fall back to hardcoded value as last resort
-        const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
-          window.CanaryConfig.distribution.canaryPercentage : 
-          (window.DEFAULT_CONSTANTS ? window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE : 5);
-        
-        window.canary.init({
-          initialCanaryPercentage: percentage,
-          posthogEnabled: true,
-          posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
-        });
-        console.log('Canary initialized with percentage:', percentage);
-      }
-    } catch (e) {
-      console.error('Failed to initialize canary on page load:', e);
-    }
-  </script>
-  
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -136,11 +99,6 @@
       border-top: 1px solid #eaeaea;
     }
   </style>
-  
-  <!-- Dashboard Assets - Now simplified -->
-  <script src="assets/embed-dashboard/dashboard-bridge.js"></script>
-  <!-- Use vanilla JS dashboard instead of React -->
-  <script src="assets/js/simple-dashboard.js"></script>
 </head>
 <body>
   <div class="container">
@@ -157,17 +115,6 @@
         <a href="stable/" class="button">Visit Stable Version</a>
         <a href="canary/" class="button button-outline">Visit Canary Version</a>
       </div>
-      
-      <div class="button-container">
-        <button id="show-metrics" class="button button-outline">Show Metrics</button>
-      </div>
-      
-      <pre id="metrics-output" style="display: none; background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 20px;"></pre>
-    </div>
-
-    <div class="card">
-      <h2>Dashboard</h2>
-      <div id="dashboard-root" style="margin: 10px 0;"></div>
     </div>
     
     <div id="countdown" class="countdown">
@@ -180,45 +127,45 @@
     </div>
   </div>
   
+  <!-- Move scripts to end of body in proper order -->
+  <!-- Include default constants first -->
+  <script src="src/config/default-constants.js"></script>
+  
+  <!-- Include the core canary.js script -->
+  <script src="src/canary.js"></script>
+  
+  <!-- Include the config to ensure it's available -->
+  <script src="src/config/canary-config.js"></script>
+  
+  <!-- Include the analytics integration -->
+  <script src="src/analytics.js"></script>
+  
+  <!-- Initialize canary -->
   <script>
-    // Add event listener for the show metrics button
-    document.addEventListener('DOMContentLoaded', function() {
-      const showMetricsBtn = document.getElementById('show-metrics');
-      if (showMetricsBtn) {
-        showMetricsBtn.addEventListener('click', function() {
-          const output = document.getElementById('metrics-output');
-          if (window.canary) {
-            const metrics = window.canary._metrics;
-            const posthogStatus = window.canary._posthogBlocked ? 
-              'BLOCKED' : 'Working';
-            
-            output.innerHTML = 
-              '<h3>Metrics</h3>' +
-              '<p><strong>PostHog Status:</strong> ' + posthogStatus + '</p>' +
-              '<h4>Stable Version:</h4>' +
-              '<ul>' +
-                '<li>Pageviews: ' + metrics.stable.pageviews + '</li>' +
-                '<li>Errors: ' + metrics.stable.errors + '</li>' +
-                '<li>Clicks: ' + metrics.stable.clicks + '</li>' +
-              '</ul>' +
-              '<h4>Canary Version:</h4>' +
-              '<ul>' +
-                '<li>Pageviews: ' + metrics.canary.pageviews + '</li>' +
-                '<li>Errors: ' + metrics.canary.errors + '</li>' +
-                '<li>Clicks: ' + metrics.canary.clicks + '</li>' +
-              '</ul>' +
-              '<h4>Last ' + (metrics.events ? metrics.events.length : 0) + ' Events:</h4>' +
-              '<pre>' + JSON.stringify(metrics.events, null, 2) + '</pre>';
-          } else {
-            output.textContent = 'Analytics not available';
-          }
-          
-          output.style.display = output.style.display === 'none' ? 'block' : 'none';
+    try {
+      if (window.canary) {
+        // Use percentage from CanaryConfig if available, otherwise use DEFAULT_CONSTANTS,
+        // and only fall back to hardcoded value as last resort
+        const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
+          window.CanaryConfig.distribution.canaryPercentage : 
+          (window.DEFAULT_CONSTANTS ? window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE : 5);
+        
+        window.canary.init({
+          initialCanaryPercentage: percentage,
+          posthogEnabled: true,
+          posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
         });
+        console.log('Canary initialized with percentage:', percentage);
       }
-    });
-
-    // Simple approach - start countdown immediately when DOM is ready
+    } catch (e) {
+      console.error('Failed to initialize canary:', e);
+    }
+  </script>
+  
+  <!-- Include the version switcher component LAST to ensure dependencies are loaded -->
+  <script src="assets/js/components/version-switcher.js"></script>
+  
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM fully loaded');
       
@@ -241,47 +188,42 @@
       }
       
       // Initialize version switcher with a delay to ensure it's visible
-      setTimeout(function() {
-        if (window.VersionSwitcher) {
-          try {
-            const switcher = new VersionSwitcher({
+      if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
+        try {
+          window.versionSwitcher = new VersionSwitcher({
+            currentPage: 'home',
+            position: 'bottom-right',
+            switcherContainerId: 'version-switcher'
+          });
+          window.versionSwitcherInitialized = true;
+          console.log('Version switcher initialized manually');
+          
+          // Force visibility
+          const switcherElement = document.getElementById('version-switcher');
+          if (switcherElement) {
+            switcherElement.style.display = 'block';
+            switcherElement.style.visibility = 'visible';
+            switcherElement.style.opacity = '1';
+            console.log('Version switcher visibility enforced');
+          } else {
+            // Create container if it doesn't exist
+            const switcherContainer = document.createElement('div');
+            switcherContainer.id = 'version-switcher';
+            switcherContainer.className = 'version-switcher';
+            document.body.appendChild(switcherContainer);
+            console.log('Created version switcher container manually');
+            
+            // Initialize version switcher again
+            new VersionSwitcher({
               currentPage: 'home',
               position: 'bottom-right',
               switcherContainerId: 'version-switcher'
             });
-            console.log('Version switcher initialized');
-            
-            // Force visibility
-            const switcherElement = document.getElementById('version-switcher');
-            if (switcherElement) {
-              switcherElement.style.display = 'block';
-              switcherElement.style.visibility = 'visible';
-              switcherElement.style.opacity = '1';
-              console.log('Version switcher visibility enforced');
-            } else {
-              console.warn('Version switcher element not found after initialization');
-              
-              // Create container if it doesn't exist
-              const switcherContainer = document.createElement('div');
-              switcherContainer.id = 'version-switcher';
-              switcherContainer.className = 'version-switcher';
-              document.body.appendChild(switcherContainer);
-              console.log('Created version switcher container manually');
-              
-              // Initialize version switcher again
-              new VersionSwitcher({
-                currentPage: 'home',
-                position: 'bottom-right',
-                switcherContainerId: 'version-switcher'
-              });
-            }
-          } catch (e) {
-            console.error('Error initializing version switcher:', e);
           }
-        } else {
-          console.error('VersionSwitcher not available');
+        } catch (e) {
+          console.error('Error initializing version switcher:', e);
         }
-      }, 500);
+      }
       
       // Get countdown element
       const countdownElement = document.getElementById('countdown-number');
@@ -332,23 +274,6 @@
           window.location.href = targetVersion + '/';
         }
       }, 1000);
-    });
-
-    // Initialize the dashboard with vanilla JS
-    document.addEventListener('DOMContentLoaded', function() {
-      // Check if the root element exists
-      const dashboardRoot = document.getElementById('dashboard-root');
-      if (!dashboardRoot) {
-        console.error('Dashboard root element not found');
-        return;
-      }
-      
-      // Use simple dashboard instead of React
-      if (window.simpleDashboard && window.canary) {
-        window.simpleDashboard.init(dashboardRoot, window.canary);
-      } else {
-        console.warn('Simple dashboard or canary not available');
-      }
     });
   </script>
   
