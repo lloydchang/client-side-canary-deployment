@@ -413,7 +413,7 @@ jobs:
             
             # Only commit if there are meaningful changes
             if [ "$ONLY_TIMESTAMP_CHANGES" = "false" ]; then
-              git commit -m "Update of canary percentage to ${{ github.event.inputs.canary_percentage }}%"
+              git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%"
               
               # 9. Push with improved conflict handling
               echo "Pushing changes to main branch..."
@@ -456,7 +456,7 @@ jobs:
                   fi
 
                   if [ "$ONLY_TIMESTAMP_CHANGES_CONFLICT" = "false" ]; then
-                     git commit -m "Update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
+                     git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
                   else
                      echo "No meaningful changes to commit after conflict resolution"
                   fi
