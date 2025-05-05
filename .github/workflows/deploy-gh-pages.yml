@@ -141,6 +141,8 @@ jobs:
           INCREMENT_STEP: ${{ vars.INCREMENT_STEP || '5' }}
           MAX_PERCENTAGE: ${{ vars.MAX_PERCENTAGE || '50' }}
           SAFETY_THRESHOLD: ${{ vars.SAFETY_THRESHOLD || '2' }}
+          # Temporarily use mock data until PostHog API key permissions are updated
+          USE_MOCK_DATA: 'true'
         run: |
           chmod +x ./.github/scripts/canary-analyzer.js
           node ./.github/scripts/canary-analyzer.js

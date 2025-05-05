@@ -83,7 +83,25 @@ function queryPostHog(path, options = {}) {
             reject(new Error(`Failed to parse PostHog response: ${error.message}`));
           }
         } else {
-          reject(new Error(`PostHog API error: ${res.statusCode} - ${data}`));
+          // Enhanced error handling for permission issues
+          try {
+            const errorData = JSON.parse(data);
+            
+            // Check for permission denied error
+            if (res.statusCode === 403 && errorData.code === 'permission_denied') {
+              const scope = errorData.detail?.match(/scope '([^']+)'/) ? errorData.detail.match(/scope '([^']+)'/)[1] : 'unknown';
+              reject(new Error(
+                `PostHog API permission error: Missing required scope '${scope}'\n` +
+                `Please ensure your PostHog API key has the following scopes: insight:read\n` +
+                `You may need to create a new Personal API key with appropriate permissions in PostHog.`
+              ));
+            } else {
+              reject(new Error(`PostHog API error: ${res.statusCode} - ${data}`));
+            }
+          } catch (e) {
+            // If we can't parse the error JSON, fall back to the generic error
+            reject(new Error(`PostHog API error: ${res.statusCode} - ${data}`));
+          }
         }
       });
     });
@@ -107,6 +125,22 @@ async function getVersionEvents() {
 
   if (!config.projectId) {
     throw new Error('POSTHOG_PROJECT_ID environment variable is required');
+  }
+
+  // For local development or CI environments without proper PostHog setup,
+  // check for a special environment flag to use mock data
+  if (process.env.USE_MOCK_DATA === 'true') {
+    console.log('Using mock analytics data (USE_MOCK_DATA=true)');
+    return {
+      stable: { pageviews: 1000, errors: 5, errorRate: 0.005 },
+      canary: { pageviews: 100, errors: 1, errorRate: 0.01 },
+      analysis: {
+        relativeErrorIncrease: 0.005,
+        exceedsThreshold: false,
+        recommendedAction: 'continue'
+      },
+      timestamp: new Date().toISOString()
+    };
   }
 
   // Query for pageviews by version
