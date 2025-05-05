@@ -36,10 +36,31 @@ class VersionSwitcher {
         const retryInterval = 200; // Slightly faster retries
         
         console.log(`[Version Switcher] Init attempt ${attempts + 1}/${maxAttempts}`);
+        console.log(`[Version Switcher] Current URL path: ${window.location.pathname}`);
         
         // Use a priority order for configuration sources
         let percentage = null;
         let source = '';
+        
+        // Debug all potential configuration sources
+        if (window.CanaryConfigManager) {
+            console.log(`[Version Switcher] CanaryConfigManager exists, loaded: ${window.CanaryConfigManager._configLoaded}`);
+            if (window.CanaryConfigManager._configLoaded) {
+                console.log(`[Version Switcher] Config data:`, window.CanaryConfigManager._config);
+            }
+        }
+        
+        if (window.CanaryConfig && window.CanaryConfig.distribution) {
+            console.log(`[Version Switcher] CanaryConfig.distribution:`, window.CanaryConfig.distribution);
+        }
+        
+        if (window.canary && window.canary._config) {
+            console.log(`[Version Switcher] canary._config:`, window.canary._config);
+        }
+        
+        if (window.DEFAULT_CONSTANTS) {
+            console.log(`[Version Switcher] DEFAULT_CONSTANTS.CANARY_PERCENTAGE:`, window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE);
+        }
         
         // 1. Check ConfigManager (preferred)
         if (window.CanaryConfigManager && window.CanaryConfigManager._configLoaded) {

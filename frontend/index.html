@@ -176,6 +176,13 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM fully loaded');
       
+      // Add this debug line to check configuration loading
+      if (window.CanaryConfigManager) {
+        console.log('[Debug] CanaryConfigManager config status:', 
+                    window.CanaryConfigManager._configLoaded, 
+                    window.CanaryConfigManager._config);
+      }
+      
       // Initialize canary first - this is now a backup if the head initialization failed
       if (window.canary && !window.canary._assignment) {
         try {
@@ -194,13 +201,14 @@
         }
       }
       
-      // Initialize version switcher with a delay to ensure it's visible
+      // Initialize version switcher with explicit config path
       if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
         try {
           window.versionSwitcher = new VersionSwitcher({
             currentPage: 'home',  // This is correct - the home page should have 'home' selected
             position: 'bottom-right',
-            switcherContainerId: 'version-switcher'
+            switcherContainerId: 'version-switcher',
+            configPath: 'assets/config/canary-config.json' // Explicitly set config path
           });
           window.versionSwitcherInitialized = true;
           console.log('[Version Switcher] Initialized for home page');  // Updated logging format for consistency
