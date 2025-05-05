@@ -75,7 +75,7 @@ Analyzes canary performance using PostHog data:
 - Periodically adjusts canary percentage based on analysis results
 
 #### 3. adjust-canary
-Provides manual control over canary percentages:
+Provides manual control over canary distribution percentages:
 - Allows immediate adjustment of canary traffic percentage via workflow dispatch
 - Serves as a critical override for the automated system
 - Updates the canary configuration with the specified percentage
@@ -84,7 +84,7 @@ Provides manual control over canary percentages:
 
 **Why manual control alongside automation?**
 While the system includes automated analysis and adjustment through the `analyze-canary` job, the manual job serves several important purposes:
-- **Emergency control**: Quickly respond to issues by adjusting or rolling back canary percentages
+- **Emergency control**: Quickly respond to issues by adjusting or rolling back canary distribution percentages
 - **Special scenarios**: Handle business requirements that automated metrics can't account for
 - **Testing & validation**: Set specific percentages during development or QA processes
 - **Fine-grained control**: Allow product managers to directly influence rollout pace

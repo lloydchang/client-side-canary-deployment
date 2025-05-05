@@ -60,7 +60,7 @@ graph TD
         CL --> CL1[Poll variant.json every 5 minutes]
         CL1 -->|Variant Changed| CL2[Reload page]
         CL2 --> CL3[Load new configuration]
-        CL3 --> CL4[Apply new canary percentages]
+        CL3 --> CL4[Apply new canary distribution percentages]
     end    
 ```
 
@@ -79,7 +79,7 @@ The system ensures all clients stay up-to-date with the latest canary configurat
    - When variant changes are detected, the page triggers a hard reload
    - Local variant information is stored in localStorage for comparison
 
-This ensures that when canary percentages are adjusted (either automatically or manually), all users receive the updated configuration without manual intervention.
+This ensures that when canary distribution percentages are adjusted (either automatically or manually), all users receive the updated configuration without manual intervention.
 
 ## Client-Side vs. Server-Side Canary Deployments
  
