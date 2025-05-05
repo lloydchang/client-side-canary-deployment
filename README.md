@@ -98,7 +98,7 @@ In this approach, the traffic shaping decision (which version a user receives) h
 ```mermaid
 graph TD
     subgraph "Server-Side Canary Deployment"
-        A[User Request] --> GA[Global Accelerator and Domain Name Service (DNS)]
+        A[User Request] --> GA[Global Accelerator and Domain Name Service]
         GA --> SSDL{Server-Side Decision Logic}
         SSDL -->|95% of users| StablePath[Route to Stable]
         SSDL -->|5% of users| CanaryPath[Route to Canary]
