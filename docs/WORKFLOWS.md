@@ -42,7 +42,7 @@ The workflow ensures that clients always get the latest configuration:
 
 2. **Configuration Updates**:
    - The `canary-analyzer.js` script updates:
-     - `config/canary-config.json`: Main JSON configuration 
+     - `frontend/assets/config/canary-config.json`: Main JSON configuration 
      - `frontend/assets/config/canary-config.js`: JavaScript configuration for client use
 
 3. **Clean Deployment**:
@@ -137,16 +137,16 @@ flowchart LR
     
     subgraph "File Updates"
         A --> A1[Update version.json]
-        A --> A2[Create config/canary-config.json]
+        A --> A2[Create frontend/assets/config/canary-config.json]
         A --> A3[Deploy all files to gh-pages]
         
         B --> B1[Update version.json]
-        B --> B2[Update config/canary-config.json]
+        B --> B2[Update frontend/assets/config/canary-config.json]
         B --> B3[Update frontend/assets/config/canary-config.js]
         B --> B4[Selective deployment to gh-pages]
         
         C --> C1[Update version.json]
-        C --> C2[Update config/canary-config.json]
+        C --> C2[Update frontend/assets/config/canary-config.json]
         C --> C3[Update frontend/assets/config/canary-config.js]
         C --> C4[Selective deployment to gh-pages]
         
@@ -160,7 +160,7 @@ flowchart LR
     end
     
     subgraph "GitHub Pages"
-        Config[config/canary-config.json]
+        Config[frontend/assets/config/canary-config.json]
         JSConfig[frontend/assets/config/canary-config.js]
         Version[version.json]
     end
@@ -178,7 +178,7 @@ flowchart LR
 
 ```mermaid
 graph LR
-    A[GitHub Actions] -->|Reads/Updates| B[config/canary-config.json]
+    A[GitHub Actions] -->|Reads/Updates| B[frontend/assets/config/canary-config.json]
     A -->|Generates| C[frontend/assets/config/canary-config.js]
     C -->|Loaded by| D[Browser]
     D -->|Accesses via| E[window.CanaryConfig]
@@ -189,7 +189,7 @@ graph LR
 When running `analyze-canary` or `adjust-canary` jobs, only specific files are updated in GitHub Pages:
 
 1. `version.json` - Updated to trigger client refreshes
-2. `config/canary-config.json` - Contains the updated canary percentage
+2. `frontend/assets/config/canary-config.json` - Contains the updated canary percentage
 3. `frontend/assets/config/canary-config.js` - JavaScript version of configuration for client use
 
 This selective deployment is implemented through the GitHub Pages deploy action with:

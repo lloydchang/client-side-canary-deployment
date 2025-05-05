@@ -57,10 +57,10 @@ jobs:
           mkdir -p frontend/assets/config
           
           # Use the template from .github/config to create the runtime config
-          cp .github/config/canary-config-template.json frontend/assets/config/canary-config.json
+          cp .github/config/canary-config-template.json frontend/assets/frontend/assets/config/canary-config.json
           
           # Update with secrets
-          cat > frontend/assets/config/canary-config.json << EOF
+          cat > frontend/assets/frontend/assets/config/canary-config.json << EOF
           {
             "posthog": {
               "apiKey": "${{ secrets.POSTHOG_PUBLIC_KEY }}",
@@ -222,7 +222,7 @@ jobs:
           fi
           
           # 9. Stage all changes
-          git add frontend/version.json frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
+          git add frontend/version.json frontend/assets/frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
           
           # 10. Show what files are staged
           echo "Files staged for commit:"
@@ -258,7 +258,7 @@ jobs:
                 USE_MOCK_DATA="false" \
                 node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
                 
-                git add frontend/version.json frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
+                git add frontend/version.json frontend/assets/frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
                 git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
               fi
               
@@ -307,7 +307,7 @@ jobs:
             echo "⚠️ canary-config.js was not created/updated" >> $GITHUB_STEP_SUMMARY
           fi
           
-          if [ -f "frontend/assets/config/canary-config.json" ]; then
+          if [ -f "frontend/assets/frontend/assets/config/canary-config.json" ]; then
             echo "- canary-config.json: Updated with percentage $CANARY_PERCENTAGE%" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ canary-config.json was not created/updated" >> $GITHUB_STEP_SUMMARY
@@ -360,7 +360,7 @@ jobs:
           node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
           
           # 7. Stage all changes
-          git add frontend/version.json frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
+          git add frontend/version.json frontend/assets/frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
           
           # 8. Check if there are changes to commit
           if ! git diff --staged --quiet; then
@@ -384,7 +384,7 @@ jobs:
                 ./.github/scripts/update-version.sh  # Re-run version update
                 chmod +x ./.github/scripts/canary-analyzer.js
                 node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}  # Re-run with manual percentage
-                git add frontend/version.json frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
+                git add frontend/version.json frontend/assets/frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
                 git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
               fi
               
