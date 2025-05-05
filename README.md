@@ -240,7 +240,7 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
   - Deploys to GitHub Pages
 
 - **Analytics**: Runs every 6 hours by default
-  - Uses `analyze-canary.js` to query PostHog data
+  - Uses `.github/scripts/canary-analyzer.js` to query PostHog data
   - Compares error rates between stable and canary variants
   - Creates detailed reports in GitHub Actions summaries
   - Implements automatic rollback if error thresholds are exceeded
