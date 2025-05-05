@@ -6,7 +6,7 @@
 const CanaryConfig = {
   // Canary distribution percentage
   distribution: {
-    canaryPercentage: 30,
+    canaryPercentage: 35,
     maxPercentage: 50
   }
 };
