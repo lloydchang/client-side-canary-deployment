@@ -18,11 +18,30 @@ class VersionSwitcher {
             ...config
         };
         
+        // Store canary distribution percentage for reuse
+        this.canaryPercentage = this._getCanaryPercentage();
+        
         // Create UI
         this._createSwitcher();
         
         // Add event listeners
         this._addEventListeners();
+    }
+    
+    /**
+     * Get canary distribution percentage
+     * @returns {string} Canary percentage as a string with % symbol
+     * @private
+     */
+    _getCanaryPercentage() {
+        if (window.CanaryConfig && window.CanaryConfig.distribution) {
+            // Prefer the configuration from CanaryConfig first
+            return window.CanaryConfig.distribution.canaryPercentage + '%';
+        } else if (window.canary && window.canary._config) {
+            // Fall back to the runtime config if needed
+            return window.canary._config.initialCanaryPercentage + '%';
+        }
+        return '';  // Return empty string if no percentage found
     }
     
     /**
@@ -37,16 +56,6 @@ class VersionSwitcher {
             container.id = this.config.switcherContainerId;
             container.className = 'version-switcher';
             document.body.appendChild(container);
-        }
-        
-        // Get info directly from the global canary object or CanaryConfig
-        let canaryPercentage = '';
-        if (window.CanaryConfig && window.CanaryConfig.distribution) {
-            // Prefer the configuration from CanaryConfig first
-            canaryPercentage = window.CanaryConfig.distribution.canaryPercentage + '%';
-        } else if (window.canary && window.canary._config) {
-            // Fall back to the runtime config if needed
-            canaryPercentage = window.canary._config.initialCanaryPercentage + '%';
         }
         
         // Determine active button based on current page or assignment
@@ -68,6 +77,11 @@ class VersionSwitcher {
             else if (path.includes('/stable/') || path.endsWith('/stable')) {
                 activePage = 'stable';
                 console.log('Detected stable version from URL');
+            } 
+            // If not canary or stable, it should be home
+            else if (path === '/' || path === '' || path.endsWith('/index.html') || !path.includes('/canary/') && !path.includes('/stable/')) {
+                activePage = 'home';
+                console.log('Detected home version from URL');
             }
         }
         
@@ -77,11 +91,10 @@ class VersionSwitcher {
             console.log('Using assignment from localStorage:', activePage);
         }
         
-        // If we're on the root path and no specific page is set, assume it's home
-        if (!activePage && (window.location.pathname === '/' || 
-            window.location.pathname === '' || 
-            window.location.pathname.endsWith('/index.html'))) {
+        // If still no active page is determined, default to home
+        if (!activePage) {
             activePage = 'home';
+            console.log('No specific version detected, defaulting to home');
         }
         
         container.innerHTML = `
@@ -171,7 +184,7 @@ class VersionSwitcher {
             </style>
             <div>
                 <h4>Version Switcher</h4>
-                ${canaryPercentage ? `<div class="version-info">Canary distribution: ${canaryPercentage}</div>` : ''}
+                <div class="version-info">Canary distribution: ${this.canaryPercentage || 'N/A'}</div>
                 <div class="version-switcher-options">
                     <button id="vs-home-btn" class="${activePage === 'home' ? 'active' : ''}">
                         Home
@@ -185,6 +198,8 @@ class VersionSwitcher {
                 </div>
             </div>
         `;
+        
+        console.log('Active page set to:', activePage);
     }
     
     /**
@@ -208,6 +223,8 @@ class VersionSwitcher {
      * @private
      */
     _goHome() {
+        console.log('Navigating to home page');
+        
         // Get the base path for the application
         let basePath = this._getBasePath();
         
