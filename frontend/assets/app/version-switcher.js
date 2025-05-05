@@ -20,8 +20,11 @@ class VersionSwitcher {
         // Create container immediately so it's visible in the DOM
         this._createContainer();
         
-        // Use a more robust initialization approach with retry
-        this._initWithRetry();
+        // Wait for next tick to ensure DOM is ready
+        setTimeout(() => {
+            // Start the configuration detection process
+            this._initWithRetry();
+        }, 0);
     }
     
     /**
@@ -29,56 +32,70 @@ class VersionSwitcher {
      * @private
      */
     _initWithRetry(attempts = 0) {
-        const maxAttempts = 10; // Maximum number of retries
-        const retryInterval = 300; // Retry every 300ms
+        const maxAttempts = 20; // More retries
+        const retryInterval = 200; // Slightly faster retries
         
-        console.log(`Version Switcher init attempt ${attempts + 1}/${maxAttempts}`);
+        console.log(`[Version Switcher] Init attempt ${attempts + 1}/${maxAttempts}`);
         
-        // Check if ConfigManager is loaded and ready
+        // Use a priority order for configuration sources
+        let percentage = null;
+        let source = '';
+        
+        // 1. Check ConfigManager (preferred)
         if (window.CanaryConfigManager && window.CanaryConfigManager._configLoaded) {
-            // ConfigManager is ready, use its data
-            const percentage = window.CanaryConfigManager.get('CANARY_PERCENTAGE');
-            console.log('Using ConfigManager percentage:', percentage);
-            this.canaryPercentage = percentage + '%';
-            this._completeInitialization();
-        } 
-        // Try alternatives if ConfigManager isn't ready
-        else if (window.CanaryConfig && window.CanaryConfig.distribution) {
-            // Legacy fallback 1: Use direct CanaryConfig
-            const percentage = window.CanaryConfig.distribution.canaryPercentage;
-            console.log('Using legacy CanaryConfig percentage:', percentage);
-            this.canaryPercentage = percentage + '%';
-            this._completeInitialization();
-        } 
-        // Try canary object as last resort
-        else if (window.canary && window.canary._config && typeof window.canary._config.initialCanaryPercentage !== 'undefined') {
-            // Legacy fallback 2: Use canary object
-            const percentage = window.canary._config.initialCanaryPercentage;
-            console.log('Using canary object percentage:', percentage);
-            this.canaryPercentage = percentage + '%';
-            this._completeInitialization();
+            percentage = window.CanaryConfigManager.get('CANARY_PERCENTAGE');
+            source = 'ConfigManager';
         }
-        // If ConfigManager exists but isn't loaded yet, wait for it
-        else if (window.CanaryConfigManager && attempts < maxAttempts) {
-            console.log('Waiting for ConfigManager to load...');
-            if (attempts === 0) {
-                // On first attempt, try using the onConfigReady method
-                window.CanaryConfigManager.onConfigReady(config => {
-                    console.log('ConfigManager ready via callback:', config.CANARY_PERCENTAGE);
-                    this.canaryPercentage = config.CANARY_PERCENTAGE + '%';
-                    this._completeInitialization();
-                });
-            }
+        // 2. Try direct onConfigReady registration
+        else if (window.CanaryConfigManager) {
+            // This is the most reliable approach - register for when config is actually ready
+            window.CanaryConfigManager.onConfigReady(config => {
+                console.log('[Version Switcher] ConfigManager ready via callback with percentage:', config.CANARY_PERCENTAGE);
+                this.canaryPercentage = config.CANARY_PERCENTAGE + '%';
+                this._completeInitialization();
+            });
             
-            // Keep retrying with a timeout as a backup plan
-            setTimeout(() => this._initWithRetry(attempts + 1), retryInterval);
-        } 
-        // Last resort - use a default value after max attempts
-        else {
-            console.warn('Could not get canary percentage from any source after maximum attempts');
+            // Keep retrying in case the callback doesn't fire for some reason
+            if (attempts < maxAttempts) {
+                setTimeout(() => this._initWithRetry(attempts + 1), retryInterval);
+            }
+            return; // Exit early as we're waiting for callback
+        }
+        // 3. Try deprecated CanaryConfig global
+        else if (window.CanaryConfig && window.CanaryConfig.distribution) {
+            percentage = window.CanaryConfig.distribution.canaryPercentage;
+            source = 'CanaryConfig global';
+        }
+        // 4. Try canary object configuration
+        else if (window.canary && window.canary._config && 
+                 typeof window.canary._config.initialCanaryPercentage !== 'undefined') {
+            percentage = window.canary._config.initialCanaryPercentage;
+            source = 'canary._config';
+        }
+        // 5. Try DEFAULT_CONSTANTS as last resort
+        else if (window.DEFAULT_CONSTANTS && typeof window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE !== 'undefined') {
+            percentage = window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE;
+            source = 'DEFAULT_CONSTANTS';
+        }
+        
+        // If we found a percentage, use it
+        if (percentage !== null) {
+            console.log(`[Version Switcher] Found percentage ${percentage} from ${source}`);
+            this.canaryPercentage = percentage + '%';
+            this._completeInitialization();
+            return;
+        }
+        
+        // If we've exhausted retries, use a hard default
+        if (attempts >= maxAttempts) {
+            console.warn('[Version Switcher] Could not get canary percentage from any source after maximum attempts');
             this.canaryPercentage = '5%'; // Default fallback
             this._completeInitialization();
+            return;
         }
+        
+        // Otherwise, retry after delay
+        setTimeout(() => this._initWithRetry(attempts + 1), retryInterval);
     }
     
     /**
@@ -137,18 +154,7 @@ class VersionSwitcher {
     _completeInitialization() {
         this.createUI();
         this.attachEvents();
-        console.log('Version switcher fully initialized with percentage:', this.canaryPercentage);
-    }
-    
-    /**
-     * Get canary distribution percentage
-     * @returns {string} Canary percentage as a string with % symbol
-     * @private
-     */
-    _getCanaryPercentage() {
-        // We don't need this method anymore as we handle this in _initWithRetry
-        // Keeping it for backward compatibility
-        return this.canaryPercentage;
+        console.log('[Version Switcher] Fully initialized with percentage:', this.canaryPercentage);
     }
     
     /**
@@ -491,7 +497,7 @@ window.VersionSwitcher = VersionSwitcher;
     // Wait for DOM to be ready
     const initVersionSwitcher = function() {
         if (!window.versionSwitcherInitialized) {
-            console.log('Starting version switcher initialization');
+            console.log('[Version Switcher] Starting initialization');
             
             // Initialize the version switcher - it will handle waiting for config internally
             window.versionSwitcher = new VersionSwitcher();
@@ -499,12 +505,13 @@ window.VersionSwitcher = VersionSwitcher;
         }
     };
     
+    // Handle case where script loads before DOM is ready
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
         // Give more time for other scripts to load
         setTimeout(initVersionSwitcher, 200);
     } else {
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(initVersionSwitcher, 200);
-        }
+        });
     }
 })();
