@@ -1,14 +1,19 @@
 /**
  * Canary configuration
- * Define feature flags and their default states
+ * Auto-generated from canary-analyzer.js
  */
 
 const CanaryConfig = {
   // Feature flags for the application
   featureFlags: {
-    newDesign: true,       // Enable new design for all canary users
-    enhancedAnalytics: true, // Enable enhanced analytics for canary
-    experimentalFeatures: false // Disable experimental features by default
+  "newDesign": true,
+  "betaFeatures": false,
+  "performanceOptimizations": true
+},
+  // Canary distribution percentage
+  distribution: {
+    canaryPercentage: 20,
+    maxPercentage: 50
   }
 };
 
