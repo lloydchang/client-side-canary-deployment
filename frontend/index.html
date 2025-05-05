@@ -132,8 +132,8 @@
       </div>
     </div>
     
-    <div id="countdown" class="countdown">
-      Redirecting to <span id="assigned-version-text">your assigned variant</span> in <span id="countdown-number" class="countdown-number">10</span> seconds...
+    <div id="countdown" class="countdown" style="visibility: hidden;">
+      Redirecting to <span id="assigned-version-text"></span> in <span id="countdown-number" class="countdown-number">10</span> seconds...
     </div>
     
     <!-- Add version footer -->
@@ -293,6 +293,7 @@
       // Get countdown element
       const countdownElement = document.getElementById('countdown-number');
       const assignedVersionText = document.getElementById('assigned-version-text');
+      const countdownContainer = document.getElementById('countdown');
       
       if (!countdownElement) {
         console.error('Countdown element not found');
@@ -320,6 +321,11 @@
         // Update version text immediately with proper format
         if (assignedVersionText) {
           assignedVersionText.textContent = targetVersion + ' (your assigned variant)';
+        }
+        
+        // Show the countdown now that we have the variant text ready
+        if (countdownContainer) {
+          countdownContainer.style.visibility = 'visible';
         }
         
         // Start the countdown immediately
