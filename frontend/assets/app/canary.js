@@ -14,7 +14,7 @@
     return fallback;
   };
   
-  // Default configuration
+  // Default configuration - removed deprecated options
   const DEFAULT_CONFIG = {
     initialCanaryPercentage: getDefaultValue('CANARY_PERCENTAGE', 5),  // From constants or fallback to 5%
     maxCanaryPercentage: getDefaultValue('MAX_PERCENTAGE', 50),        // From constants or fallback to 50%
@@ -24,11 +24,9 @@
     storageKey: 'canary_assignment', // localStorage key for assignment
     metricsStorageKey: 'canary_metrics', // localStorage key for metrics
     switcherContainerId: 'version-switcher',
-    autoEvaluate: true,              // Auto-evaluate metrics periodically
-    evaluationInterval: 3600000,     // Evaluate every hour (in milliseconds)
-    errorThreshold: 1.5,             // Rollback if error rate 1.5x stable version
-    posthogEnabled: true,           // PostHog enabled by default
-    posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR',               // PostHog API key should be provided during initialization
+    errorThreshold: 1.5,             // For historical data only - server now handles evaluation
+    posthogEnabled: true,            // PostHog enabled by default
+    posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR',
     posthogHost: 'https://us.i.posthog.com' // Default PostHog host
   };
   
@@ -106,15 +104,6 @@
           this._posthogBlocked = true;
         }
       }
-    },
-    
-    /**
-     * Initialize PostHog integration
-     * @private
-     */
-    _initPostHog: function() {
-      // This method is deprecated - use _initAnalytics instead
-      this._initAnalytics();
     },
     
     /**
@@ -478,24 +467,6 @@
           self._saveMetrics();
         }
       });
-    },
-    
-    /**
-     * Schedule periodic evaluation of metrics - DEPRECATED
-     * Server-side analytics now handles this task
-     * @private
-     */
-    _scheduleEvaluation: function() {
-      console.warn('Client-side evaluation is deprecated - rely on server analytics');
-    },
-    
-    /**
-     * Evaluate metrics and make decisions - DEPRECATED
-     * Server-side analytics now handles this task
-     * @private
-     */
-    _evaluateMetrics: function() {
-      console.warn('Client-side evaluation is deprecated - rely on server analytics');
     },
     
     /**
