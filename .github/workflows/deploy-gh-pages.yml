@@ -196,21 +196,36 @@ jobs:
           # 5. Apply our changes on top of the latest code
           ./.github/scripts/update-version.sh  # Re-run after reset to ensure we have a fresh version
           
-          # 6. Generate new configuration files if they don't exist after reset
-          if [ ! -f "frontend/assets/config/canary-config.js" ] || [ ! -f "frontend/assets/config/canary-config.json" ]; then
-            echo "Regenerating configuration files after reset..."
-            chmod +x ./.github/scripts/canary-analyzer.js
-            node ./.github/scripts/canary-analyzer.js
+          # 6. Ensure config directory exists
+          mkdir -p frontend/assets/config/
+          
+          # 7. Generate configuration files with updated canary percentage
+          echo "Generating configuration files with canary percentage: $CANARY_PERCENTAGE%"
+          chmod +x ./.github/scripts/canary-analyzer.js
+          node ./.github/scripts/canary-analyzer.js
+          
+          # 8. Verify config files exist and contain the right percentage
+          echo "Verifying configuration files:"
+          if [ -f "frontend/assets/config/canary-config.js" ]; then
+            echo "✓ canary-config.js exists"
+            cat frontend/assets/config/canary-config.js | grep -i "canaryPercentage"
+          else
+            echo "ERROR: ✘ canary-config.js doesn't exists"
+            exit 1
           fi
           
-          # 7. Stage all changes
+          # 9. Stage all changes
           git add frontend/version.json frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
           
-          # 8. Check if there are changes to commit
+          # 10. Show what files are staged
+          echo "Files staged for commit:"
+          git diff --staged --name-status
+          
+          # 11. Check if there are changes to commit
           if ! git diff --staged --quiet; then
-            git commit -m "Update canary percentage to $CANARY_PERCENTAGE% based on analytics"
+            git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics"
             
-            # 9. Push with improved conflict handling
+            # 12. Push with improved conflict handling
             echo "Pushing changes to main branch..."
             MAX_RETRIES=3
             RETRY_COUNT=0
@@ -229,7 +244,7 @@ jobs:
                 chmod +x ./.github/scripts/canary-analyzer.js
                 node ./.github/scripts/canary-analyzer.js  # Re-run analysis
                 git add frontend/version.json frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
-                git commit -m "Update canary percentage to $CANARY_PERCENTAGE% based on analytics (conflict resolution)"
+                git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
               fi
               
               # Try to push
@@ -262,6 +277,26 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           folder: frontend  # Deploy from frontend directory
           target-folder: frontend  # Deploy to frontend directory on gh-pages branch
+      
+      - name: Update summary report with configuration details
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Configuration Update" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The following configuration files were updated:" >> $GITHUB_STEP_SUMMARY
+          echo "- version.json: $(jq -r .version frontend/version.json)" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "frontend/assets/config/canary-config.js" ]; then
+            echo "- canary-config.js: Updated with percentage $CANARY_PERCENTAGE%" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ canary-config.js was not created/updated" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f "frontend/assets/config/canary-config.json" ]; then
+            echo "- canary-config.json: Updated with percentage $CANARY_PERCENTAGE%" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ canary-config.json was not created/updated" >> $GITHUB_STEP_SUMMARY
+          fi
 
   # Adjust canary job - manual
   adjust-canary:
