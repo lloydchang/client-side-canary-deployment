@@ -42,14 +42,49 @@ class VariantSwitcher {
         let percentage = null;
         let source = '';
         
-        // Debug all potential configuration sources
+        // Try to fetch from CanaryConfigManager directly with debug info
         if (window.CanaryConfigManager) {
-            console.log(`[Variant Switcher] CanaryConfigManager exists, loaded: ${window.CanaryConfigManager._configLoaded}`);
+            console.log(`[Variant Switcher] CanaryConfigManager exists:`, window.CanaryConfigManager);
+            
+            // Force a config load if not loaded yet and configPath was provided
+            if (!window.CanaryConfigManager._configLoaded && this.options.configPath) {
+                console.log(`[Variant Switcher] Forcing config load from: ${this.options.configPath}`);
+                window.CanaryConfigManager.loadConfig(this.options.configPath).then(config => {
+                    console.log(`[Variant Switcher] Forced config load successful:`, config);
+                    if (typeof config.CANARY_PERCENTAGE !== 'undefined') {
+                        this.canaryPercentage = config.CANARY_PERCENTAGE + '%';
+                        this._completeInitialization();
+                    }
+                }).catch(err => {
+                    console.error(`[Variant Switcher] Forced config load failed:`, err);
+                });
+            }
+            
+            // Check if config is already loaded
             if (window.CanaryConfigManager._configLoaded) {
-                console.log(`[Variant Switcher] Config data:`, window.CanaryConfigManager._config);
+                percentage = window.CanaryConfigManager.get('CANARY_PERCENTAGE');
+                if (percentage !== undefined) {
+                    source = 'ConfigManager (already loaded)';
+                } else {
+                    console.warn('[Variant Switcher] Config loaded but CANARY_PERCENTAGE not found');
+                }
+            } else {
+                // Register for callback when config is ready
+                window.CanaryConfigManager.onConfigReady(config => {
+                    console.log('[Variant Switcher] ConfigManager ready via callback:', config);
+                    if (typeof config.CANARY_PERCENTAGE !== 'undefined') {
+                        this.canaryPercentage = config.CANARY_PERCENTAGE + '%';
+                        this._completeInitialization();
+                    } else {
+                        console.warn('[Variant Switcher] Config ready but no CANARY_PERCENTAGE');
+                        this.canaryPercentage = '5% (default)';
+                        this._completeInitialization();
+                    }
+                });
             }
         }
-        
+
+        // Debug all potential configuration sources
         if (window.CanaryConfig && window.CanaryConfig.distribution) {
             console.log(`[Variant Switcher] CanaryConfig.distribution:`, window.CanaryConfig.distribution);
         }
@@ -107,16 +142,16 @@ class VariantSwitcher {
             return;
         }
         
-        // If we've exhausted retries, use a hard default
-        if (attempts >= maxAttempts) {
-            console.warn('[Variant Switcher] Could not get canary percentage from any source after maximum attempts');
-            this.canaryPercentage = '5%'; // Default fallback
-            this._completeInitialization();
+        // Continue retrying if we haven't exhausted attempts
+        if (attempts < maxAttempts) {
+            setTimeout(() => this._initWithRetry(attempts + 1), retryInterval);
             return;
         }
         
-        // Otherwise, retry after delay
-        setTimeout(() => this._initWithRetry(attempts + 1), retryInterval);
+        // If we've exhausted retries, use a hard default
+        console.warn('[Variant Switcher] Could not get canary percentage after maximum attempts, using default');
+        this.canaryPercentage = '5% (default)';
+        this._completeInitialization();
     }
     
     /**
@@ -335,7 +370,7 @@ class VariantSwitcher {
             </div>
         `;
         
-        console.log('Active page set to:', activePage);
+        console.log('[Variant Switcher] UI created, active page set to:', activePage);
     }
     
     /**

@@ -103,28 +103,10 @@
     });
   </script>
   
-  <!-- Include version switcher component -->
-  <script src="../assets/app/version-switcher.js"></script>
-
-  <!-- Include variant switcher component -->
+  <!-- Include only the variant switcher component -->
   <script src="../assets/app/variant-switcher.js"></script>
 
   <script>
-    // Initialize version switcher with correct currentPage
-    if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
-      try {
-        window.versionSwitcher = new VersionSwitcher({
-          currentPage: 'canary',  // Explicitly set to canary
-          position: 'bottom-right',
-          switcherContainerId: 'version-switcher'
-        });
-        window.versionSwitcherInitialized = true;
-        console.log('Variant switcher initialized for canary page');
-      } catch (e) {
-        console.error('Error initializing variant switcher:', e);
-      }
-    }
-
     // Initialize variant switcher with correct currentPage
     if (window.VariantSwitcher && !window.variantSwitcherInitialized) {
       try {

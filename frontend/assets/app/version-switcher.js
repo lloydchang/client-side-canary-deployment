@@ -349,8 +349,8 @@ class VersionSwitcher {
         
         if (homeBtn && stableBtn && canaryBtn) {
             homeBtn.addEventListener('click', () => this._goHome());
-            stableBtn.addEventListener('click', () => this._switchVersion('stable'));
-            canaryBtn.addEventListener('click', () => this._switchVersion('canary'));
+            stableBtn.addEventListener('click', () => this._switchVariant('stable'));
+            canaryBtn.addEventListener('click', () => this._switchVariant('canary'));
         }
     }
     
@@ -367,7 +367,7 @@ class VersionSwitcher {
         // Update the active button in the UI
         this._updateActiveButton('home');
         
-        // Normalize the URL similar to _switchVersion
+        // Normalize the URL similar to _switchVariant
         const baseUrl = window.location.origin;
         let normalizedPath = '';
         
@@ -384,28 +384,28 @@ class VersionSwitcher {
     
     /**
      * Switch variant and redirect
-     * @param {string} version - The variant to switch to
+     * @param {string} variant - The variant to switch to
      * @private
      */
-    _switchVersion(version) {
-        console.log('Switching to variant:', version);
+    _switchVariant(variant) {
+        console.log('Switching to variant:', variant);
         
         // Check if we're already on the variant - FIX: separate path and assignment checks
         const currentPath = window.location.pathname;
-        const pathContainsVersion = currentPath.includes(`/${version}/`);
+        const pathContainsVariant = currentPath.includes(`/${variant}/`);
         
         // Only skip if we're actually on the variant's path
-        if (pathContainsVersion) {
-            console.log('Already on path for variant', version, '- skipping redirect');
+        if (pathContainsVariant) {
+            console.log('Already on path for variant', variant, '- skipping redirect');
             return;
         }
         
         // Update UI
-        this._updateActiveButton(version);
+        this._updateActiveButton(variant);
         
         // Call callback if provided
-        if (this.options.onVersionSwitch) {
-            this.options.onVersionSwitch(version);
+        if (this.options.onVariantSwitch) {
+            this.options.onVariantSwitch(variant);
         }
         
         // Get the base path for the application
@@ -429,7 +429,7 @@ class VersionSwitcher {
         normalizedPath = normalizedPath.replace(/\/+$/, '');
         
         // Redirect to the appropriate variant with clean URLs
-        if (version === 'canary') {
+        if (variant === 'canary') {
             window.location.href = normalizedPath + '/canary/';
         } else {
             window.location.href = normalizedPath + '/stable/';
@@ -478,10 +478,10 @@ class VersionSwitcher {
     
     /**
      * Update the active button in the UI
-     * @param {string} version - The active variant ('stable', 'canary', or 'home')
+     * @param {string} variant - The active variant ('stable', 'canary', or 'home')
      * @private
      */
-    _updateActiveButton(version) {
+    _updateActiveButton(variant) {
         const homeBtn = document.getElementById('vs-home-btn');
         const stableBtn = document.getElementById('vs-stable-btn');
         const canaryBtn = document.getElementById('vs-canary-btn');
@@ -493,11 +493,11 @@ class VersionSwitcher {
             canaryBtn.classList.remove('active');
             
             // Add active class to the correct button
-            if (version === 'stable') {
+            if (variant === 'stable') {
                 stableBtn.classList.add('active');
-            } else if (version === 'canary') {
+            } else if (variant === 'canary') {
                 canaryBtn.classList.add('active');
-            } else if (version === 'home') {
+            } else if (variant === 'home') {
                 homeBtn.classList.add('active');
             }
         }

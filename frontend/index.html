@@ -199,19 +199,32 @@
           console.log('[Debug] Fixing config path for home page');
           
           // Add proper frontend prefix for GitHub Pages deployment
-          window.CanaryConfigManager.loadConfig('frontend/assets/config/canary-config.json')
-            .then(() => {
-              console.log('[Debug] Successfully loaded config with corrected path');
+          const configPath = 'frontend/assets/config/canary-config.json';
+          console.log('[Debug] Loading configuration from:', configPath);
+          
+          window.CanaryConfigManager.loadConfig(configPath)
+            .then((config) => {
+              console.log('[Debug] Successfully loaded config with corrected path:', config);
+              
+              // Make the configuration globally available
+              window.canaryConfig = config;
               
               // Re-initialize canary with corrected config if needed
               if (window.canary) {
                 window.canary.init({
-                  initialCanaryPercentage: window.CanaryConfigManager.get('CANARY_PERCENTAGE'),
+                  initialCanaryPercentage: config.CANARY_PERCENTAGE,
                   posthogEnabled: true,
                   posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
                 });
                 console.log('Canary re-initialized with corrected path config:', 
-                            window.CanaryConfigManager.get('CANARY_PERCENTAGE'));
+                            config.CANARY_PERCENTAGE);
+              }
+              
+              // Update variant switcher with new percentage if it exists
+              if (window.variantSwitcher && window.variantSwitcher.canaryPercentage) {
+                window.variantSwitcher.canaryPercentage = config.CANARY_PERCENTAGE + '%';
+                window.variantSwitcher.createUI(); // Re-render UI with new percentage
+                console.log('[Debug] Updated variant switcher with new percentage:', config.CANARY_PERCENTAGE);
               }
             })
             .catch(err => {
