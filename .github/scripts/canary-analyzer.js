@@ -232,24 +232,33 @@ function readCanaryConfig() {
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       return {
-        currentPercentage: config.canary?.initialPercentage || 5,
+        // Read from the correct path in the config structure
+        currentPercentage: config.distribution?.canaryPercentage || 5,
         config: config
       };
     }
     
-    // Fall back to default config
+    // Fall back to default config matching the expected structure
     return {
       currentPercentage: 5,
       config: {
-        posthog: {
-          apiKey: process.env.POSTHOG_PUBLIC_KEY || '',
-          projectId: process.env.POSTHOG_PROJECT_ID || '',
-          host: 'https://us.i.posthog.com'
+        canaryVersion: "1.0.0",
+        distribution: {
+          canaryPercentage: 5,
+          gradualRollout: true,
+          rolloutPeriod: 7,
+          safetyThreshold: 2
         },
-        canary: {
-          initialPercentage: 5,
-          maxPercentage: 50,
-          incrementStep: 5
+        analytics: {
+          sampleRate: 1,
+          debug: false,
+          posthogApiKey: process.env.POSTHOG_PUBLIC_KEY || '',
+          posthogProjectId: process.env.POSTHOG_PROJECT_ID || ''
+        },
+        featureFlags: {
+          newDesign: true,
+          betaFeatures: false,
+          performanceOptimizations: true
         }
       }
     };
@@ -259,15 +268,23 @@ function readCanaryConfig() {
     return {
       currentPercentage: 5,
       config: {
-        posthog: {
-          apiKey: process.env.POSTHOG_PUBLIC_KEY || '',
-          projectId: process.env.POSTHOG_PROJECT_ID || '',
-          host: 'https://us.i.posthog.com'
+        canaryVersion: "1.0.0",
+        distribution: {
+          canaryPercentage: 5,
+          gradualRollout: true,
+          rolloutPeriod: 7,
+          safetyThreshold: 2
         },
-        canary: {
-          initialPercentage: 5, 
-          maxPercentage: 50,
-          incrementStep: 5
+        analytics: {
+          sampleRate: 1,
+          debug: false,
+          posthogApiKey: process.env.POSTHOG_PUBLIC_KEY || '',
+          posthogProjectId: process.env.POSTHOG_PROJECT_ID || ''
+        },
+        featureFlags: {
+          newDesign: true,
+          betaFeatures: false,
+          performanceOptimizations: true
         }
       }
     };
@@ -327,8 +344,20 @@ function updateCanaryConfig(percentage) {
   // Read current config
   const { config: currentConfig } = readCanaryConfig();
   
-  // Update percentage
-  currentConfig.canary.initialPercentage = percentage;
+  // Ensure the distribution property exists
+  if (!currentConfig.distribution) {
+    currentConfig.distribution = {
+      canaryPercentage: 5,
+      gradualRollout: true,
+      rolloutPeriod: 7,
+      safetyThreshold: 2
+    };
+  }
+  
+  // Update percentage in the correct location
+  currentConfig.distribution.canaryPercentage = percentage;
+  currentConfig.lastUpdated = new Date().toISOString();
+  currentConfig.updateSource = "automated";
   
   // Ensure directories exist
   const configDir = path.dirname(configPath);
@@ -345,7 +374,7 @@ function updateCanaryConfig(percentage) {
   // Write JSON config file
   fs.writeFileSync(configPath, JSON.stringify(currentConfig, null, 2));
   
-  // Write JavaScript config file for src directory
+  // Write JavaScript config file for src directory - keep structure consistent
   const jsContent = `/**
  * Canary configuration
  * Auto-generated from canary-analyzer.js
@@ -353,15 +382,15 @@ function updateCanaryConfig(percentage) {
 
 const CanaryConfig = {
   // Feature flags for the application
-  featureFlags: {
+  featureFlags: ${JSON.stringify(currentConfig.featureFlags || {
     newDesign: true,
     enhancedAnalytics: true,
     experimentalFeatures: false
-  },
+  }, null, 2)},
   // Canary distribution percentage
   distribution: {
-    initialPercentage: ${percentage},
-    maxPercentage: ${currentConfig.canary.maxPercentage || 50}
+    canaryPercentage: ${percentage},
+    maxPercentage: ${currentConfig.distribution?.maxCanaryPercentage || 50}
   }
 };
 
