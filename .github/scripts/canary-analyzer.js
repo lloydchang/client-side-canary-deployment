@@ -292,11 +292,6 @@ function readCanaryConfig() {
           debug: false,
           posthogApiKey: process.env.POSTHOG_PUBLIC_KEY || '',
           posthogProjectId: process.env.POSTHOG_PROJECT_ID || ''
-        },
-        featureFlags: {
-          newDesign: true,
-          betaFeatures: false,
-          performanceOptimizations: true
         }
       }
     };
@@ -318,11 +313,6 @@ function readCanaryConfig() {
           debug: false,
           posthogApiKey: process.env.POSTHOG_PUBLIC_KEY || '',
           posthogProjectId: process.env.POSTHOG_PROJECT_ID || ''
-        },
-        featureFlags: {
-          newDesign: true,
-          betaFeatures: false,
-          performanceOptimizations: true
         }
       }
     };
@@ -412,19 +402,13 @@ function updateCanaryConfig(percentage) {
   // Write JSON config file
   fs.writeFileSync(configPath, JSON.stringify(currentConfig, null, 2));
   
-  // Write JavaScript config file for src directory - keep structure consistent
+  // Write JavaScript config file for src directory - simplified structure
   const jsContent = `/**
  * Canary configuration
  * Auto-generated from canary-analyzer.js
  */
 
 const CanaryConfig = {
-  // Feature flags for the application
-  featureFlags: ${JSON.stringify(currentConfig.featureFlags || {
-    newDesign: true,
-    enhancedAnalytics: true,
-    experimentalFeatures: false
-  }, null, 2)},
   // Canary distribution percentage
   distribution: {
     canaryPercentage: ${percentage},

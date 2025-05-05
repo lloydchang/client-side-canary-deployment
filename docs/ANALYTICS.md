@@ -7,8 +7,6 @@ This document explains how our client-side canary deployment system integrates w
 1. **Client-side tracking**: The `canary.js` and `analytics.js` scripts automatically track:
    - Pageviews with version information (stable/canary)
    - Error events with stack traces and context
-   - Feature flag evaluations
-   - Custom events defined in your application
 
 2. **PostHog dashboard**: All events are sent to your PostHog instance where you can:
    - Build custom dashboards for monitoring
@@ -224,26 +222,3 @@ window.canary.trackEvent('button_clicked', {
   page: '/homepage'
 });
 ```
-
-## PostHog Dashboard Setup
-
-We recommend creating the following dashboards in PostHog:
-
-1. **Canary Performance Dashboard**:
-   - Pageview counts by version
-   - Error rates by version
-   - User engagement metrics by version
-
-2. **Feature Flag Impact Dashboard**:
-   - Conversion rates with/without feature
-   - Error rates with/without feature
-   - Performance metrics with/without feature
-
-## Troubleshooting
-
-If you're not seeing analytics data:
-
-1. Check browser console for errors
-2. Verify PostHog keys are correctly set in GitHub secrets
-3. Ensure the analytics script is properly loaded
-4. Check for ad blockers or privacy tools that might block analytics

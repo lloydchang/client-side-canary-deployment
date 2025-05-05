@@ -214,12 +214,6 @@ class VersionSwitcher {
         // Update the active button in the UI
         this._updateActiveButton('home');
         
-        // Update assignment if needed
-        if (window.canary && window.canary._assignment) {
-            // We don't change the assignment version here, just update the UI
-            // This ensures we return to the same version if the user navigates back
-        }
-        
         // Normalize the URL similar to _switchVersion
         const baseUrl = window.location.origin;
         let normalizedPath = '';
@@ -251,12 +245,6 @@ class VersionSwitcher {
         if (pathContainsVersion) {
             console.log('Already on path for version', version, '- skipping redirect');
             return;
-        }
-        
-        // Update assignment
-        if (window.canary && window.canary._assignment) {
-            window.canary._assignment.version = version;
-            window.canary._saveAssignment();
         }
         
         // Update UI

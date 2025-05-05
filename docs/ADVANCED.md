@@ -46,21 +46,6 @@ async function checkForVersionUpdates() {
 setInterval(checkForVersionUpdates, 5 * 60 * 1000);
 ```
 
-## Feature-Specific Configuration
-
-Features can be configured individually:
-
-```javascript
-canary.defineFeature('advancedSearch', {
-  description: 'New search algorithm with better results',
-  initialPercentage: 2,            // Start with just 2% of canary users
-  evaluationCriteria: {            // Custom evaluation criteria
-    errorThreshold: 1.2            // More sensitive error threshold
-  },
-  usePostHogFlag: true             // Whether to use PostHog feature flag if available
-});
-```
-
 ## Custom Assignments
 
 Override the default assignment logic:
@@ -91,7 +76,6 @@ canary.debug(true);
 
 // Get debug information
 const debugInfo = canary.debugInfo();
-console.table(debugInfo.features);
 console.table(debugInfo.metrics);
 
 // Export all data (useful for support)
