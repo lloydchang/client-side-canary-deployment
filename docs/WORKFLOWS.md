@@ -72,7 +72,7 @@ Analyzes canary performance using PostHog data:
 - Creates a summary report with error rates and recommendations
 - Saves detailed results as artifacts
 - Can trigger automatic rollback if thresholds are exceeded
-- Automatically adjusts canary percentage based on analysis results
+- Periodically adjusts canary percentage based on analysis results
 
 #### 3. adjust-canary
 Provides manual control over canary percentages:
