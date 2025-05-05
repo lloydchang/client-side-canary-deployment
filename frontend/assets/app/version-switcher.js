@@ -41,7 +41,7 @@ class VersionSwitcher {
             // Fall back to the runtime config if needed
             return window.canary._config.initialCanaryPercentage + '%';
         }
-        return '';  // Return empty string if no percentage found
+        return 'N/A'; // Return "N/A" when no percentage found instead of empty string
     }
     
     /**
