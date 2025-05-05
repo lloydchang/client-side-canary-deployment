@@ -169,6 +169,14 @@ flowchart TD
     style Version fill:#ff9,stroke:#333,stroke-width:2px
 ```
 
+```mermaid
+graph TD
+    A[GitHub Actions] -->|Reads/Updates| B[config/canary-config.json]
+    A -->|Generates| C[src/config/canary-config.js]
+    C -->|Loaded by| D[Browser]
+    D -->|Accesses via| E[window.CanaryConfig]
+```
+
 ### Selective Deployment Details
 
 When running `analyze-canary` or `adjust-canary` jobs, only specific files are updated in GitHub Pages:
