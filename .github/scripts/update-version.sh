@@ -4,7 +4,7 @@
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Read current version and increment it
-VERSION_FILE="version.json"
+VERSION_FILE="frontend/version.json"
 if [ -f "$VERSION_FILE" ]; then
   CURRENT_VERSION=$(grep -o '"version": "[^"]*"' "$VERSION_FILE" | cut -d'"' -f4)
   
@@ -21,7 +21,7 @@ else
   NEW_VERSION="1.0.0"
 fi
 
-# Write updated version.json
+# Write updated version.json directly to frontend directory
 cat > "$VERSION_FILE" << EOF
 {
   "version": "$NEW_VERSION",
@@ -29,7 +29,6 @@ cat > "$VERSION_FILE" << EOF
 }
 EOF
 
-# Also copy to frontend directory for development convenience
-cp "$VERSION_FILE" "frontend/"
+# No need to copy the file since it's already in the frontend directory
 
-echo "Updated version.json to version $NEW_VERSION"
+echo "Updated frontend/version.json to version $NEW_VERSION"
