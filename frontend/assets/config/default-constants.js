@@ -98,10 +98,17 @@ if (typeof window !== 'undefined') {
     },
     
     // Load JSON configuration asynchronously
-    loadConfig: async function() {
+    loadConfig: async function(configPath) {
       try {
+        // Use provided configPath or determine based on environment
+        const effectivePath = configPath || 
+          (window.location.pathname.includes('/client-side-canary-deployment/') ? 
+            '../frontend/assets/config/canary-config.json' : '../assets/config/canary-config.json');
+            
+        console.log('[ConfigManager] Loading config from:', effectivePath);
+        
         // Fetch with cache busting
-        const response = await fetch('../assets/config/canary-config.json?nocache=' + Date.now());
+        const response = await fetch(effectivePath + '?nocache=' + Date.now());
         if (response.ok) {
           const jsonConfig = await response.json();
           
@@ -114,7 +121,7 @@ if (typeof window !== 'undefined') {
           this._config.fullConfig = jsonConfig;
         }
       } catch (err) {
-        console.warn('Could not load canary configuration, using defaults');
+        console.warn('[ConfigManager] Could not load canary configuration, using defaults:', err);
       }
       
       this._configLoaded = true;
