@@ -57,16 +57,6 @@ jobs:
           ./update-version.sh
           cat version.json
       
-      - name: Build Dashboard with build-dashboard.js 📊
-        run: |
-          echo "Building dashboard with unified script..."
-          node build-dashboard.js
-          echo "Dashboard build completed successfully"
-          if [ ! -d "frontend/assets/embed-dashboard" ]; then
-            echo "::error::Dashboard build failed - output directory not found"
-            exit 1
-          fi
-      
       - name: Build Project
         run: npx rollup -c --bundleConfigAsCjs
       
