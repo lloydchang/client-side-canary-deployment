@@ -262,11 +262,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           folder: frontend  # Deploy from frontend directory
           target-folder: frontend  # Deploy to frontend directory on gh-pages branch
-          clean-exclude: |
-            **/*
-            !version.json
-            !assets/config/**
-            !index.html
 
   # Adjust canary job - manual
   adjust-canary:
@@ -373,11 +368,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           folder: frontend  # Deploy from frontend directory
           target-folder: frontend  # Deploy to frontend directory on gh-pages branch
-          clean-exclude: |
-            **/*
-            !version.json
-            !assets/config/**
-            !index.html
       
       - name: Create summary report
         run: |
