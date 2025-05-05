@@ -204,15 +204,23 @@ jobs:
           git config --local user.name "${{ env.GIT_USER_NAME }}"
           git config --local user.email "${{ env.GIT_USER_EMAIL }}"
           
-          # 3. Pull latest changes before committing
+          # 3. Stash changes before rebasing
+          echo "Stashing local changes..."
+          git stash
+          
+          # 4. Pull latest changes
           echo "Fetching latest changes from remote repository..."
           git pull --rebase origin main
           
-          # 4. Commit changes to main
-          git add config/canary-config.json src/config/canary-config.js version.json
+          # 5. Apply stashed changes
+          echo "Applying stashed changes..."
+          git stash pop || true
+          
+          # 6. Stage and commit all changes
+          git add version.json config/canary-config.json src/config/canary-config.js
           git commit -m "Update canary percentage to $CANARY_PERCENTAGE% based on analytics" || echo "No changes to commit"
           
-          # 5. Push with retry mechanism
+          # 7. Push with retry mechanism
           echo "Pushing changes to main branch..."
           MAX_RETRIES=3
           RETRY_COUNT=0
@@ -226,7 +234,11 @@ jobs:
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
                 echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
                 sleep 5
+                
+                # Stash, pull, pop pattern again for retry
+                git stash
                 git pull --rebase origin main
+                git stash pop || true
               else
                 echo "::warning::Failed to push changes after $MAX_RETRIES attempts"
                 # Continue workflow even if push fails - we'll still update gh-pages
@@ -234,7 +246,7 @@ jobs:
             fi
           done
           
-          # 6. Deploy config folders to gh-pages
+          # 8. Deploy config folders to gh-pages
           echo "Deploying updated files to gh-pages branch..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -288,15 +300,23 @@ jobs:
           git config --local user.name "${{ env.GIT_USER_NAME }}"
           git config --local user.email "${{ env.GIT_USER_EMAIL }}"
           
-          # 3. Pull latest changes before committing
+          # 3. Stash changes before rebasing
+          echo "Stashing local changes..."
+          git stash
+          
+          # 4. Pull latest changes
           echo "Fetching latest changes from remote repository..."
           git pull --rebase origin main
           
-          # 4. Commit changes to main
-          git add config/canary-config.json src/config/canary-config.js version.json
+          # 5. Apply stashed changes
+          echo "Applying stashed changes..."
+          git stash pop || true
+          
+          # 6. Stage and commit all changes
+          git add version.json config/canary-config.json src/config/canary-config.js
           git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%" || echo "No changes to commit"
           
-          # 5. Push with retry mechanism
+          # 7. Push with retry mechanism
           echo "Pushing changes to main branch..."
           MAX_RETRIES=3
           RETRY_COUNT=0
@@ -310,7 +330,11 @@ jobs:
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
                 echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
                 sleep 5
+                
+                # Stash, pull, pop pattern again for retry
+                git stash
                 git pull --rebase origin main
+                git stash pop || true
               else
                 echo "::warning::Failed to push changes after $MAX_RETRIES attempts"
                 # Continue workflow even if push fails - we'll still update gh-pages
@@ -318,7 +342,7 @@ jobs:
             fi
           done
           
-          # 6. Deploy to gh-pages
+          # 8. Deploy to gh-pages
           echo "Deploying updated files to gh-pages branch..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
