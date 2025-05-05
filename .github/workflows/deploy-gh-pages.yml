@@ -50,7 +50,7 @@ jobs:
       
       - name: Update Version ⬆️
         run: |
-          ./update-version.sh
+          ./github/scripts/update-version.sh
           cat version.json
       
       - name: Replace PostHog Keys
@@ -183,7 +183,7 @@ jobs:
       - name: Update repositories and deploy
         run: |
           # 1. Update version.json to trigger client refresh
-          ./update-version.sh
+          ./github/scripts/update-version.sh
           
           # 2. Configure git with credentials
           git config --local user.name "${{ env.GIT_USER_NAME }}"
@@ -196,7 +196,7 @@ jobs:
           git reset --hard origin/main
           
           # 5. Apply our changes on top of the latest code
-          ./update-version.sh  # Re-run after reset to ensure we have a fresh version
+          ./github/scripts/update-version.sh  # Re-run after reset to ensure we have a fresh version
           
           # 6. Generate new configuration files if they don't exist after reset
           if [ ! -f "src/config/canary-config.js" ] || [ ! -f "config/canary-config.json" ]; then
@@ -227,7 +227,7 @@ jobs:
                 git rebase --abort
                 # Reset to origin/main and apply our changes as a new commit
                 git reset --hard origin/main
-                ./update-version.sh  # Re-run version update
+                ./github/scripts/update-version.sh  # Re-run version update
                 chmod +x ./.github/scripts/canary-analyzer.js
                 node ./.github/scripts/canary-analyzer.js  # Re-run analysis
                 git add version.json config/canary-config.json src/config/canary-config.js
@@ -297,7 +297,7 @@ jobs:
       - name: Update repositories and deploy
         run: |
           # 1. Update version.json to trigger client refresh
-          ./update-version.sh
+          ./github/scripts/update-version.sh
           
           # 2. Configure git with credentials
           git config --local user.name "${{ env.GIT_USER_NAME }}"
@@ -310,7 +310,7 @@ jobs:
           git reset --hard origin/main
           
           # 5. Apply our changes on top of the latest code
-          ./update-version.sh  # Re-run after reset to ensure we have a fresh version
+          ./github/scripts/update-version.sh  # Re-run after reset to ensure we have a fresh version
           
           # 6. Re-run the canary analyzer with our percentage
           chmod +x ./.github/scripts/canary-analyzer.js
@@ -338,7 +338,7 @@ jobs:
                 git rebase --abort
                 # Reset to origin/main and apply our changes as a new commit
                 git reset --hard origin/main
-                ./update-version.sh  # Re-run version update
+                ./github/scripts/update-version.sh  # Re-run version update
                 chmod +x ./.github/scripts/canary-analyzer.js
                 node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}  # Re-run with manual percentage
                 git add version.json config/canary-config.json src/config/canary-config.js
