@@ -186,7 +186,7 @@ jobs:
           echo "- **$CANARY_UPDATE_MESSAGE**" >> $GITHUB_STEP_SUMMARY
       
       - name: Save Analytics Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: analytics-results
           path: canary-analysis.json
