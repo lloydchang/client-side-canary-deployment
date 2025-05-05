@@ -198,27 +198,27 @@
       if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
         try {
           window.versionSwitcher = new VersionSwitcher({
-            currentPage: 'home',
+            currentPage: 'home',  // This is correct - the home page should have 'home' selected
             position: 'bottom-right',
             switcherContainerId: 'version-switcher'
           });
           window.versionSwitcherInitialized = true;
-          console.log('Version switcher initialized manually');
+          console.log('[Version Switcher] Initialized for home page');  // Updated logging format for consistency
           
-          // Force visibility
+          // Force visibility - existing code is fine
           const switcherElement = document.getElementById('version-switcher');
           if (switcherElement) {
             switcherElement.style.display = 'block';
             switcherElement.style.visibility = 'visible';
             switcherElement.style.opacity = '1';
-            console.log('Version switcher visibility enforced');
+            console.log('[Version Switcher] Visibility enforced');  // Updated logging format
           } else {
-            // Create container if it doesn't exist
+            // Create container if it doesn't exist - existing code is fine
             const switcherContainer = document.createElement('div');
             switcherContainer.id = 'version-switcher';
             switcherContainer.className = 'version-switcher';
             document.body.appendChild(switcherContainer);
-            console.log('Created version switcher container manually');
+            console.log('[Version Switcher] Created container manually');  // Updated logging format
             
             // Initialize version switcher again
             new VersionSwitcher({
