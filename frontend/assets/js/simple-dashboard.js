@@ -1,160 +1,125 @@
 /**
- * Simple Dashboard Component
- * Vanilla JS replacement for the React dashboard
+ * Simple Dashboard Module
+ * 
+ * A vanilla JavaScript alternative to the React dashboard component
+ * for displaying canary deployment metrics.
  */
 
 (function(window) {
   'use strict';
   
+  // Create dashboard object
   const simpleDashboard = {
+    // Store reference to container element and canary instance
+    _root: null,
+    _canary: null,
+    _updateInterval: null,
+    
     /**
      * Initialize the dashboard
-     * @param {HTMLElement} container - Container element
-     * @param {Object} canary - Canary instance
+     * @param {HTMLElement} rootElement - The container element
+     * @param {Object} canary - The canary instance
      */
-    init: function(container, canary) {
-      if (!container) {
-        console.error('Dashboard container element is required');
+    init: function(rootElement, canary) {
+      if (!rootElement) {
+        console.error('Dashboard root element is required');
         return;
       }
       
-      if (!canary) {
-        console.error('Canary instance is required');
-        return;
-      }
+      this._root = rootElement;
+      this._canary = canary;
       
-      this.container = container;
-      this.canary = canary;
-      
-      // Render initial dashboard
+      // Initial render
       this.render();
       
-      // Set up periodic refresh
-      this.setupRefresh();
+      // Set up periodic updates
+      this._updateInterval = setInterval(() => this.render(), 5000);
+      
+      console.log('Simple dashboard initialized');
     },
     
     /**
-     * Set up periodic refresh of dashboard data
+     * Destroy the dashboard
      */
-    setupRefresh: function() {
-      const self = this;
-      setInterval(function() {
-        self.render();
-      }, 5000);
+    destroy: function() {
+      if (this._updateInterval) {
+        clearInterval(this._updateInterval);
+      }
     },
     
     /**
-     * Render the dashboard
+     * Render the dashboard content
      */
     render: function() {
-      const metrics = this.canary._metrics || {
+      if (!this._root || !this._canary) return;
+      
+      // Get data from canary
+      const metrics = this._canary._metrics || {
         stable: { pageviews: 0, errors: 0, clicks: 0 },
-        canary: { pageviews: 0, errors: 0, clicks: 0 },
-        events: []
+        canary: { pageviews: 0, errors: 0, clicks: 0 }
       };
       
-      const assignment = this.canary._assignment || {
-        version: 'stable',
-        timestamp: new Date().toISOString()
-      };
+      // Get version assignment
+      const assignment = this._canary._assignment || { version: 'unknown' };
       
-      const config = this.canary._config || {
-        initialCanaryPercentage: 5
-      };
+      // Calculate derived metrics
+      const stableErrorRate = metrics.stable.pageviews > 0 ? 
+        ((metrics.stable.errors / metrics.stable.pageviews) * 100).toFixed(2) : '0.00';
+      const canaryErrorRate = metrics.canary.pageviews > 0 ? 
+        ((metrics.canary.errors / metrics.canary.pageviews) * 100).toFixed(2) : '0.00';
       
-      const stableMetrics = metrics.stable;
-      const canaryMetrics = metrics.canary;
-      
-      const stableErrorRate = stableMetrics.pageviews > 0 
-        ? ((stableMetrics.errors / stableMetrics.pageviews) * 100).toFixed(1) 
-        : '0.0';
-      
-      const canaryErrorRate = canaryMetrics.pageviews > 0 
-        ? ((canaryMetrics.errors / canaryMetrics.pageviews) * 100).toFixed(1) 
-        : '0.0';
-      
-      // Create HTML for the dashboard
-      let html = `
-        <div class="dashboard">
-          <div class="dashboard-section">
-            <h3>Current Version</h3>
-            <div class="dashboard-card">
-              <div class="dashboard-row">
-                <strong>Assigned to:</strong> ${assignment.version}
+      // Create dashboard HTML
+      this._root.innerHTML = `
+        <div class="simple-dashboard">
+          <div class="dashboard-header">
+            <h3>Deployment Metrics</h3>
+            <div class="dashboard-legend">
+              <span class="legend-item stable-legend">■ Stable</span>
+              <span class="legend-item canary-legend">■ Canary</span>
+            </div>
+          </div>
+          
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-title">Page Views</div>
+              <div class="metric-values">
+                <div class="metric-value stable">${metrics.stable.pageviews}</div>
+                <div class="metric-value canary">${metrics.canary.pageviews}</div>
               </div>
-              <div class="dashboard-row">
-                <strong>Canary percentage:</strong> ${config.initialCanaryPercentage}%
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-title">Errors</div>
+              <div class="metric-values">
+                <div class="metric-value stable">${metrics.stable.errors}</div>
+                <div class="metric-value canary">${metrics.canary.errors}</div>
+              </div>
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-title">Error Rate</div>
+              <div class="metric-values">
+                <div class="metric-value stable">${stableErrorRate}%</div>
+                <div class="metric-value canary">${canaryErrorRate}%</div>
+              </div>
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-title">Clicks</div>
+              <div class="metric-values">
+                <div class="metric-value stable">${metrics.stable.clicks}</div>
+                <div class="metric-value canary">${metrics.canary.clicks}</div>
               </div>
             </div>
           </div>
           
-          <div class="dashboard-section">
-            <h3>Metrics Comparison</h3>
-            <div class="dashboard-card">
-              <table class="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th>Stable Version</th>
-                    <th>Canary Version</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Pageviews</td>
-                    <td>${stableMetrics.pageviews}</td>
-                    <td>${canaryMetrics.pageviews}</td>
-                  </tr>
-                  <tr>
-                    <td>Clicks</td>
-                    <td>${stableMetrics.clicks}</td>
-                    <td>${canaryMetrics.clicks}</td>
-                  </tr>
-                  <tr>
-                    <td>Errors</td>
-                    <td>${stableMetrics.errors}</td>
-                    <td>${canaryMetrics.errors}</td>
-                  </tr>
-                  <tr>
-                    <td>Error Rate</td>
-                    <td>${stableErrorRate}%</td>
-                    <td>${canaryErrorRate}%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          
-          <div class="dashboard-section">
-            <h3>Recent Events</h3>
-            <div class="dashboard-card">
-              <div class="events-list">
-      `;
-      
-      // Add events if available
-      if (metrics.events && metrics.events.length > 0) {
-        metrics.events.slice(0, 5).forEach(event => {
-          const eventTime = new Date(event.timestamp || Date.now()).toLocaleTimeString();
-          html += `
-            <div class="event-item">
-              <div class="event-name">${event.name || event.event || event.type || 'Unknown Event'}</div>
-              <div class="event-time">${eventTime}</div>
-            </div>
-          `;
-        });
-      } else {
-        html += `<div class="no-events">No events recorded</div>`;
-      }
-      
-      html += `
-              </div>
+          <div class="dashboard-footer">
+            <div class="user-assignment">
+              You are currently assigned to: <span class="assignment ${assignment.version}">${assignment.version}</span>
             </div>
           </div>
         </div>
       `;
-      
-      // Update the container
-      this.container.innerHTML = html;
     }
   };
   

@@ -117,3 +117,127 @@
 .dark-theme .no-events {
   color: #aaa;
 }
+
+.simple-dashboard {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f7f9fc;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.dashboard-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.dashboard-legend {
+  display: flex;
+  gap: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #555;
+}
+
+.stable-legend {
+  color: #0366d6;
+}
+
+.canary-legend {
+  color: #d73a49;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.metric-title {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.metric-values {
+  display: flex;
+  justify-content: space-between;
+}
+
+.metric-value {
+  font-size: 22px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 4px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.metric-value.stable {
+  color: #0366d6;
+  background: rgba(3, 102, 214, 0.1);
+}
+
+.metric-value.canary {
+  color: #d73a49;
+  background: rgba(215, 58, 73, 0.1);
+}
+
+.dashboard-footer {
+  padding-top: 10px;
+  border-top: 1px solid #eaeaea;
+  font-size: 14px;
+  color: #666;
+}
+
+.user-assignment {
+  text-align: center;
+}
+
+.assignment {
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.assignment.stable {
+  background: rgba(3, 102, 214, 0.1);
+  color: #0366d6;
+}
+
+.assignment.canary {
+  background: rgba(215, 58, 73, 0.1);
+  color: #d73a49;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metric-value {
+    font-size: 18px;
+  }
+}
