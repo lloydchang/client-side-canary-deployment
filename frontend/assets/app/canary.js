@@ -22,7 +22,6 @@
     gradualRollout: true,            // Automatically increase percentage
     rolloutPeriod: 7,                // Days to reach max percentage
     storageKey: 'canary_assignment', // localStorage key for assignment
-    metricsStorageKey: 'canary_metrics', // localStorage key for metrics
     switcherContainerId: 'version-switcher',
     errorThreshold: 1.5,             // For historical data only - server now handles evaluation
     posthogEnabled: true,            // PostHog enabled by default
@@ -37,10 +36,6 @@
     _customAssignFn: null,
     _userIdentity: {},
     _eventHooks: {},
-    _metrics: {
-      'stable': { pageviews: 0, errors: 0, clicks: 0 },
-      'canary': { pageviews: 0, errors: 0, clicks: 0 }
-    },
     _debug: false,
     _analyticsInitialized: false,
     _posthogBlocked: false,
@@ -62,9 +57,6 @@
       
       // Set up error tracking
       this._setupErrorTracking();
-      
-      // Load metrics
-      this._loadMetrics();
       
       // Track initial page view
       this._trackPageview();
@@ -175,7 +167,6 @@
     getResults: function() {
       return {
         currentAssignment: this._assignment,
-        metrics: this._metrics,
         config: this._config
       };
     },
@@ -196,7 +187,6 @@
     debugInfo: function() {
       return {
         assignment: this._assignment,
-        metrics: this._metrics,
         config: this._config,
         userIdentity: this._userIdentity
       };
@@ -209,12 +199,10 @@
     exportData: function() {
       return {
         assignment: this._assignment,
-        metrics: this._metrics,
         config: this._config,
         userIdentity: this._userIdentity,
         localStorage: {
-          assignment: localStorage.getItem(this._config.storageKey),
-          metrics: localStorage.getItem(this._config.metricsStorageKey)
+          assignment: localStorage.getItem(this._config.storageKey)
         }
       };
     },
@@ -245,36 +233,13 @@
         ...properties
       };
       
-      // Track clicks
-      if (eventName.toLowerCase().includes('click')) {
-        if (this._metrics[eventProperties.version]) {
-          this._metrics[eventProperties.version].clicks = 
-            (this._metrics[eventProperties.version].clicks || 0) + 1;
-        }
-      }
-      
-      // Always track locally regardless of remote analytics status
-      if (!this._metrics.events) {
-        this._metrics.events = [];
-      }
-      this._metrics.events.push({
-        name: eventName,
-        properties: eventProperties,
-        time: Date.now()
-      });
-      
-      // Keep events array from growing too large
-      if (this._metrics.events.length > 100) {
-        this._metrics.events = this._metrics.events.slice(-100);
-      }
-      
-      // Try remote tracking only if PostHog isn't known to be blocked
+      // Send to analytics system if available and not blocked
       if (!this._posthogBlocked) {
-        // Send to analytics system if available
+        // Use analytics module if available
         if (window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {
           window.canaryAnalytics.trackEvent(eventName, eventProperties);
         }
-        // Fallback to direct PostHog usage if analytics module not properly initialized
+        // Fallback to direct PostHog usage
         else if (this._config.posthogEnabled && window.posthog) {
           try {
             window.posthog.capture(eventName, eventProperties);
@@ -294,9 +259,6 @@
           }
         }
       }
-      
-      // Save metrics
-      this._saveMetrics();
       
       return this;
     },
@@ -343,43 +305,7 @@
       };
       
       // Save assignment to localStorage
-      localStorage.setItem(this._config.storageKey, JSON.stringify(this._assignment));
-      
-      // Increment pageview for this version
-      this._metrics[version].pageviews = (this._metrics[version].pageviews || 0) + 1;
-      this._saveMetrics();
-    },
-    
-    /**
-     * Load metrics from localStorage
-     * @private
-     */
-    _loadMetrics: function() {
-      const saved = localStorage.getItem(this._config.metricsStorageKey);
-      
-      if (saved) {
-        try {
-          this._metrics = JSON.parse(saved);
-          
-          // Initialize metrics objects if they don't exist
-          if (!this._metrics.stable) {
-            this._metrics.stable = { pageviews: 0, errors: 0, clicks: 0 };
-          }
-          if (!this._metrics.canary) {
-            this._metrics.canary = { pageviews: 0, errors: 0, clicks: 0 };
-          }
-        } catch (e) {
-          console.error('Error loading metrics from localStorage:', e);
-        }
-      }
-    },
-    
-    /**
-     * Save metrics to localStorage
-     * @private
-     */
-    _saveMetrics: function() {
-      localStorage.setItem(this._config.metricsStorageKey, JSON.stringify(this._metrics));
+      this._saveAssignment();
     },
     
     /**
@@ -419,8 +345,6 @@
     _trackPageview: function() {
       if (this._assignment) {
         const version = this._assignment.version;
-        this._metrics[version].pageviews = (this._metrics[version].pageviews || 0) + 1;
-        this._saveMetrics();
         
         // Only attempt remote tracking if PostHog isn't blocked
         if (!this._posthogBlocked) {
@@ -459,12 +383,37 @@
     _setupErrorTracking: function() {
       const self = this;
       
-      // Capture unhandled errors - just record them, don't auto-evaluate
+      // Capture unhandled errors and send them directly to PostHog
       window.addEventListener('error', function(event) {
-        if (self._assignment) {
+        if (self._assignment && !self._posthogBlocked) {
           const version = self._assignment.version;
-          self._metrics[version].errors = (self._metrics[version].errors || 0) + 1;
-          self._saveMetrics();
+          
+          // Send error to PostHog directly
+          if (window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {
+            window.canaryAnalytics.trackEvent('error', {
+              version: version,
+              message: event.message || 'Unknown error',
+              filename: event.filename,
+              lineno: event.lineno,
+              colno: event.colno,
+              stack: event.error ? event.error.stack : null
+            });
+          }
+          // Fallback to direct PostHog usage
+          else if (self._config.posthogEnabled && window.posthog) {
+            try {
+              window.posthog.capture('error', {
+                version: version,
+                message: event.message || 'Unknown error',
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                stack: event.error ? event.error.stack : null
+              });
+            } catch (e) {
+              if (self._debug) console.error('Error sending error to PostHog:', e);
+            }
+          }
         }
       });
     },
