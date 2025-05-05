@@ -520,9 +520,15 @@ async function main() {
       console.log(`Updated config files at ${configPath} and ${srcConfigPath}`);
     }
     
-    // Set GitHub Actions outputs
-    console.log(`::set-output name=percentage::${recommendation.percentage}`);
-    console.log(`::set-output name=reason::${recommendation.reason}`);
+    // Set GitHub Actions outputs using Environment Files
+    if (process.env.GITHUB_OUTPUT) {
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `percentage=${recommendation.percentage}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `reason=${recommendation.reason}\n`);
+    } else {
+      // Fallback for backward compatibility or local runs
+      console.log(`::set-output name=percentage::${recommendation.percentage}`);
+      console.log(`::set-output name=reason::${recommendation.reason}`);
+    }
     
     // For GitHub Actions environment file
     console.log(`CANARY_PERCENTAGE=${recommendation.percentage}`);
