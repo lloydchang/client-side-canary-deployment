@@ -227,17 +227,11 @@ jobs:
           echo "Files staged for commit:"
           git diff --staged --name-status
           
-          # 11. Check if there are meaningful changes to commit
+          # 11. Check if there are *any* staged changes to commit
           COMMIT_CHANGES=false
           if ! git diff --staged --quiet; then
-            # Check if staged changes contain anything other than 'lastUpdated' lines
-            if git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated":' > /dev/null; then
-              echo "Meaningful changes detected (beyond just timestamps)."
-              COMMIT_CHANGES=true
-            else
-              echo "Only timestamp changes detected. Skipping commit to main."
-              COMMIT_CHANGES=false
-            fi
+            echo "Changes detected in staged files."
+            COMMIT_CHANGES=true
           else
             echo "No changes staged for commit."
             COMMIT_CHANGES=false
@@ -278,16 +272,11 @@ jobs:
                 
                 git add frontend/version.json frontend/assets/config/canary-config.json
                 
-                # Check for meaningful changes again after resolution
+                # Check for *any* staged changes again after resolution
                 COMMIT_CHANGES_CONFLICT=false
                 if ! git diff --staged --quiet; then
-                  if git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated":' > /dev/null; then
-                    echo "Meaningful changes detected after conflict resolution."
-                    COMMIT_CHANGES_CONFLICT=true
-                  else
-                    echo "Only timestamp changes detected after conflict resolution. Skipping commit."
-                    COMMIT_CHANGES_CONFLICT=false
-                  fi
+                   echo "Changes detected after conflict resolution."
+                   COMMIT_CHANGES_CONFLICT=true
                 else
                    echo "No changes to commit after conflict resolution."
                    COMMIT_CHANGES_CONFLICT=false
@@ -396,17 +385,11 @@ jobs:
           # 7. Stage all changes
           git add frontend/version.json frontend/assets/config/canary-config.json
           
-          # 8. Check if there are meaningful changes to commit
+          # 8. Check if there are *any* staged changes to commit
           COMMIT_CHANGES=false
           if ! git diff --staged --quiet; then
-            # Check if staged changes contain anything other than 'lastUpdated' lines
-            if git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated":' > /dev/null; then
-              echo "Meaningful changes detected (beyond just timestamps)."
-              COMMIT_CHANGES=true
-            else
-              echo "Only timestamp changes detected. Skipping commit to main."
-              COMMIT_CHANGES=false
-            fi
+            echo "Changes detected in staged files."
+            COMMIT_CHANGES=true
           else
             echo "No changes staged for commit."
             COMMIT_CHANGES=false
@@ -445,16 +428,11 @@ jobs:
                 
                 git add frontend/version.json frontend/assets/config/canary-config.json
                 
-                # Check for meaningful changes again after resolution
+                # Check for *any* staged changes again after resolution
                 COMMIT_CHANGES_CONFLICT=false
                 if ! git diff --staged --quiet; then
-                  if git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated":' > /dev/null; then
-                    echo "Meaningful changes detected after conflict resolution."
-                    COMMIT_CHANGES_CONFLICT=true
-                  else
-                    echo "Only timestamp changes detected after conflict resolution. Skipping commit."
-                    COMMIT_CHANGES_CONFLICT=false
-                  fi
+                   echo "Changes detected after conflict resolution."
+                   COMMIT_CHANGES_CONFLICT=true
                 else
                    echo "No changes to commit after conflict resolution."
                    COMMIT_CHANGES_CONFLICT=false
