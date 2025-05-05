@@ -14,11 +14,22 @@ class VersionSwitcher {
             ...options
         };
         
-        this.createUI();
-        this.attachEvents();
+        // Initialize with a default percentage value
+        this.canaryPercentage = 'Loading...';
         
-        // Store the current canary percentage for display
-        this.canaryPercentage = this._getCanaryPercentage();
+        // If CanaryConfigManager is available, wait for it to be ready
+        if (window.CanaryConfigManager) {
+            window.CanaryConfigManager.onConfigReady(config => {
+                this.canaryPercentage = config.CANARY_PERCENTAGE + '%';
+                this.createUI();
+                this.attachEvents();
+            });
+        } else {
+            // Fall back to immediate initialization with other methods
+            this.canaryPercentage = this._getCanaryPercentage();
+            this.createUI();
+            this.attachEvents();
+        }
     }
     
     /**
@@ -28,13 +39,13 @@ class VersionSwitcher {
      */
     _getCanaryPercentage() {
         // Use the new ConfigManager instead of direct window.CanaryConfig access
-        if (window.CanaryConfigManager) {
+        if (window.CanaryConfigManager && window.CanaryConfigManager._configLoaded) {
             return window.CanaryConfigManager.get('CANARY_PERCENTAGE') + '%';
         }
         // Fallbacks for backward compatibility
         else if (window.CanaryConfig && window.CanaryConfig.distribution) {
             return window.CanaryConfig.distribution.canaryPercentage + '%';
-        } else if (window.canary && window.canary._config) {
+        } else if (window.canary && window.canary._config && typeof window.canary._config.initialCanaryPercentage !== 'undefined') {
             return window.canary._config.initialCanaryPercentage + '%';
         }
         return 'N/A';
@@ -389,19 +400,19 @@ window.VersionSwitcher = VersionSwitcher;
                     JSON.stringify(window.CanaryConfig.distribution || {}) : 'Not loaded');
             }
             
+            // Initialize the version switcher - it will handle waiting for config internally
             window.versionSwitcher = new VersionSwitcher();
             window.versionSwitcherInitialized = true;
-            console.log('Version switcher initialized with percentage:', 
-                window.versionSwitcher.canaryPercentage);
+            console.log('Version switcher initialization started');
         }
     };
     
-    // Wait slightly longer to ensure configs are loaded
+    // Wait slightly longer to ensure the ConfigManager itself is initialized
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        setTimeout(checkAndInitialize, 100); // Small delay to ensure configs are loaded
+        setTimeout(checkAndInitialize, 150); // Slightly longer delay to ensure ConfigManager is initialized
     } else {
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(checkAndInitialize, 100);
+            setTimeout(checkAndInitialize, 150);
         });
     }
 })();
