@@ -1,7 +1,7 @@
 {
   "canaryVersion": "1.0.0",
   "distribution": {
-    "canaryPercentage": 15,
+    "canaryPercentage": 20,
     "gradualRollout": true,
     "rolloutPeriod": 7,
     "initialDate": "2025-05-01",
@@ -32,8 +32,8 @@
       "hoursOfData": 6
     }
   },
-  "lastUpdated": "2025-05-01T12:00:00Z",
-  "updateSource": "manual",
+  "lastUpdated": "2025-05-05T05:09:06.831Z",
+  "updateSource": "automated",
   "insights": {
     "recentEvaluation": {
       "date": "2025-05-01T12:00:00Z",
