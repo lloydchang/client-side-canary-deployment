@@ -449,7 +449,6 @@ function updateCanaryConfig(percentage) {
   
   // Write JSON config file only
   fs.writeFileSync(configPath, JSON.stringify(currentConfig, null, 2));
-  console.log(`Updated JSON config file at ${configPath} with percentage ${percentage}%`);
   
   return { configPath };
 }
