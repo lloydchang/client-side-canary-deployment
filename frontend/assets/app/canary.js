@@ -233,31 +233,10 @@
         ...properties
       };
       
-      // Send to analytics system if available and not blocked
-      if (!this._posthogBlocked) {
-        // Use analytics module if available
-        if (window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {
-          window.canaryAnalytics.trackEvent(eventName, eventProperties);
-        }
-        // Fallback to direct PostHog usage
-        else if (this._config.posthogEnabled && window.posthog) {
-          try {
-            window.posthog.capture(eventName, eventProperties);
-          } catch (e) {
-            // Mark PostHog as blocked if we get consistent failures
-            if (!this._posthogErrorCount) this._posthogErrorCount = 0;
-            this._posthogErrorCount++;
-            
-            if (this._posthogErrorCount > 3) {
-              this._posthogBlocked = true;
-              if (this._debug) console.log('PostHog appears to be blocked or unavailable - disabling remote analytics');
-            }
-            
-            if (this._debug) {
-              console.error('Error sending event to PostHog:', e);
-            }
-          }
-        }
+      // Use analytics module only - remove direct PostHog interaction
+      if (!this._posthogBlocked && window.canaryAnalytics && 
+          typeof window.canaryAnalytics.trackEvent === 'function') {
+        window.canaryAnalytics.trackEvent(eventName, eventProperties);
       }
       
       return this;
@@ -343,35 +322,12 @@
      * @private
      */
     _trackPageview: function() {
-      if (this._assignment) {
+      if (this._assignment && !this._posthogBlocked) {
         const version = this._assignment.version;
         
-        // Only attempt remote tracking if PostHog isn't blocked
-        if (!this._posthogBlocked) {
-          // Use analytics system if available
-          if (window.canaryAnalytics && typeof window.canaryAnalytics.trackPageview === 'function') {
-            window.canaryAnalytics.trackPageview(version);
-          }
-          // Fallback to direct PostHog usage
-          else if (this._config.posthogEnabled && window.posthog) {
-            try {
-              window.posthog.capture('pageview', {
-                version: version,
-                timestamp: Date.now()
-              });
-            } catch (e) {
-              if (this._debug) console.error('Error sending pageview to PostHog:', e);
-              
-              // Increment error count
-              if (!this._posthogErrorCount) this._posthogErrorCount = 0;
-              this._posthogErrorCount++;
-              
-              // If we get multiple errors, assume PostHog is blocked
-              if (this._posthogErrorCount > 2) {
-                this._posthogBlocked = true;
-              }
-            }
-          }
+        // Use analytics system only - remove direct PostHog interaction
+        if (window.canaryAnalytics && typeof window.canaryAnalytics.trackPageview === 'function') {
+          window.canaryAnalytics.trackPageview(version);
         }
       }
     },
@@ -383,37 +339,19 @@
     _setupErrorTracking: function() {
       const self = this;
       
-      // Capture unhandled errors and send them directly to PostHog
+      // Capture unhandled errors and send them only through the analytics module
       window.addEventListener('error', function(event) {
-        if (self._assignment && !self._posthogBlocked) {
-          const version = self._assignment.version;
+        if (self._assignment && !self._posthogBlocked && 
+            window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {
           
-          // Send error to PostHog directly
-          if (window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {
-            window.canaryAnalytics.trackEvent('error', {
-              version: version,
-              message: event.message || 'Unknown error',
-              filename: event.filename,
-              lineno: event.lineno,
-              colno: event.colno,
-              stack: event.error ? event.error.stack : null
-            });
-          }
-          // Fallback to direct PostHog usage
-          else if (self._config.posthogEnabled && window.posthog) {
-            try {
-              window.posthog.capture('error', {
-                version: version,
-                message: event.message || 'Unknown error',
-                filename: event.filename,
-                lineno: event.lineno,
-                colno: event.colno,
-                stack: event.error ? event.error.stack : null
-              });
-            } catch (e) {
-              if (self._debug) console.error('Error sending error to PostHog:', e);
-            }
-          }
+          window.canaryAnalytics.trackEvent('error', {
+            version: self._assignment.version,
+            message: event.message || 'Unknown error',
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            stack: event.error ? event.error.stack : null
+          });
         }
       });
     },
