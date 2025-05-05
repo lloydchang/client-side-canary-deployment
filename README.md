@@ -200,7 +200,7 @@ This library consists of two main components:
 <script src="src/canary.js"></script>
 
 <!-- Then include the version switcher -->
-<script src="src/components/version-switcher.js"></script>
+<script src="src/version-switcher.js"></script>
 
 <!-- Initialize both components -->
 <script>
