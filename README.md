@@ -133,12 +133,12 @@ graph TD
         L --> PHL[PostHog JS SDK - Canary]
     end
 
-    %% Styles for PostHog components
     style PHK fill:#ffefc6,stroke:#333,stroke-width:1px
     style PHL fill:#ffe6cc,stroke:#333,stroke-width:1px
     style PSA fill:#ffefc6,stroke:#333,stroke-width:1px
     style PSC fill:#ffe6cc,stroke:#333,stroke-width:1px
     style J fill:#af9,stroke:#333
+    style SSDL fill:#af9,stroke:#333
 ```
 
 ## PostHog Analytics Integration
