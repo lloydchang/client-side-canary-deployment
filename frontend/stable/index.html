@@ -101,19 +101,19 @@
     });
   </script>
   
-  <!-- Include version switcher component LAST -->
-  <script src="../assets/app/version-switcher.js"></script>
+  <!-- Include variant switcher component LAST -->
+  <script src="../assets/app/variant-switcher.js"></script>
 
   <script>
-    // Initialize version switcher with correct currentPage
-    if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
+    // Initialize variant switcher with correct currentPage
+    if (window.VariantSwitcher && !window.variantSwitcherInitialized) {
       try {
-        window.versionSwitcher = new VersionSwitcher({
+        window.variantSwitcher = new VariantSwitcher({
           currentPage: 'stable',
           position: 'bottom-right',
-          switcherContainerId: 'version-switcher'
+          switcherContainerId: 'variant-switcher'
         });
-        window.versionSwitcherInitialized = true;
+        window.variantSwitcherInitialized = true;
         console.log('Variant switcher initialized for stable page');
       } catch (e) {
         console.error('Error initializing variant switcher:', e);
