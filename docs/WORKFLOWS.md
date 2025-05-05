@@ -41,7 +41,7 @@ The workflow ensures that clients always get the latest configuration:
    > source of truth while ensuring the deployed site has access to the same version data.
 
 2. **Configuration Updates**:
-   - The `canary-analyzer.js` script updates:
+   - The `.github/scripts/canary-analyzer.js` script updates:
      - `frontend/assets/config/canary-config.json`: Main JSON configuration 
      - `frontend/assets/config/canary-config.js`: JavaScript configuration for client use
 
@@ -68,7 +68,7 @@ Handles the deployment of the application to GitHub Pages:
 
 #### 2. analyze-canary
 Analyzes canary performance using PostHog data:
-- Runs the analysis script (`analyze-canary.js`)
+- Runs the analysis script (`.github/scripts/canary-analyzer.js`)
 - Creates a summary report with error rates and recommendations
 - Saves detailed results as artifacts
 - Can trigger automatic rollback if thresholds are exceeded
@@ -94,7 +94,7 @@ This hybrid approach combining automated analysis with manual override capabilit
 
 ## Supporting Scripts
 
-### `analyze-canary.js`
+### `.github/scripts/canary-analyzer.js`
 
 This script queries the PostHog API to compare stable and canary version performance:
 
@@ -109,19 +109,6 @@ This script queries the PostHog API to compare stable and canary version perform
 - `POSTHOG_HOST`: PostHog host (default: app.posthog.com)
 - `ERROR_THRESHOLD`: Maximum acceptable error rate increase (default: 0.02)
 - `TIMEFRAME`: Analysis time period (default: 24h)
-
-### `update-canary.js`
-
-Script for updating the canary percentage configuration:
-
-- Reads existing configuration or creates default
-- Updates the canary percentage
-- Writes updated configuration back to file
-
-**Usage:**
-```
-node update-canary.js --percentage=20
-```
 
 ## File Update Process
 

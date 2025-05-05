@@ -4,7 +4,7 @@
 
 ## Overview
 
-This project demonstrates how to implement canary deployments for static web applications primarily on the client side. It enables gradual feature rollouts to a subset of users without requiring specialized server-side infrastructure such as global accelerators, load balancers, or service meshes. Traffic-shaping decisions—such as whether a user sees the new or old variant—are made directly in the user's browser using JavaScript, potentially based on client-side cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
+This project demonstrates how to implement canary deployments for static web applications. It enables gradual feature rollouts to a subset of users without requiring specialized server-side infrastructure such as global accelerators, load balancers, or service meshes. Traffic-shaping decisions—such as whether a user sees the new or old variant—are made directly in the user's browser using JavaScript, potentially based on client-side cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
 
 ## How It Works
 
@@ -240,7 +240,7 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
   - Deploys to GitHub Pages
 
 - **Analytics**: Runs every 6 hours by default
-  - Uses `analyze-canary.js` to query PostHog data
+  - Uses `.github/scripts/canary-analyzer.js` to query PostHog data
   - Compares error rates between stable and canary variants
   - Creates detailed reports in GitHub Actions summaries
   - Implements automatic rollback if error thresholds are exceeded
