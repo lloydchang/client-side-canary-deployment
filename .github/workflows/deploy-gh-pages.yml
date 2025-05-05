@@ -238,12 +238,12 @@ jobs:
             if git diff --staged | grep -E '[+-].*"canaryPercentage"' > /dev/null; then
               echo "Canary percentage change detected."
               COMMIT_CHANGES=true
-            # Then check for other non-timestamp changes
-            elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' | grep -v '"timestamp"' > /dev/null; then
+            # Then check for other non-lastUpdated changes
+            elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"'; then
               echo "Other meaningful changes detected."
               COMMIT_CHANGES=true
             else
-              echo "Only timestamp changes detected. Skipping commit to main."
+              echo "Only lastUpdated changes detected. Skipping commit to main."
               COMMIT_CHANGES=false
             fi
           else
@@ -290,12 +290,12 @@ jobs:
                   if git diff --staged | grep -E '[+-].*"canaryPercentage"' > /dev/null; then
                     echo "Canary percentage change detected after conflict resolution."
                     COMMIT_CHANGES_CONFLICT=true
-                  # Then check for other non-timestamp changes
-                  elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' | grep -v '"timestamp"' > /dev/null; then
+                  # Then check for other non-lastUpdated changes
+                  elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"'; then
                     echo "Other meaningful changes detected after conflict resolution."
                     COMMIT_CHANGES_CONFLICT=true
                   else
-                    echo "Only timestamp changes detected after conflict resolution. Skipping commit."
+                    echo "Only lastUpdated changes detected after conflict resolution. Skipping commit."
                     COMMIT_CHANGES_CONFLICT=false
                   fi
                 else
@@ -417,12 +417,12 @@ jobs:
             if git diff --staged | grep -E '[+-].*"canaryPercentage"' > /dev/null; then
               echo "Canary percentage change detected."
               COMMIT_CHANGES=true
-            # Then check for other non-timestamp changes
-            elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' | grep -v '"timestamp"' > /dev/null; then
+            # Then check for other non-lastUpdated changes
+            elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"'; then
               echo "Other meaningful changes detected."
               COMMIT_CHANGES=true
             else
-              echo "Only timestamp changes detected. Skipping commit to main."
+              echo "Only lastUpdated changes detected. Skipping commit to main."
               COMMIT_CHANGES=false
             fi
           else
@@ -469,12 +469,12 @@ jobs:
                   if git diff --staged | grep -E '[+-].*"canaryPercentage"' > /dev/null; then
                     echo "Canary percentage change detected after conflict resolution."
                     COMMIT_CHANGES_CONFLICT=true
-                  # Then check for other non-timestamp changes
-                  elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' | grep -v '"timestamp"' > /dev/null; then
+                  # Then check for other non-lastUpdated changes
+                  elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"'; then
                     echo "Other meaningful changes detected after conflict resolution."
                     COMMIT_CHANGES_CONFLICT=true
                   else
-                    echo "Only timestamp changes detected after conflict resolution. Skipping commit."
+                    echo "Only lastUpdated changes detected after conflict resolution. Skipping commit."
                     COMMIT_CHANGES_CONFLICT=false
                   fi
                 else
