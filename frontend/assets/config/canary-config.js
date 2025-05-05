@@ -5,7 +5,7 @@
 
 const CanaryConfig = {
   distribution: {
-    canaryPercentage: 0,  // Current percentage is 0%
+    canaryPercentage: 5,  // Updated by canary-analyzer.js
     maxPercentage: 50
   },
   configVersion: Date.now() // Add a timestamp for tracking config freshness

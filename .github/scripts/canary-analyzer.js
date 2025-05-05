@@ -65,6 +65,28 @@ const config = {
 const configPath = path.join(process.cwd(), 'frontend', 'assets', 'config', 'canary-config.json');
 const srcConfigPath = path.join(process.cwd(), 'frontend', 'assets', 'config', 'canary-config.js');
 
+// Get API key from environment
+const posthogApiKey = process.env.POSTHOG_API_KEY || '';
+const posthogProjectId = process.env.POSTHOG_PROJECT_ID || '';
+const useMockData = process.env.USE_MOCK_DATA === 'true';
+
+// Validate required parameters
+if (!useMockData && (!posthogApiKey || !posthogProjectId)) {
+  if (!posthogApiKey) {
+    console.error('Error: POSTHOG_API_KEY environment variable is required unless USE_MOCK_DATA=true');
+  }
+  if (!posthogProjectId) {
+    console.error('Error: POSTHOG_PROJECT_ID environment variable is required unless USE_MOCK_DATA=true');
+  }
+  
+  // If we're in percentage setting mode, we can skip the validation
+  if (forcePercentage === null) {
+    process.exit(1);
+  } else {
+    console.log('Using manual percentage setting mode, skipping PostHog API validation');
+  }
+}
+
 /**
  * Make a request to the PostHog API
  */
@@ -135,6 +157,38 @@ function queryPostHog(path, options = {}) {
     
     req.end();
   });
+}
+
+// Add mock data function if it doesn't exist
+function getMockAnalyticsData() {
+  return {
+    stable: {
+      pageviews: 500,
+      errors: 10,
+      errorRate: 0.02
+    },
+    canary: {
+      pageviews: 50,
+      errors: 1,
+      errorRate: 0.02
+    },
+    analysis: {
+      relativeErrorIncrease: 0,
+      exceedsThreshold: false,
+      recommendedAction: 'continue'
+    }
+  };
+}
+
+// Use mock data if specified or if API key is missing
+async function getAnalyticsData() {
+  if (useMockData || forcePercentage !== null) {
+    console.log('Using mock analytics data');
+    return getMockAnalyticsData();
+  }
+  
+  // Otherwise use the real PostHog API
+  return getVersionEvents();
 }
 
 /**
@@ -447,7 +501,7 @@ function createReportFile(analytics, recommendation) {
 async function main() {
   try {
     // Get analytics data from PostHog
-    const analytics = await getVersionEvents();
+    const analytics = await getAnalyticsData();
     
     // Read current configuration
     const { currentPercentage } = readCanaryConfig();
