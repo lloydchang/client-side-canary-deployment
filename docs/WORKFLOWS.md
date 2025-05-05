@@ -110,19 +110,6 @@ This script queries the PostHog API to compare stable and canary version perform
 - `ERROR_THRESHOLD`: Maximum acceptable error rate increase (default: 0.02)
 - `TIMEFRAME`: Analysis time period (default: 24h)
 
-### `update-canary.js`
-
-Script for updating the canary percentage configuration:
-
-- Reads existing configuration or creates default
-- Updates the canary percentage
-- Writes updated configuration back to file
-
-**Usage:**
-```
-node update-canary.js --percentage=20
-```
-
 ## File Update Process
 
 ```mermaid
