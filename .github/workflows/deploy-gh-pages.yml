@@ -260,13 +260,13 @@ jobs:
           branch: gh-pages
           clean: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          folder: .
-          target-folder: .
+          folder: frontend  # Deploy from frontend directory instead of repository root
+          target-folder: .  # Deploy to the root of gh-pages branch
           clean-exclude: |
             **/*
             !version.json
-            !frontend/assets/config/**
-            !frontend/index.html  # Make sure not to overwrite index.html
+            !assets/config/**
+            !index.html  # Make sure not to overwrite index.html
 
   # Adjust canary job - manual
   adjust-canary:
@@ -371,13 +371,13 @@ jobs:
           branch: gh-pages
           clean: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          folder: .
-          target-folder: .
+          folder: frontend  # Deploy from frontend directory instead of repository root
+          target-folder: .  # Deploy to the root of gh-pages branch
           clean-exclude: |
             **/*
             !version.json
-            !frontend/assets/config/**
-            !frontend/index.html  # Make sure not to overwrite index.html
+            !assets/config/**
+            !index.html  # Make sure not to overwrite index.html
       
       - name: Create summary report
         run: |
