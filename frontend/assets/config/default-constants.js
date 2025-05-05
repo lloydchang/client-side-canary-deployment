@@ -113,7 +113,7 @@ if (typeof window !== 'undefined') {
           if (path.includes('/client-side-canary-deployment/')) {
             // If we're at the root level of the app (landing page)
             if (path.endsWith('/frontend/') || path.endsWith('/frontend')) {
-              effectivePath = 'frontend/assets/config/canary-config.json';
+              effectivePath = 'assets/config/canary-config.json'; // Fixed path - removed duplicate 'frontend/'
             }
             // If we're in a subdirectory (stable or canary)
             else {

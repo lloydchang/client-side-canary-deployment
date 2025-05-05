@@ -181,8 +181,8 @@
     }
   </script>
   
-  <!-- Include the version switcher component LAST -->
-  <script src="assets/app/version-switcher.js"></script>
+  <!-- Include the variant switcher component LAST -->
+  <script src="assets/app/variant-switcher.js"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -199,7 +199,7 @@
           console.log('[Debug] Fixing config path for home page');
           
           // Add proper frontend prefix for GitHub Pages deployment
-          const configPath = 'frontend/assets/config/canary-config.json';
+          const configPath = 'frontend/assets/config/canary-config.json';e 'frontend/' prefix
           console.log('[Debug] Loading configuration from:', configPath);
           
           window.CanaryConfigManager.loadConfig(configPath)
@@ -251,38 +251,38 @@
         }
       }
       
-      // Initialize version switcher with explicit config path
-      if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
+      // Initialize variant switcher with explicit config path
+      if (window.VariantSwitcher && !window.variantSwitcherInitialized) {
         try {
-          window.versionSwitcher = new VersionSwitcher({
+          window.variantSwitcher = new VariantSwitcher({
             currentPage: 'home',
             position: 'bottom-right',
-            switcherContainerId: 'version-switcher',
-            configPath: 'frontend/assets/config/canary-config.json' // Explicitly set corrected config path
+            switcherContainerId: 'variant-switcher',
+            configPath: 'assets/config/canary-config.json' // Fixed path
           });
-          window.versionSwitcherInitialized = true;
+          window.variantSwitcherInitialized = true;
           console.log('[Variant Switcher] Initialized for home page');
           
           // Force visibility - existing code is fine
-          const switcherElement = document.getElementById('version-switcher');
+          const switcherElement = document.getElementById('variant-switcher');
           if (switcherElement) {
             switcherElement.style.display = 'block';
             switcherElement.style.visibility = 'visible';
             switcherElement.style.opacity = '1';
-            console.log('[Version Switcher] Visibility enforced');  // Updated logging format
+            console.log('[Variant Switcher] Visibility enforced');  // Updated logging format
           } else {
             // Create container if it doesn't exist - existing code is fine
             const switcherContainer = document.createElement('div');
-            switcherContainer.id = 'version-switcher';
-            switcherContainer.className = 'version-switcher';
+            switcherContainer.id = 'variant-switcher';
+            switcherContainer.className = 'variant-switcher';
             document.body.appendChild(switcherContainer);
-            console.log('[Version Switcher] Created container manually');  // Updated logging format
+            console.log('[Variant Switcher] Created container manually');  // Updated logging format
             
-            // Initialize version switcher again
-            new VersionSwitcher({
+            // Initialize variant switcher again with correct class name
+            new VariantSwitcher({
               currentPage: 'home',
               position: 'bottom-right',
-              switcherContainerId: 'version-switcher'
+              switcherContainerId: 'variant-switcher'
             });
           }
         } catch (e) {
