@@ -118,6 +118,21 @@ function queryPostHog(path, options = {}) {
  * Fetch event counts for stable and canary versions
  */
 async function getVersionEvents() {
+  // Skip validation if we're only setting a specific percentage
+  if (forcePercentage !== null) {
+    console.log('Using manual percentage setting mode, skipping PostHog API validation');
+    return {
+      stable: { pageviews: 0, errors: 0, errorRate: 0 },
+      canary: { pageviews: 0, errors: 0, errorRate: 0 },
+      analysis: {
+        relativeErrorIncrease: 0,
+        exceedsThreshold: false,
+        recommendedAction: 'continue'
+      },
+      timestamp: new Date().toISOString()
+    };
+  }
+
   // Validate required configuration
   if (!config.apiKey) {
     throw new Error('POSTHOG_API_KEY environment variable is required');
