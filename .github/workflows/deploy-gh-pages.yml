@@ -243,10 +243,12 @@ jobs:
             COMMIT_CHANGES=false
           fi
 
+          COMMIT_MADE=false # Initialize flag
           if [ "$COMMIT_CHANGES" = "true" ]; then
             # Determine commit message
             COMMIT_MESSAGE="Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics"
             git commit -m "$COMMIT_MESSAGE"
+            COMMIT_MADE=true # Set flag if commit happens
             
             # 12. Push with improved conflict handling
             echo "Pushing changes to main branch..."
@@ -293,11 +295,12 @@ jobs:
 
                 if [ "$COMMIT_CHANGES_CONFLICT" = "true" ]; then
                    git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
+                   COMMIT_MADE=true # Set flag if commit happens here too
                 fi
               fi
               
-              # Try to push only if there was a commit made
-              if git show HEAD --format=%B -s | grep -q "$COMMIT_MESSAGE"; then
+              # Try to push only if there was a commit made (check the flag)
+              if [ "$COMMIT_MADE" = "true" ]; then
                 if git push origin main; then
                   echo "Successfully pushed changes to main branch"
                   break
@@ -409,8 +412,10 @@ jobs:
             COMMIT_CHANGES=false
           fi
           
+          COMMIT_MADE=false # Initialize flag
           if [ "$COMMIT_CHANGES" = "true" ]; then
             git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%"
+            COMMIT_MADE=true # Set flag if commit happens
             
             # 9. Push with improved conflict handling
             echo "Pushing changes to main branch..."
@@ -457,11 +462,12 @@ jobs:
 
                 if [ "$COMMIT_CHANGES_CONFLICT" = "true" ]; then
                    git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
+                   COMMIT_MADE=true # Set flag if commit happens here too
                 fi
               fi
               
-              # Try to push only if there was a commit made
-              if git show HEAD --format=%B -s | grep -q "Manual update of canary percentage"; then
+              # Try to push only if there was a commit made (check the flag)
+              if [ "$COMMIT_MADE" = "true" ]; then
                 if git push origin main; then
                   echo "Successfully pushed changes to main branch"
                   break
