@@ -39,9 +39,13 @@ class VersionSwitcher {
             document.body.appendChild(container);
         }
         
-        // Get info directly from the global canary object
+        // Get info directly from the global canary object or CanaryConfig
         let canaryPercentage = '';
-        if (window.canary && window.canary._config) {
+        if (window.CanaryConfig && window.CanaryConfig.distribution) {
+            // Prefer the configuration from CanaryConfig first
+            canaryPercentage = window.CanaryConfig.distribution.canaryPercentage + '%';
+        } else if (window.canary && window.canary._config) {
+            // Fall back to the runtime config if needed
             canaryPercentage = window.canary._config.initialCanaryPercentage + '%';
         }
         

@@ -6,9 +6,32 @@
   <title>Stable Version</title>
   
   <script src="../src/canary.js"></script>
-  <script src="../src/analytics.js"></script>
   <script src="../src/config/canary-config.js"></script>
+  <script src="../src/analytics.js"></script>
   <script src="../src/components/version-switcher.js"></script>
+  
+  <!-- Initialize canary with config-based percentage -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        if (window.canary && window.CanaryConfig && window.CanaryConfig.distribution) {
+          const percentage = window.CanaryConfig.distribution.canaryPercentage;
+          window.canary.init({
+            initialCanaryPercentage: percentage,
+            posthogEnabled: true,
+            posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+          });
+          console.log('Canary initialized with percentage from config:', percentage);
+        } else {
+          console.error('CanaryConfig not available, using default');
+          window.canary.init();
+        }
+      } catch (e) {
+        console.error('Error initializing canary:', e);
+      }
+    });
+  </script>
+  
   <style>
     /* Black text on white background for stable version */
     body {

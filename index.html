@@ -8,6 +8,9 @@
   <!-- Include the core canary.js script -->
   <script src="src/canary.js"></script>
   
+  <!-- Include the config first to ensure it's available -->
+  <script src="src/config/canary-config.js"></script>
+  
   <!-- Include the analytics integration -->
   <script src="src/analytics.js"></script>
   
@@ -18,12 +21,16 @@
   <script>
     try {
       if (window.canary) {
+        // Use percentage from CanaryConfig if available
+        const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
+          window.CanaryConfig.distribution.canaryPercentage : 5;
+        
         window.canary.init({
-          initialCanaryPercentage: 5,
+          initialCanaryPercentage: percentage,
           posthogEnabled: true,
           posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
         });
-        console.log('Canary initialized on page load');
+        console.log('Canary initialized with percentage:', percentage);
       }
     } catch (e) {
       console.error('Failed to initialize canary on page load:', e);
@@ -211,12 +218,15 @@
       // Initialize canary first - this is now a backup if the head initialization failed
       if (window.canary && !window.canary._assignment) {
         try {
+          const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
+            window.CanaryConfig.distribution.canaryPercentage : 5;
+
           window.canary.init({
-            initialCanaryPercentage: 5,
+            initialCanaryPercentage: percentage,
             posthogEnabled: true,
             posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
           });
-          console.log('Canary initialized successfully');
+          console.log('Canary initialized successfully with percentage:', percentage);
         } catch (e) {
           console.error('Error initializing canary:', e);
         }
