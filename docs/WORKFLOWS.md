@@ -152,8 +152,8 @@ flowchart LR
         
         B2 --"Contains canary percentage"--> Config
         C2 --"Contains canary percentage"--> Config
-        B3 --"Contains canary feature flags"--> JSConfig
-        C3 --"Contains canary feature flags"--> JSConfig
+        B3 --"Contains canary configuration"--> JSConfig
+        C3 --"Contains canary configuration"--> JSConfig
         A1 --"Increments version number"--> Version
         B1 --"Increments version number"--> Version
         C1 --"Increments version number"--> Version

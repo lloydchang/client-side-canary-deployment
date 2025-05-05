@@ -23,28 +23,25 @@ canary.config({
 
 ## Version Management & Client Updates
 
-The system includes automatic version detection and refresh capabilities:
+The system automatically checks for version updates every 5 minutes by polling the `version.json` file:
 
 ```javascript
-// Check for updated versions programmatically
-async function checkForVersionUpdates() {
-  // Add cache-busting to ensure fresh data
+// Simplified version check logic
+setInterval(async function() {
   const response = await fetch('version.json?nocache=' + Date.now());
   const data = await response.json();
-  
-  // Compare with locally stored version
   const currentVersion = localStorage.getItem('app-version');
   
   if (currentVersion && currentVersion !== data.version) {
-    // Version has changed - reload to get updated configs
     localStorage.setItem('app-version', data.version);
-    window.location.reload(true); // Force reload from server
+    window.location.reload(true);
   }
-}
 
 // Schedule periodic checks (system default is 5 minutes)
 setInterval(checkForVersionUpdates, 5 * 60 * 1000);
 ```
+
+This enables configuration changes to propagate quickly without requiring users to manually refresh.
 
 ## Custom Assignments
 
@@ -106,3 +103,11 @@ canary.on('analyticsBlocked', function(data) {
   console.log(`Analytics blocked: ${data.reason}`);
 });
 ```
+
+## Note About Feature Flags
+
+If you need feature flag functionality, consider integrating a dedicated feature flag service like:
+- LaunchDarkly
+- Split.io
+- Optimizely
+- PostHog (using their native feature flag system)

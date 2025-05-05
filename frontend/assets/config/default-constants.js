@@ -69,19 +69,7 @@ const DEFAULT_CONSTANTS = {
   SAFETY_THRESHOLD: CURRENT_DEFAULTS.SAFETY_THRESHOLD,
   
   // Allow checking the environment
-  ENV,
-  
-  // Feature flag functions
-  isFeatureFlagEnabled(flag) {
-    if (typeof window !== 'undefined') {
-      try {
-        return localStorage.getItem(`feature_${flag}`) === 'true';
-      } catch (e) {
-        return false;
-      }
-    }
-    return false;
-  }
+  ENV
 };
 
 // Make it available as a module export for Node.js and as a global for the browser
