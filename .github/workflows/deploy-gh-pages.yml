@@ -177,7 +177,6 @@ jobs:
           path: canary-analysis.json
           retention-days: 30
       
-      # Combined step for updating repos and deploying to both branches
       - name: Update repositories and deploy
         run: |
           # 1. Update version.json to trigger client refresh
@@ -230,53 +229,92 @@ jobs:
           
           # 11. Check if there are changes to commit
           if ! git diff --staged --quiet; then
-            git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics"
+            # Check if changes are more than just timestamp updates
+            ONLY_TIMESTAMP_CHANGES=true
             
-            # 12. Push with improved conflict handling
-            echo "Pushing changes to main branch..."
-            MAX_RETRIES=3
-            RETRY_COUNT=0
+            # Extract current and previous canary percentage
+            CURRENT_PERCENTAGE=$(jq -r '.canary.currentPercentage // .canaryPercentage' frontend/assets/config/canary-config.json)
+            PREVIOUS_PERCENTAGE=$(git show HEAD:frontend/assets/config/canary-config.json 2>/dev/null | jq -r '.canary.currentPercentage // .canaryPercentage' 2>/dev/null || echo "0")
             
-            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              # Pull latest changes with rebase to minimize conflicts
-              git pull --rebase origin main
+            # Check if canary percentage has changed
+            if [ "$CURRENT_PERCENTAGE" != "$PREVIOUS_PERCENTAGE" ]; then
+              ONLY_TIMESTAMP_CHANGES=false
+            fi
+            
+            # Check for other significant changes (ignore lines only containing lastUpdated or version)
+            if git diff --staged | grep -v "lastUpdated" | grep -v "\"version\"" | grep -E '^\+' | grep -v '^\+\+\+' > /dev/null; then
+              ONLY_TIMESTAMP_CHANGES=false
+            fi
+            
+            # Only commit if there are meaningful changes
+            if [ "$ONLY_TIMESTAMP_CHANGES" = "false" ]; then
+              git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics"
               
-              # If rebase encounters conflicts, abort and try a different approach
-              if [ $? -ne 0 ]; then
-                echo "Rebase failed due to conflicts, trying alternative approach..."
-                git rebase --abort
-                # Reset to origin/main and apply our changes as a new commit
-                git reset --hard origin/main
-                ./.github/scripts/update-version.sh  # Re-run version update
-                chmod +x ./.github/scripts/canary-analyzer.js
-                
-                # Pass all required environment variables explicitly in conflict scenario
-                POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
-                POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
-                POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
-                POSTHOG_HOST="https://us.i.posthog.com" \
-                USE_MOCK_DATA="false" \
-                node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
-                
-                git add frontend/version.json frontend/assets/config/canary-config.json
-                git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
-              fi
+              # 12. Push with improved conflict handling
+              echo "Pushing changes to main branch..."
+              MAX_RETRIES=3
+              RETRY_COUNT=0
               
-              # Try to push
-              if git push origin main; then
-                echo "Successfully pushed changes to main branch"
-                break
-              else
-                RETRY_COUNT=$((RETRY_COUNT + 1))
-                if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                  echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
-                  sleep 5
-                else
-                  echo "::warning::Failed to push changes after $MAX_RETRIES attempts. Continuing with gh-pages update only."
-                  break
+              while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+                # Pull latest changes with rebase to minimize conflicts
+                git pull --rebase origin main
+                
+                # If rebase encounters conflicts, abort and try a different approach
+                if [ $? -ne 0 ]; then
+                  echo "Rebase failed due to conflicts, trying alternative approach..."
+                  git rebase --abort
+                  # Reset to origin/main and apply our changes as a new commit
+                  git reset --hard origin/main
+                  ./.github/scripts/update-version.sh  # Re-run version update
+                  chmod +x ./.github/scripts/canary-analyzer.js
+                  
+                  # Pass all required environment variables explicitly in conflict scenario
+                  POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+                  POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
+                  POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
+                  POSTHOG_HOST="https://us.i.posthog.com" \
+                  USE_MOCK_DATA="false" \
+                  node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
+                  
+                  git add frontend/version.json frontend/assets/config/canary-config.json
+                  
+                  # Check for meaningful changes again after resolution
+                  ONLY_TIMESTAMP_CHANGES_CONFLICT=true
+                  CURRENT_PERCENTAGE_CONFLICT=$(jq -r '.canary.currentPercentage // .canaryPercentage' frontend/assets/config/canary-config.json)
+                  
+                  if [ "$CURRENT_PERCENTAGE_CONFLICT" != "$PREVIOUS_PERCENTAGE" ]; then
+                    ONLY_TIMESTAMP_CHANGES_CONFLICT=false
+                  fi
+                  
+                  if git diff --staged | grep -v "lastUpdated" | grep -v "\"version\"" | grep -E '^\+' | grep -v '^\+\+\+' > /dev/null; then
+                    ONLY_TIMESTAMP_CHANGES_CONFLICT=false
+                  fi
+                  
+                  if [ "$ONLY_TIMESTAMP_CHANGES_CONFLICT" = "false" ]; then
+                     git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
+                  else
+                     echo "No meaningful changes to commit after conflict resolution"
+                  fi
                 fi
-              fi
-            done
+                
+                # Try to push
+                if git push origin main; then
+                  echo "Successfully pushed changes to main branch"
+                  break
+                else
+                  RETRY_COUNT=$((RETRY_COUNT + 1))
+                  if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                    echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
+                    sleep 5
+                  else
+                    echo "::warning::Failed to push changes after $MAX_RETRIES attempts. Continuing with gh-pages update only."
+                    break
+                  fi
+                fi
+              done
+            else
+              echo "No meaningful changes to commit in main branch"
+            fi
           else
             echo "No changes to commit in main branch"
           fi
@@ -300,7 +338,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "The following configuration files were updated:" >> $GITHUB_STEP_SUMMARY
           echo "- version.json: $(jq -r .version frontend/version.json)" >> $GITHUB_STEP_SUMMARY
-          
           if [ -f "frontend/assets/config/canary-config.json" ]; then
             echo "- canary-config.json: Updated with percentage $CANARY_PERCENTAGE%" >> $GITHUB_STEP_SUMMARY
           else
@@ -330,7 +367,6 @@ jobs:
           chmod +x ./.github/scripts/canary-analyzer.js
           node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
       
-      # Combined step for updating repos and deploying to both branches
       - name: Update repositories and deploy
         run: |
           # 1. Update version.json to trigger client refresh
@@ -358,52 +394,98 @@ jobs:
           
           # 8. Check if there are changes to commit
           if ! git diff --staged --quiet; then
-            git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%"
+            # Check if changes are more than just timestamp updates
+            ONLY_TIMESTAMP_CHANGES=true
             
-            # 9. Push with improved conflict handling
-            echo "Pushing changes to main branch..."
-            MAX_RETRIES=3
-            RETRY_COUNT=0
+            # Extract current and previous canary percentage
+            CURRENT_PERCENTAGE=$(jq -r '.canary.currentPercentage // .canaryPercentage' frontend/assets/config/canary-config.json)
+            PREVIOUS_PERCENTAGE=$(git show HEAD:frontend/assets/config/canary-config.json 2>/dev/null | jq -r '.canary.currentPercentage // .canaryPercentage' 2>/dev/null || echo "0")
             
-            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              # Pull latest changes with rebase to minimize conflicts
-              git pull --rebase origin main
+            # Check if canary percentage has changed
+            if [ "$CURRENT_PERCENTAGE" != "$PREVIOUS_PERCENTAGE" ]; then
+              ONLY_TIMESTAMP_CHANGES=false
+            fi
+            
+            # Check for other significant changes
+            if git diff --staged | grep -v "lastUpdated" | grep -v "\"version\"" | grep -E '^\+' | grep -v '^\+\+\+' > /dev/null; then
+              ONLY_TIMESTAMP_CHANGES=false
+            fi
+            
+            # Only commit if there are meaningful changes
+            if [ "$ONLY_TIMESTAMP_CHANGES" = "false" ]; then
+              git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%"
               
-              # If rebase encounters conflicts, abort and try a different approach
-              if [ $? -ne 0 ]; then
-                echo "Rebase failed due to conflicts, trying alternative approach..."
-                git rebase --abort
-                # Reset to origin/main and apply our changes as a new commit
-                git reset --hard origin/main
-                ./.github/scripts/update-version.sh  # Re-run version update
-                chmod +x ./.github/scripts/canary-analyzer.js
-                node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}  # Re-run with manual percentage
-                git add frontend/version.json frontend/assets/config/canary-config.json
-                git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
-              fi
+              # 9. Push with improved conflict handling
+              echo "Pushing changes to main branch..."
+              MAX_RETRIES=3
+              RETRY_COUNT=0
               
-              # Try to push
-              if git push origin main; then
-                echo "Successfully pushed changes to main branch"
-                break
-              else
-                RETRY_COUNT=$((RETRY_COUNT + 1))
-                if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                  echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
-                  sleep 5
-                else
-                  echo "::warning::Failed to push changes after $MAX_RETRIES attempts. Continuing with gh-pages update only."
-                  break
+              while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+                # Pull latest changes with rebase to minimize conflicts
+                git pull --rebase origin main
+                
+                # If rebase encounters conflicts, abort and try a different approach
+                if [ $? -ne 0 ]; then
+                  echo "Rebase failed due to conflicts, trying alternative approach..."
+                  git rebase --abort
+                  # Reset to origin/main and apply our changes as a new commit
+                  git reset --hard origin/main
+                  ./.github/scripts/update-version.sh  # Re-run version update
+                  chmod +x ./.github/scripts/canary-analyzer.js
+                  
+                  # Pass all required environment variables explicitly in conflict scenario
+                  POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+                  POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
+                  POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
+                  POSTHOG_HOST="https://us.i.posthog.com" \
+                  USE_MOCK_DATA="false" \
+                  node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
+                  
+                  git add frontend/version.json frontend/assets/config/canary-config.json
+                  
+                  # Check for meaningful changes again after resolution
+                  ONLY_TIMESTAMP_CHANGES_CONFLICT=true
+                  CURRENT_PERCENTAGE_CONFLICT=$(jq -r '.canary.currentPercentage // .canaryPercentage' frontend/assets/config/canary-config.json)
+
+                  if [ "$CURRENT_PERCENTAGE_CONFLICT" != "$PREVIOUS_PERCENTAGE" ]; then
+                     ONLY_TIMESTAMP_CHANGES_CONFLICT=false
+                  fi
+
+                  if git diff --staged | grep -v "lastUpdated" | grep -v "\"version\"" | grep -E '^\+' | grep -v '^\+\+\+' > /dev/null; then
+                     ONLY_TIMESTAMP_CHANGES_CONFLICT=false
+                  fi
+
+                  if [ "$ONLY_TIMESTAMP_CHANGES_CONFLICT" = "false" ]; then
+                     git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
+                  else
+                     echo "No meaningful changes to commit after conflict resolution"
+                  fi
                 fi
-              fi
-            done
+                
+                # Try to push
+                if git push origin main; then
+                  echo "Successfully pushed changes to main branch"
+                  break
+                else
+                  RETRY_COUNT=$((RETRY_COUNT + 1))
+                  if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                    echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
+                    sleep 5
+                  else
+                    echo "::warning::Failed to push changes after $MAX_RETRIES attempts. Continuing with gh-pages update only."
+                    break
+                  fi
+                fi
+              done
+            else
+              echo "No meaningful changes to commit in main branch"
+            fi
           else
             echo "No changes to commit in main branch"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      # Combined deployment steps for gh-pages
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
