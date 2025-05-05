@@ -63,7 +63,6 @@ This creates a seamless update pipeline where configuration changes are automati
 
 #### 1. build-and-deploy
 Handles the deployment of the application to GitHub Pages:
-- Builds the project with Rollup
 - Injects PostHog API keys from GitHub secrets
 - Configures base path for GitHub Pages
 - Deploys to the gh-pages branch
