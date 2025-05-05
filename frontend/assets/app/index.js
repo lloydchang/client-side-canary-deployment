@@ -6,7 +6,7 @@
 // Use relative paths for imports
 import './canary.js';
 import './analytics.js';
-import './version-switcher.js';
+import './variant-switcher.js';
 
 // Re-export for module systems (if used with bundlers)
 export default window.canary;

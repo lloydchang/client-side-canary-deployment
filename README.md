@@ -4,7 +4,7 @@
 
 ## Overview
 
-This project demonstrates how to implement canary deployments for static web applications primarily on the client side. It enables gradual feature rollouts to a subset of users without requiring specialized server-side infrastructure such as global accelerators, load balancers, or service meshes. Traffic-shaping decisions—such as whether a user sees the new or old version—are made directly in the user's browser using JavaScript, potentially based on client-side cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
+This project demonstrates how to implement canary deployments for static web applications primarily on the client side. It enables gradual feature rollouts to a subset of users without requiring specialized server-side infrastructure such as global accelerators, load balancers, or service meshes. Traffic-shaping decisions—such as whether a user sees the new or old variant—are made directly in the user's browser using JavaScript, potentially based on client-side cookies, local storage, randomized flags, or remotely-fetched values via API endpoints. Analytics are collected to inform rollout progression or trigger rollbacks.
 
 ## How It Works
 
@@ -13,13 +13,13 @@ This project demonstrates how to implement canary deployments for static web app
 3. Gradually increases canary percentage when metrics look good
 4. Rolls back features if error rates increase
 5. Persists user assignments in localStorage
-6. Uses automatic version detection to refresh clients when configuration changes
+6. Uses automatic variant detection to refresh clients when configuration changes
 
 ```mermaid
 graph LR
-    subgraph Client-Side: Version Assignment & Metrics
+    subgraph Client-Side: Variant Assignment & Metrics
         A[User Visits Site] --> B{First Visit?}
-        B -->|Yes| C{Assign Version}
+        B -->|Yes| C{Assign Variant}
         B -->|No| D[Load Saved Assignment: Stable or Canary]
         C -->|95%| E[Stable Experience]
         C -->|5%| F[Canary Experience]
@@ -49,7 +49,7 @@ graph TD
         subgraph "File Updates Process"
             F1[Update frontend/assets/config/canary-config.json]
             F1 --> F2[Update frontend/assets/config/canary-config.js]
-            F2 --> V[Update version.json]
+            F2 --> V[Update variant.json]
         end
         
         V --> G[Deploy updated files to GitHub Pages]
@@ -57,27 +57,27 @@ graph TD
 
     subgraph "Client-Side Detection"
         G --> CL[Client browsers]
-        CL --> CL1[Poll version.json every 5 minutes]
-        CL1 -->|Version Changed| CL2[Reload page]
+        CL --> CL1[Poll variant.json every 5 minutes]
+        CL1 -->|Variant Changed| CL2[Reload page]
         CL2 --> CL3[Load new configuration]
         CL3 --> CL4[Apply new canary percentages]
     end    
 ```
 
-## Automatic Version Detection & Client Refresh
+## Automatic Variant Detection & Client Refresh
 
 The system ensures all clients stay up-to-date with the latest canary configurations:
 
 1. **Server-Side Updates**:
-   - Every deployment updates `version.json` with an incremented version number
+   - Every deployment updates `variant.json` with an incremented version number
    - Configuration changes update `frontend/assets/config/canary-config.json`
    - All changes are deployed to GitHub Pages automatically
 
 2. **Client-Side Detection**:
    - The `CanaryConfigManager` loads configuration from multiple sources with proper precedence
-   - All pages poll for changes to `version.json` every 5 minutes
-   - When version changes are detected, the page triggers a hard reload
-   - Local version information is stored in localStorage for comparison
+   - All pages poll for changes to `variant.json` every 5 minutes
+   - When variant changes are detected, the page triggers a hard reload
+   - Local variant information is stored in localStorage for comparison
 
 This ensures that when canary percentages are adjusted (either automatically or manually), all users receive the updated configuration without manual intervention.
 
@@ -85,12 +85,12 @@ This ensures that when canary percentages are adjusted (either automatically or 
  
 ### What is a Client-Side Canary Deployment?
  
-In this approach, the traffic shaping decision (which version a user receives) happens mostly in the user's browser:
+In this approach, the traffic shaping decision (which variant a user receives) happens mostly in the user's browser:
  
 - **No specialized server infrastructure required**: No need for global accelerators, load balancers, or service meshes
 - **Works with static hosting**: Compatible with GitHub Pages
 - **JavaScript-based assignment**: Uses browser's localStorage (not server-side sessions) and JavaScript for user assignment
-- **Analytics-driven**: Collects metrics to evaluate stable vs. canary versions
+- **Analytics-driven**: Collects metrics to evaluate stable vs. canary variants
  
 ### How It Differs From Server-Side Canary Deployment
 
@@ -106,8 +106,8 @@ graph TD
             StablePath --> RLB1[Regional Load Balancer - Stable]
             RLB1 --> SM1[Service Mesh - Stable]
             SM1 --> EP1[Envoy Proxy / Linkerd2-proxy - Stable]
-            EP1 --> C[Stable Version Server]
-            C --> E[Response with Stable Version]
+            EP1 --> C[Stable Variant Server]
+            C --> E[Response with Stable Variant]
             E --> PSA[PostHog Server SDK]
         end
 
@@ -115,8 +115,8 @@ graph TD
             CanaryPath --> RLB2[Regional Load Balancer - Canary]
             RLB2 --> SM2[Service Mesh - Canary]
             SM2 --> EP2[Envoy Proxy / Linkerd2-proxy - Canary]
-            EP2 --> D[Canary Version Server]
-            D --> F[Response with Canary Version]
+            EP2 --> D[Canary Variant Server]
+            D --> F[Response with Canary Variant]
             F --> PSC[PostHog Server SDK]
         end
     end
@@ -125,8 +125,8 @@ graph TD
         G[User Request] --> H[Static Web Server or CDN]
         H --> I[index.html with JavaScript]
         I --> J{Client-Side Decision Logic}
-        J -->|95% of users| K[Load Stable Version Assets]
-        J -->|5% of users| L[Load Canary Version Assets]
+        J -->|95% of users| K[Load Stable Variant Assets]
+        J -->|5% of users| L[Load Canary Variant Assets]
 
         K --> PHK[PostHog JS SDK - Stable]
         L --> PHL[PostHog JS SDK - Canary]
@@ -144,7 +144,7 @@ graph TD
 
 This project uses PostHog for analytics tracking in canary deployments. The system automatically:
 
-- Tracks pageviews and events for stable and canary versions
+- Tracks pageviews and events for stable and canary variants
 - Reports errors and interactions
 
 ### GitHub Actions Integration
@@ -153,7 +153,7 @@ Our GitHub Actions workflows interact with PostHog in several ways:
 
 1. **Deployment**: The workflow injects PostHog API keys from GitHub secrets
 2. **Analytics Reporting**: A scheduled workflow fetches analytics data to monitor canary performance
-3. **Automated Rollbacks**: If error rates in the canary version exceed thresholds, an automated rollback can be triggered
+3. **Automated Rollbacks**: If error rates in the canary variant exceed thresholds, an automated rollback can be triggered
 
 ### Setup Requirements
 
@@ -173,8 +173,8 @@ Add the following script tags to your HTML:
 <!-- Core canary functionality -->
 <script src="https://cdn.example.com/canary.js"></script>
 
-<!-- Optional: Version switcher UI component -->
-<script src="https://cdn.example.com/version-switcher.js"></script>
+<!-- Optional: Variant switcher UI component -->
+<script src="https://cdn.example.com/variant-switcher.js"></script>
 
 <!-- Optional: PostHog analytics integration -->
 <script src="https://cdn.example.com/analytics.js"></script>
@@ -189,17 +189,17 @@ Add the following script tags to your HTML:
 
 This library consists of two main components:
 
-1. **Core Canary System** (`src/canary.js`): Handles metrics tracking and version assignments
-2. **Version Switcher** (`src/components/version-switcher.js`): Optional UI component that allows users to manually switch between versions
+1. **Core Canary System** (`src/canary.js`): Handles metrics tracking and variant assignments
+2. **Variant Switcher** (`src/components/variant-switcher.js`): Optional UI component that allows users to manually switch between variants
 
-### Using the Version Switcher
+### Using the Variant Switcher
 
 ```html
 <!-- First include the main canary library -->
 <script src="assets/app/canary.js"></script>
 
-<!-- Then include the version switcher -->
-<script src="assets/app/version-switcher.js"></script>
+<!-- Then include the variant switcher -->
+<script src="assets/app/variant-switcher.js"></script>
 
 <!-- Initialize both components -->
 <script>
@@ -209,7 +209,7 @@ This library consists of two main components:
   });
   
   // Then initialize the switcher
-  new VersionSwitcher();
+  new VariantSwitcher();
 </script>
 ```
 
@@ -241,7 +241,7 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
 
 - **Analytics**: Runs every 6 hours by default
   - Uses `analyze-canary.js` to query PostHog data
-  - Compares error rates between stable and canary versions
+  - Compares error rates between stable and canary variants
   - Creates detailed reports in GitHub Actions summaries
   - Implements automatic rollback if error thresholds are exceeded
 

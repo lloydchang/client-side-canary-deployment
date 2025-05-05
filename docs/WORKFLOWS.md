@@ -22,7 +22,7 @@ This consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of the ca
   - `analyze`: Evaluate canary performance
   - `adjust-canary`: Change canary percentage
 
-### Version Management & Client Updates
+### Variant Management & Client Updates
 
 The workflow ensures that clients always get the latest configuration:
 

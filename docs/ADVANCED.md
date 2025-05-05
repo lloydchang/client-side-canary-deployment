@@ -21,9 +21,9 @@ canary.config({
 });
 ```
 
-## Version Management & Client Updates
+## Variant Management & Client Updates
 
-The system automatically checks for version updates every 5 minutes by polling the `version.json` file:
+The system automatically checks for variant updates every 5 minutes by polling the `version.json` file:
 
 ```javascript
 // Simplified version check logic
