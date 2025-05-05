@@ -6,11 +6,19 @@
 (function(window) {
   'use strict';
   
+  // Get default values from the constants file if available
+  const getDefaultValue = (key, fallback) => {
+    if (window.DEFAULT_CONSTANTS && typeof window.DEFAULT_CONSTANTS[key] !== 'undefined') {
+      return window.DEFAULT_CONSTANTS[key];
+    }
+    return fallback;
+  };
+  
   // Default configuration
   const DEFAULT_CONFIG = {
-    initialCanaryPercentage: 5,      // Start with 5% of users
-    maxCanaryPercentage: 50,         // Never exceed 50% without manual review
-    safetyThreshold: 2,              // Minimum percentage on rollback
+    initialCanaryPercentage: getDefaultValue('CANARY_PERCENTAGE', 5),  // From constants or fallback to 5%
+    maxCanaryPercentage: getDefaultValue('MAX_PERCENTAGE', 50),        // From constants or fallback to 50%
+    safetyThreshold: getDefaultValue('SAFETY_THRESHOLD', 2),           // From constants or fallback to 2%
     gradualRollout: true,            // Automatically increase percentage
     rolloutPeriod: 7,                // Days to reach max percentage
     storageKey: 'canary_assignment', // localStorage key for assignment

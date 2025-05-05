@@ -19,6 +19,29 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+// Import default constants if available or use fallbacks
+let DEFAULT_CONSTANTS;
+const constantsPath = path.join(process.cwd(), 'src', 'config', 'default-constants.js');
+try {
+  if (fs.existsSync(constantsPath)) {
+    DEFAULT_CONSTANTS = require(constantsPath);
+  } else {
+    console.log('Default constants file not found, using fallbacks');
+    DEFAULT_CONSTANTS = {
+      CANARY_PERCENTAGE: 5,
+      MAX_PERCENTAGE: 50, 
+      SAFETY_THRESHOLD: 2
+    };
+  }
+} catch (e) {
+  console.warn('Error loading default constants:', e);
+  DEFAULT_CONSTANTS = {
+    CANARY_PERCENTAGE: 5,
+    MAX_PERCENTAGE: 50,
+    SAFETY_THRESHOLD: 2
+  };
+}
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 const analyzeOnly = args.includes('--analyze-only');
@@ -34,8 +57,8 @@ const config = {
   errorThreshold: parseFloat(process.env.ERROR_THRESHOLD || 0.02), // 2% default
   timeframe: process.env.TIMEFRAME || '24h',
   incrementStep: parseInt(process.env.INCREMENT_STEP || '5'),
-  maxPercentage: parseInt(process.env.MAX_PERCENTAGE || '50'),
-  safetyThreshold: parseInt(process.env.SAFETY_THRESHOLD || '2')
+  maxPercentage: parseInt(process.env.MAX_PERCENTAGE || DEFAULT_CONSTANTS.MAX_PERCENTAGE),
+  safetyThreshold: parseInt(process.env.SAFETY_THRESHOLD || DEFAULT_CONSTANTS.SAFETY_THRESHOLD)
 };
 
 // File paths
@@ -248,21 +271,21 @@ function readCanaryConfig() {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       return {
         // Read from the correct path in the config structure
-        currentPercentage: config.distribution?.canaryPercentage || 5,
+        currentPercentage: config.distribution?.canaryPercentage || DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
         config: config
       };
     }
     
     // Fall back to default config matching the expected structure
     return {
-      currentPercentage: 5,
+      currentPercentage: DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
       config: {
         canaryVersion: "1.0.0",
         distribution: {
-          canaryPercentage: 5,
+          canaryPercentage: DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
           gradualRollout: true,
           rolloutPeriod: 7,
-          safetyThreshold: 2
+          safetyThreshold: DEFAULT_CONSTANTS.SAFETY_THRESHOLD
         },
         analytics: {
           sampleRate: 1,
@@ -281,14 +304,14 @@ function readCanaryConfig() {
     console.error('Error reading canary config:', error);
     // Return default values if there's an error
     return {
-      currentPercentage: 5,
+      currentPercentage: DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
       config: {
         canaryVersion: "1.0.0",
         distribution: {
-          canaryPercentage: 5,
+          canaryPercentage: DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
           gradualRollout: true,
           rolloutPeriod: 7,
-          safetyThreshold: 2
+          safetyThreshold: DEFAULT_CONSTANTS.SAFETY_THRESHOLD
         },
         analytics: {
           sampleRate: 1,
@@ -362,10 +385,10 @@ function updateCanaryConfig(percentage) {
   // Ensure the distribution property exists
   if (!currentConfig.distribution) {
     currentConfig.distribution = {
-      canaryPercentage: 5,
+      canaryPercentage: DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
       gradualRollout: true,
       rolloutPeriod: 7,
-      safetyThreshold: 2
+      safetyThreshold: DEFAULT_CONSTANTS.SAFETY_THRESHOLD
     };
   }
   
@@ -405,7 +428,7 @@ const CanaryConfig = {
   // Canary distribution percentage
   distribution: {
     canaryPercentage: ${percentage},
-    maxPercentage: ${currentConfig.distribution?.maxCanaryPercentage || 50}
+    maxPercentage: ${currentConfig.distribution?.maxCanaryPercentage || DEFAULT_CONSTANTS.MAX_PERCENTAGE}
   }
 };
 
