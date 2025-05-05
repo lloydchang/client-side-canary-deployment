@@ -96,10 +96,14 @@ class VersionSwitcher {
                     border-radius: 4px;
                     padding: 10px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    z-index: 9999;
+                    z-index: 9999 !important;
                     color: #333;
                     font-size: 14px;
                     line-height: 1.4;
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    pointer-events: auto !important;
                 }
 
                 #version-switcher.version-switcher * {
@@ -361,3 +365,33 @@ class VersionSwitcher {
 
 // Make available globally
 window.VersionSwitcher = VersionSwitcher;
+
+// Self-initialize when the DOM is loaded - immediate initialization
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        if (!window.versionSwitcherInitialized) {
+            window.versionSwitcher = new VersionSwitcher();
+            window.versionSwitcherInitialized = true;
+            console.log('Version switcher self-initialized on DOM content loaded');
+        }
+    } catch (e) {
+        console.error('Failed to self-initialize version switcher:', e);
+    }
+});
+
+// Fallback initialization for browsers where DOMContentLoaded already fired
+(function() {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(function() {
+            try {
+                if (!window.versionSwitcherInitialized) {
+                    window.versionSwitcher = new VersionSwitcher();
+                    window.versionSwitcherInitialized = true;
+                    console.log('Version switcher self-initialized via readyState fallback');
+                }
+            } catch (e) {
+                console.error('Failed to initialize version switcher via fallback:', e);
+            }
+        }, 0);
+    }
+})();
