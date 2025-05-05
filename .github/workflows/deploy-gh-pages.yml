@@ -19,9 +19,9 @@ on:
         required: false
         type: number
   schedule:
+    - cron: '*/5 * * * *' # Run every 5 minutes
   #   - cron: '0 */6 * * *' # Run every 6 hours
-  #   - cron: '0 */1 * * *' # Run every hour instead of every minute
-    - cron: '* * * * *' # Run every minute
+  #   - cron: '0 */1 * * *' # Run hourly
 
 permissions:
   contents: write
