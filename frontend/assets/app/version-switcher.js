@@ -78,8 +78,8 @@ class VersionSwitcher {
                 activePage = 'stable';
                 console.log('Detected stable version from URL');
             } 
-            // If not canary or stable, it should be home
-            else if (path === '/' || path === '' || path.endsWith('/index.html') || !path.includes('/canary/') && !path.includes('/stable/')) {
+            // Any other path is considered home
+            else {
                 activePage = 'home';
                 console.log('Detected home version from URL');
             }
@@ -95,6 +95,12 @@ class VersionSwitcher {
         if (!activePage) {
             activePage = 'home';
             console.log('No specific version detected, defaulting to home');
+        }
+
+        // Ensure home page is always correctly set
+        if (this.config.currentPage === 'home') {
+            activePage = 'home';
+            console.log('Force setting active page to home based on config');
         }
         
         container.innerHTML = `
