@@ -63,7 +63,6 @@ const config = {
 
 // File paths
 const configPath = path.join(process.cwd(), 'frontend', 'assets', 'config', 'canary-config.json');
-const srcConfigPath = path.join(process.cwd(), 'frontend', 'assets', 'config', 'canary-config.js');
 
 // Get API key from environment
 const posthogApiKey = process.env.POSTHOG_API_KEY || '';
@@ -441,41 +440,17 @@ function updateCanaryConfig(percentage) {
   currentConfig.lastUpdated = new Date().toISOString();
   currentConfig.updateSource = "automated";
   
-  // Ensure directories exist
+  // Ensure directory exists
   const configDir = path.dirname(configPath);
-  const srcConfigDir = path.dirname(srcConfigPath);
   
   if (!fs.existsSync(configDir)) {
     fs.mkdirSync(configDir, { recursive: true });
   }
   
-  if (!fs.existsSync(srcConfigDir)) {
-    fs.mkdirSync(srcConfigDir, { recursive: true });
-  }
-  
-  // Write JSON config file
+  // Write JSON config file only
   fs.writeFileSync(configPath, JSON.stringify(currentConfig, null, 2));
   
-  // Write JavaScript config file for src directory - simplified structure
-  const jsContent = `/**
- * Canary configuration
- * Auto-generated from canary-analyzer.js
- */
-
-const CanaryConfig = {
-  // Canary distribution percentage
-  distribution: {
-    canaryPercentage: ${percentage},
-    maxPercentage: ${currentConfig.distribution?.maxCanaryPercentage || DEFAULT_CONSTANTS.MAX_PERCENTAGE}
-  }
-};
-
-// Make available globally
-window.CanaryConfig = CanaryConfig;
-`;
-  fs.writeFileSync(srcConfigPath, jsContent);
-  
-  return { configPath, srcConfigPath };
+  return { configPath };
 }
 
 /**
@@ -516,8 +491,9 @@ async function main() {
     
     // Update config if not in analyze-only mode
     if (!analyzeOnly) {
-      const { configPath, srcConfigPath } = updateCanaryConfig(recommendation.percentage);
-      console.log(`Updated config files at ${configPath} and ${srcConfigPath}`);
+      // Only update the JSON config file now - no JS file
+      const { configPath } = updateCanaryConfig(recommendation.percentage);
+      console.log(`Updated config file at ${configPath}`);
     }
     
     // Set GitHub Actions outputs using Environment Files

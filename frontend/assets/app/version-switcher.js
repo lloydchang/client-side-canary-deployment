@@ -5,27 +5,20 @@
  */
 
 class VersionSwitcher {
-    /**
-     * Create a new Version Switcher instance
-     * @param {Object} config - Configuration options
-     */
-    constructor(config = {}) {
-        this.config = {
-            switcherContainerId: 'version-switcher',
-            onVersionSwitch: null,
+    constructor(options = {}) {
+        // Default options
+        this.options = {
+            currentPage: 'home',
             position: 'bottom-right',
-            currentPage: null, // Can be 'home', 'stable', or 'canary'
-            ...config
+            switcherContainerId: 'version-switcher',
+            ...options
         };
         
-        // Store canary distribution percentage for reuse
+        this.createUI();
+        this.attachEvents();
+        
+        // Store the current canary percentage for display
         this.canaryPercentage = this._getCanaryPercentage();
-        
-        // Create UI
-        this._createSwitcher();
-        
-        // Add event listeners
-        this._addEventListeners();
     }
     
     /**
@@ -34,34 +27,35 @@ class VersionSwitcher {
      * @private
      */
     _getCanaryPercentage() {
-        if (window.CanaryConfig && window.CanaryConfig.distribution && 
-            typeof window.CanaryConfig.distribution.canaryPercentage !== 'undefined') {
-            // Properly handle zero percentage case
+        // Use the new ConfigManager instead of direct window.CanaryConfig access
+        if (window.CanaryConfigManager) {
+            return window.CanaryConfigManager.get('CANARY_PERCENTAGE') + '%';
+        }
+        // Fallbacks for backward compatibility
+        else if (window.CanaryConfig && window.CanaryConfig.distribution) {
             return window.CanaryConfig.distribution.canaryPercentage + '%';
-        } else if (window.canary && window.canary._config && 
-                   typeof window.canary._config.initialCanaryPercentage !== 'undefined') {
-            // Fall back to the runtime config if needed
+        } else if (window.canary && window.canary._config) {
             return window.canary._config.initialCanaryPercentage + '%';
         }
-        return 'N/A'; // Return "N/A" when no percentage found
+        return 'N/A';
     }
     
     /**
      * Create the version switcher UI
      * @private
      */
-    _createSwitcher() {
+    createUI() {
         // Create container if it doesn't exist
-        let container = document.getElementById(this.config.switcherContainerId);
+        let container = document.getElementById(this.options.switcherContainerId);
         if (!container) {
             container = document.createElement('div');
-            container.id = this.config.switcherContainerId;
+            container.id = this.options.switcherContainerId;
             container.className = 'version-switcher';
             document.body.appendChild(container);
         }
         
         // Determine active button based on current page or assignment
-        let activePage = this.config.currentPage;
+        let activePage = this.options.currentPage;
         
         // If no current page specified, determine from the URL path first
         if (!activePage) {
@@ -100,7 +94,7 @@ class VersionSwitcher {
         }
 
         // Ensure home page is always correctly set
-        if (this.config.currentPage === 'home') {
+        if (this.options.currentPage === 'home') {
             activePage = 'home';
             console.log('Force setting active page to home based on config');
         }
@@ -213,20 +207,10 @@ class VersionSwitcher {
     }
     
     /**
-     * Get the configuration version timestamp
-     * @returns {string} Configuration version or timestamp
-     * @private
-     */
-    _getConfigVersion() {
-        const savedVersion = localStorage.getItem('app-version') || 'unknown';
-        return savedVersion;
-    }
-    
-    /**
      * Add event listeners to the version switcher buttons
      * @private
      */
-    _addEventListeners() {
+    attachEvents() {
         const homeBtn = document.getElementById('vs-home-btn');
         const stableBtn = document.getElementById('vs-stable-btn');
         const canaryBtn = document.getElementById('vs-canary-btn');
@@ -288,8 +272,8 @@ class VersionSwitcher {
         this._updateActiveButton(version);
         
         // Call callback if provided
-        if (this.config.onVersionSwitch) {
-            this.config.onVersionSwitch(version);
+        if (this.options.onVersionSwitch) {
+            this.options.onVersionSwitch(version);
         }
         
         // Get the base path for the application
@@ -397,9 +381,14 @@ window.VersionSwitcher = VersionSwitcher;
     const checkAndInitialize = function() {
         if (!window.versionSwitcherInitialized) {
             // Log config state for debugging
-            console.log('CanaryConfig at init time:', window.CanaryConfig ? 
-                JSON.stringify(window.CanaryConfig.distribution || {}) : 'Not loaded');
-                
+            if (window.CanaryConfigManager) {
+                console.log('Config at init time:', 
+                    JSON.stringify(window.CanaryConfigManager.getAll() || {}));
+            } else {
+                console.log('CanaryConfig at init time:', window.CanaryConfig ? 
+                    JSON.stringify(window.CanaryConfig.distribution || {}) : 'Not loaded');
+            }
+            
             window.versionSwitcher = new VersionSwitcher();
             window.versionSwitcherInitialized = true;
             console.log('Version switcher initialized with percentage:', 

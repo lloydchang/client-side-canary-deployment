@@ -44,6 +44,9 @@
       border-top: 1px solid #500;
     }
   </style>
+  
+  <!-- Load default constants first to establish base config -->
+  <script src="../assets/config/default-constants.js"></script>
 </head>
 <body>
   <div class="container">
@@ -61,25 +64,38 @@
     </div>
   </div>
 
+  <!-- Core canary functionality -->
   <script src="../assets/app/canary.js"></script>
-  <script src="../assets/config/canary-config.js"></script>
   <script src="../src/analytics.js"></script>
   
   <!-- Initialize canary -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       try {
-        if (window.canary && window.CanaryConfig && window.CanaryConfig.distribution) {
-          const percentage = window.CanaryConfig.distribution.canaryPercentage;
-          window.canary.init({
-            initialCanaryPercentage: percentage,
-            posthogEnabled: true,
-            posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
-          });
-          console.log('Canary initialized with percentage from config:', percentage);
-        } else {
-          console.error('CanaryConfig not available, using default');
-          window.canary.init();
+        if (window.canary) {
+          // Use the ConfigManager to get the percentage
+          if (window.CanaryConfigManager) {
+            window.CanaryConfigManager.onConfigReady(config => {
+              window.canary.init({
+                initialCanaryPercentage: config.CANARY_PERCENTAGE,
+                posthogEnabled: true,
+                posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+              });
+              console.log('Canary initialized with ConfigManager percentage:', config.CANARY_PERCENTAGE);
+            });
+          } else {
+            // Legacy fallback
+            const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
+              window.CanaryConfig.distribution.canaryPercentage : 
+              (window.DEFAULT_CONSTANTS ? window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE : 5);
+            
+            window.canary.init({
+              initialCanaryPercentage: percentage,
+              posthogEnabled: true,
+              posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+            });
+            console.log('Canary initialized with legacy percentage:', percentage);
+          }
         }
       } catch (e) {
         console.error('Error initializing canary:', e);
@@ -87,6 +103,7 @@
     });
   </script>
   
+  <!-- Include version switcher component -->
   <script src="../assets/app/version-switcher.js"></script>
 
   <script>

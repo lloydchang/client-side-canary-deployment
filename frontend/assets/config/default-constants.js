@@ -72,6 +72,74 @@ const DEFAULT_CONSTANTS = {
   ENV
 };
 
+/**
+ * Unified configuration loader
+ * Consolidates configuration from multiple sources with proper precedence:
+ * 1. URL parameters (highest priority)
+ * 2. localStorage saved preferences
+ * 3. canary-config.json (loaded via fetch for browser)
+ * 4. default constants (lowest priority)
+ */
+if (typeof window !== 'undefined') {
+  // Create a configuration manager
+  const ConfigManager = {
+    _config: { ...DEFAULT_CONSTANTS },
+    _configLoaded: false,
+    _callbacks: [],
+    
+    // Get a configuration value with fallbacks
+    get: function(key, fallback) {
+      return this._config[key] !== undefined ? this._config[key] : fallback;
+    },
+    
+    // Get all configuration
+    getAll: function() {
+      return { ...this._config };
+    },
+    
+    // Load JSON configuration asynchronously
+    loadConfig: async function() {
+      try {
+        // Fetch with cache busting
+        const response = await fetch('../assets/config/canary-config.json?nocache=' + Date.now());
+        if (response.ok) {
+          const jsonConfig = await response.json();
+          
+          // Extract key values from JSON structure and add them to our config
+          if (jsonConfig.distribution && typeof jsonConfig.distribution.canaryPercentage !== 'undefined') {
+            this._config.CANARY_PERCENTAGE = jsonConfig.distribution.canaryPercentage;
+          }
+          
+          // Store the full JSON config too
+          this._config.fullConfig = jsonConfig;
+        }
+      } catch (err) {
+        console.warn('Could not load canary configuration, using defaults');
+      }
+      
+      this._configLoaded = true;
+      // Notify subscribers that config is ready
+      this._callbacks.forEach(cb => cb(this._config));
+      return this._config;
+    },
+    
+    // Register a callback when config is loaded
+    onConfigReady: function(callback) {
+      if (this._configLoaded) {
+        callback(this._config);
+      } else {
+        this._callbacks.push(callback);
+      }
+    }
+  };
+  
+  // Start loading config automatically
+  ConfigManager.loadConfig();
+  
+  // Expose the configuration manager globally
+  window.CanaryConfigManager = ConfigManager;
+}
+
 // Make it available as a module export for Node.js and as a global for the browser
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = DEFAULT_CONSTANTS;

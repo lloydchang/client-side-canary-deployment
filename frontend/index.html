@@ -99,6 +99,9 @@
       border-top: 1px solid #eaeaea;
     }
   </style>
+  
+  <!-- Load default constants first to establish base config -->
+  <script src="assets/config/default-constants.js"></script>
 </head>
 <body>
   <div class="container">
@@ -127,15 +130,8 @@
     </div>
   </div>
   
-  <!-- Move scripts to end of body in proper order -->
-  <!-- Include default constants first -->
-  <script src="assets/config/default-constants.js"></script>
-  
-  <!-- Include the core canary.js script -->
+  <!-- Core canary functionality -->
   <script src="assets/app/canary.js"></script>
-  
-  <!-- Include the config to ensure it's available -->
-  <script src="assets/config/canary-config.js"></script>
   
   <!-- Include the analytics integration -->
   <script src="assets/app/analytics.js"></script>
@@ -144,25 +140,36 @@
   <script>
     try {
       if (window.canary) {
-        // Use percentage from CanaryConfig if available, otherwise use DEFAULT_CONSTANTS,
-        // and only fall back to hardcoded value as last resort
-        const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
-          window.CanaryConfig.distribution.canaryPercentage : 
-          (window.DEFAULT_CONSTANTS ? window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE : 5);
-        
-        window.canary.init({
-          initialCanaryPercentage: percentage,
-          posthogEnabled: true,
-          posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
-        });
-        console.log('Canary initialized with percentage:', percentage);
+        // Use the ConfigManager to get the percentage
+        if (window.CanaryConfigManager) {
+          window.CanaryConfigManager.onConfigReady(config => {
+            window.canary.init({
+              initialCanaryPercentage: config.CANARY_PERCENTAGE,
+              posthogEnabled: true,
+              posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+            });
+            console.log('Canary initialized with ConfigManager percentage:', config.CANARY_PERCENTAGE);
+          });
+        } else {
+          // Legacy fallback
+          const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
+            window.CanaryConfig.distribution.canaryPercentage : 
+            (window.DEFAULT_CONSTANTS ? window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE : 5);
+          
+          window.canary.init({
+            initialCanaryPercentage: percentage,
+            posthogEnabled: true,
+            posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+          });
+          console.log('Canary initialized with legacy percentage:', percentage);
+        }
       }
     } catch (e) {
       console.error('Failed to initialize canary:', e);
     }
   </script>
   
-  <!-- Include the version switcher component LAST to ensure dependencies are loaded -->
+  <!-- Include the version switcher component LAST -->
   <script src="assets/app/version-switcher.js"></script>
   
   <script>
