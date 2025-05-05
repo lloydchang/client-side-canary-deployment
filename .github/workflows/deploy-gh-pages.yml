@@ -125,7 +125,6 @@ jobs:
           INCREMENT_STEP: ${{ vars.INCREMENT_STEP || '5' }}
           MAX_PERCENTAGE: ${{ vars.MAX_PERCENTAGE || '50' }}
           SAFETY_THRESHOLD: ${{ vars.SAFETY_THRESHOLD || '2' }}
-          # Temporarily use mock data until PostHog API key permissions are updated
           USE_MOCK_DATA: 'false'
         run: |
           chmod +x ./.github/scripts/canary-analyzer.js
@@ -287,7 +286,7 @@ jobs:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_PUBLIC_KEY: ${{ secrets.POSTHOG_PUBLIC_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
-          USE_MOCK_DATA: 'true'  # Add this to bypass API validation when missing keys
+          USE_MOCK_DATA: 'false'
         run: |
           chmod +x ./.github/scripts/canary-analyzer.js
           node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
