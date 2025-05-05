@@ -194,7 +194,6 @@ class VersionSwitcher {
                 <h4>Version Switcher</h4>
                 <div class="version-info">
                     Canary distribution: ${this.canaryPercentage || 'N/A'}
-                    <div style="font-size:10px;margin-top:4px;color:#666;">Config v${this._getConfigVersion()}</div>
                 </div>
                 <div class="version-switcher-options">
                     <button id="vs-home-btn" class="${activePage === 'home' ? 'active' : ''}">
