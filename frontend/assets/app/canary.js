@@ -1,6 +1,6 @@
 /**
  * Client-Side Canary Deployment
- * Core functionality for feature flagging and canary deployments
+ * Core functionality for canary deployments
  */
 
 (function(window) {
