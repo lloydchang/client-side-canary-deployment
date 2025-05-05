@@ -51,7 +51,7 @@ jobs:
       - name: Update Version ⬆️
         run: |
           ./github/scripts/update-version.sh
-          cat version.json
+          cat frontend/version.json
       
       - name: Replace PostHog Keys
         run: |
@@ -95,8 +95,8 @@ jobs:
         run: |
           git config --local user.name "${{ env.GIT_USER_NAME }}"
           git config --local user.email "${{ env.GIT_USER_EMAIL }}"
-          git add version.json
-          git commit -m "Update version to $(jq -r .version version.json)" || echo "No changes to commit"
+          git add frontend/version.json
+          git commit -m "Update version to $(jq -r .version frontend/version.json)" || echo "No changes to commit"
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -206,7 +206,7 @@ jobs:
           fi
           
           # 7. Stage all changes
-          git add version.json config/canary-config.json src/config/canary-config.js
+          git add frontend/version.json config/canary-config.json src/config/canary-config.js
           
           # 8. Check if there are changes to commit
           if ! git diff --staged --quiet; then
@@ -230,7 +230,7 @@ jobs:
                 ./github/scripts/update-version.sh  # Re-run version update
                 chmod +x ./.github/scripts/canary-analyzer.js
                 node ./.github/scripts/canary-analyzer.js  # Re-run analysis
-                git add version.json config/canary-config.json src/config/canary-config.js
+                git add frontend/version.json config/canary-config.json src/config/canary-config.js
                 git commit -m "Update canary percentage to $CANARY_PERCENTAGE% based on analytics (conflict resolution)"
               fi
               
@@ -317,7 +317,7 @@ jobs:
           node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
           
           # 7. Stage all changes
-          git add version.json config/canary-config.json src/config/canary-config.js
+          git add frontend/version.json config/canary-config.json src/config/canary-config.js
           
           # 8. Check if there are changes to commit
           if ! git diff --staged --quiet; then
@@ -341,7 +341,7 @@ jobs:
                 ./github/scripts/update-version.sh  # Re-run version update
                 chmod +x ./.github/scripts/canary-analyzer.js
                 node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}  # Re-run with manual percentage
-                git add version.json config/canary-config.json src/config/canary-config.js
+                git add frontend/version.json config/canary-config.json src/config/canary-config.js
                 git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
               fi
               
