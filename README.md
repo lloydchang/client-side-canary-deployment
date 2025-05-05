@@ -165,20 +165,6 @@ To set up PostHog integration:
    - `POSTHOG_PUBLIC_KEY`: Your PostHog public key for client-side tracking
    - `POSTHOG_PROJECT_ID`: Your PostHog project ID
 
-## Configuration (Optional)
-
-```html
-<script>
-  // All configuration is optional with sensible defaults
-  canary.config({
-    initialCanaryPercentage: 5, // Start with 5% of users
-    maxCanaryPercentage: 50,    // Never go above 50% without manual review
-    safetyThreshold: 2,         // Keep at least 2% even on rollback
-    storageKey: 'my_app_canary' // Custom storage key
-  });
-</script>
-```
-
 ## Workflows
 
 The project includes a comprehensive GitHub Actions workflow that automates all canary deployment processes:
