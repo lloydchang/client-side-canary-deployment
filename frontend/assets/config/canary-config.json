@@ -1,7 +1,7 @@
 {
   "canaryVersion": "1.0.0",
   "distribution": {
-    "canaryPercentage": 45,
+    "canaryPercentage": 50,
     "gradualRollout": true,
     "rolloutPeriod": 7,
     "safetyThreshold": 2
@@ -12,6 +12,6 @@
     "posthogApiKey": "phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR",
     "posthogProjectId": "153422"
   },
-  "lastUpdated": "2025-05-05T12:02:44.223Z",
+  "lastUpdated": "2025-05-05T12:28:54.190Z",
   "updateSource": "automated"
 }
