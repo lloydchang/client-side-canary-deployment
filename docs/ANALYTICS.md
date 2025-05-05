@@ -69,6 +69,37 @@ graph TD
     style Version fill:#ff9,stroke:#333,stroke-width:2px
 ```
 
+```mermaid
+flowchart TD
+    subgraph Script: canary-analyzer.js
+        A[Start Script] --> B[Parse CLI Arguments]
+        B --> C[Load Config from Env and Files]
+
+        subgraph Canary Analyzer Workflow
+            C --> D[Query PostHog for Pageviews & Errors]
+            D --> E[Analyze Data]
+            E --> F{Error Rate > Threshold?}
+
+            F -- Yes --> G[Determine Rollback Recommendation]
+            F -- No --> H[Determine Increase or Maintain Recommendation]
+
+            G --> I[Create Report File]
+            H --> I
+
+            I --> J{Analyze-only Mode?}
+            J -- Yes --> K[Output Analysis, Skip Update]
+            J -- No --> L[Update Canary Config Files]
+
+            L --> M[Print GitHub Actions Output]
+            K --> M
+        end
+
+        M --> N{Exceeds Threshold?}
+        N -- Yes --> O[Exit Code 1]
+        N -- No --> P[Exit Code 0]
+    end
+```
+
 The file update sequence:
 
 1. **Analytics collection**: Client interactions tracked in PostHog
