@@ -204,23 +204,22 @@ jobs:
           git config --local user.name "${{ env.GIT_USER_NAME }}"
           git config --local user.email "${{ env.GIT_USER_EMAIL }}"
           
-          # 3. Stash changes before rebasing
-          echo "Stashing local changes..."
-          git stash
+          # 3. Create a clean working copy
+          echo "Creating clean working directory..."
+          git fetch origin
+          git checkout -B temp-branch origin/main
           
-          # 4. Pull latest changes
-          echo "Fetching latest changes from remote repository..."
-          git pull --rebase origin main
+          # 4. Apply our version changes
+          cp version.json temp-version.json
+          git checkout main
+          cp temp-version.json version.json
+          rm temp-version.json
           
-          # 5. Apply stashed changes
-          echo "Applying stashed changes..."
-          git stash pop || true
-          
-          # 6. Stage and commit all changes
+          # 5. Stage and commit all changes
           git add version.json config/canary-config.json src/config/canary-config.js
           git commit -m "Update canary percentage to $CANARY_PERCENTAGE% based on analytics" || echo "No changes to commit"
           
-          # 7. Push with retry mechanism
+          # 6. Push with retry mechanism
           echo "Pushing changes to main branch..."
           MAX_RETRIES=3
           RETRY_COUNT=0
@@ -234,11 +233,7 @@ jobs:
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
                 echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
                 sleep 5
-                
-                # Stash, pull, pop pattern again for retry
-                git stash
-                git pull --rebase origin main
-                git stash pop || true
+                git pull --ff-only origin main || git pull --rebase origin main
               else
                 echo "::warning::Failed to push changes after $MAX_RETRIES attempts"
                 # Continue workflow even if push fails - we'll still update gh-pages
@@ -246,7 +241,7 @@ jobs:
             fi
           done
           
-          # 8. Deploy config folders to gh-pages
+          # 7. Deploy config folders to gh-pages
           echo "Deploying updated files to gh-pages branch..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -300,23 +295,22 @@ jobs:
           git config --local user.name "${{ env.GIT_USER_NAME }}"
           git config --local user.email "${{ env.GIT_USER_EMAIL }}"
           
-          # 3. Stash changes before rebasing
-          echo "Stashing local changes..."
-          git stash
+          # 3. Create a clean working copy
+          echo "Creating clean working directory..."
+          git fetch origin
+          git checkout -B temp-branch origin/main
           
-          # 4. Pull latest changes
-          echo "Fetching latest changes from remote repository..."
-          git pull --rebase origin main
+          # 4. Apply our version changes
+          cp version.json temp-version.json
+          git checkout main
+          cp temp-version.json version.json
+          rm temp-version.json
           
-          # 5. Apply stashed changes
-          echo "Applying stashed changes..."
-          git stash pop || true
-          
-          # 6. Stage and commit all changes
+          # 5. Stage and commit all changes
           git add version.json config/canary-config.json src/config/canary-config.js
           git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%" || echo "No changes to commit"
           
-          # 7. Push with retry mechanism
+          # 6. Push with retry mechanism
           echo "Pushing changes to main branch..."
           MAX_RETRIES=3
           RETRY_COUNT=0
@@ -330,11 +324,7 @@ jobs:
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
                 echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
                 sleep 5
-                
-                # Stash, pull, pop pattern again for retry
-                git stash
-                git pull --rebase origin main
-                git stash pop || true
+                git pull --ff-only origin main || git pull --rebase origin main
               else
                 echo "::warning::Failed to push changes after $MAX_RETRIES attempts"
                 # Continue workflow even if push fails - we'll still update gh-pages
@@ -342,7 +332,7 @@ jobs:
             fi
           done
           
-          # 8. Deploy to gh-pages
+          # 7. Deploy to gh-pages
           echo "Deploying updated files to gh-pages branch..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
