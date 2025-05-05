@@ -103,11 +103,3 @@ canary.on('analyticsBlocked', function(data) {
   console.log(`Analytics blocked: ${data.reason}`);
 });
 ```
-
-## Note About Feature Flags
-
-If you need feature flag functionality, consider integrating a dedicated feature flag service like:
-- LaunchDarkly
-- Split.io
-- Optimizely
-- PostHog (using their native feature flag system)
