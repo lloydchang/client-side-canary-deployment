@@ -123,7 +123,7 @@
     
     <!-- Add version footer -->
     <div class="footer">
-      <p>Version: <span id="app-version">Loading...</span> | Last Updated: <span id="last-updated">Loading...</span></p>anary: <span id="canary-percentage">Loading...</span>%</p>
+      <p>Version: <span id="app-version">Loading...</span> | Last Updated: <span id="last-updated">Loading...</span></p>
     </div>
   </div>
   
@@ -296,128 +296,70 @@
           // Update footer version and timestamp display
           const versionElement = document.getElementById('app-version');
           const lastUpdatedElement = document.getElementById('last-updated');
-          const canaryPercentageElement = document.getElementById('canary-percentage');
+          
           if (versionElement) {
             versionElement.textContent = data.version;
-          } versionElement.textContent = data.version;
           }
+          
           if (lastUpdatedElement && data.lastUpdated) {
-            try {tUpdatedElement && data.lastUpdated) {
+            try {
               // Parse the date and format it in a more compatible way
-              const date = new Date(data.lastUpdated);e compatible way
               const date = new Date(data.lastUpdated);
+              
               // Create a more compatible date formatting approach
-              const options = { ompatible date formatting approach
+              const options = { 
                 year: 'numeric', 
-                month: 'short',  
-                day: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
                 hour: '2-digit', 
                 minute: '2-digit',
                 second: '2-digit',
                 timeZoneName: 'short'
-              };timeZoneName: 'short'
               };
+              
               lastUpdatedElement.textContent = date.toLocaleString(undefined, options);
-            } catch (err) {ement.textContent = date.toLocaleString(undefined, options);
+            } catch (err) {
               console.error('Error formatting date:', err);
-              // Fallback to displaying the raw timestamp);
+              // Fallback to displaying the raw timestamp
               lastUpdatedElement.textContent = data.lastUpdated;
-            } lastUpdatedElement.textContent = data.lastUpdated;
-          } }
+            }
           }
+          
           if (currentVersion && currentVersion !== data.version) {
-            console.log('New version detected, refreshing page...');ow.CanaryConfig.distribution) {
-            localStorage.setItem('app-version', data.version);yConfig.distribution.canaryPercentage || '0';
+            console.log('New version detected, refreshing page...');
+            localStorage.setItem('app-version', data.version);
             window.location.reload(true); // Force reload from server
           } else {
-            localStorage.setItem('app-version', data.version);n) {
-          } console.log('New version detected, refreshing page...');
-        } catch (err) {e.setItem('app-version', data.version);
-          console.error('Failed to check for updates:', err);m server
-          // Still attempt to update elements if data was partially received
-          if (data && data.version) {-version', data.version);
             localStorage.setItem('app-version', data.version);
-          }atch (err) {
-        } console.error('Failed to check for updates:', err);
-      };  // Still attempt to update elements if data was partially received
+          }
+        } catch (err) {
+          console.error('Failed to check for updates:', err);
+          // Still attempt to update elements if data was partially received
           if (data && data.version) {
-      // Function to ensure elements exist and are updatedon);
+            localStorage.setItem('app-version', data.version);
+          }
+        }
+      };
+      
+      // Function to ensure elements exist and are updated
       const updateVersionDisplay = () => {
         const versionElement = document.getElementById('app-version');
         const lastUpdatedElement = document.getElementById('last-updated');
         
-        // Get data from localStorage as fallbacke updated
-        const savedVersion = localStorage.getItem('app-version');
-        const versionElement = document.getElementById('app-version');
-        if (versionElement && savedVersion) {etElementById('last-updated');
-          versionElement.textContent = savedVersion;ElementById('canary-percentage');
-        }
         // Get data from localStorage as fallback
-        // Try to fetch fresh dataStorage.getItem('app-version');
+        const savedVersion = localStorage.getItem('app-version');
+        
+        if (versionElement && savedVersion) {
+          versionElement.textContent = savedVersion;
+        }
+        
+        // Try to fetch fresh data
         checkForUpdates().catch(err => {
           console.warn('Could not fetch version updates, will retry later:', err);
-        });ersionElement.textContent = savedVersion;
-      };}
+        });
+      };
       
-      // Execute immediately since DOM is already loaded at this pointanaryConfig.distribution) {
-      updateVersionDisplay();ment.textContent = window.CanaryConfig.distribution.canaryPercentage || '0';
-        }
-      // Set up interval for periodic updates
-      setInterval(updateVersionDisplay, 5 * 60 * 1000);
-    })();heckForUpdates().catch(err => {
-  </script>onsole.warn('Could not fetch version updates, will retry later:', err);
-   });
-  <!-- Canary percentage display script -->;
-  <script>      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</html></body>  </script>    })();      window.updateCanaryPercentageDisplay = updateCanaryPercentageDisplay;      // Bonus: Make the function globally available for other scripts            }, 30000);        }          updateCanaryPercentageDisplay();          // Just update with current values        } else {          });            console.warn('Failed to reload canary config:', err);          }).catch(err => {            updateCanaryPercentageDisplay();          reloadCanaryConfig().then(() => {        if (typeof reloadCanaryConfig === 'function') {        // Attempt to reload config if needed      setInterval(() => {      // Check for config changes every 30 seconds            updateCanaryPercentageDisplay();      // Initial update            }        console.log('Updated canary percentage display:', percentage);                percentageElement.textContent = percentage;        // Update the display                }          percentage = 5; // Fallback default        } else {          percentage = window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE;        } else if (window.DEFAULT_CONSTANTS) {          percentage = window.CanaryConfig.distribution.canaryPercentage;        if (window.CanaryConfig && window.CanaryConfig.distribution) {                let percentage;        // Get percentage from the configuration                if (!percentageElement) return;                const percentageElement = document.getElementById('canary-percentage');      function updateCanaryPercentageDisplay() {    (function() {      // Execute immediately since DOM is already loaded at this point
+      // Execute immediately since DOM is already loaded at this point
       updateVersionDisplay();
       
       // Set up interval for periodic updates
