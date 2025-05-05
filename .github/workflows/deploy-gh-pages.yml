@@ -200,16 +200,41 @@ jobs:
           # 1. Update version.json to trigger client refresh
           ./update-version.sh
           
-          # 2. Configure git
+          # 2. Configure git with credentials
           git config --local user.name "${{ env.GIT_USER_NAME }}"
           git config --local user.email "${{ env.GIT_USER_EMAIL }}"
           
-          # 3. Commit changes to main
+          # 3. Pull latest changes before committing
+          echo "Fetching latest changes from remote repository..."
+          git pull --rebase origin main
+          
+          # 4. Commit changes to main
           git add config/canary-config.json src/config/canary-config.js version.json
           git commit -m "Update canary percentage to $CANARY_PERCENTAGE% based on analytics" || echo "No changes to commit"
-          git push origin main
           
-          # 4. Deploy config folders to gh-pages in one command with multiple targets
+          # 5. Push with retry mechanism
+          echo "Pushing changes to main branch..."
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if git push origin main; then
+              echo "Successfully pushed changes to main branch"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
+                sleep 5
+                git pull --rebase origin main
+              else
+                echo "::warning::Failed to push changes after $MAX_RETRIES attempts"
+                # Continue workflow even if push fails - we'll still update gh-pages
+              fi
+            fi
+          done
+          
+          # 6. Deploy config folders to gh-pages
           echo "Deploying updated files to gh-pages branch..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -259,16 +284,41 @@ jobs:
           # 1. Update version.json to trigger client refresh
           ./update-version.sh
           
-          # 2. Configure git
+          # 2. Configure git with credentials
           git config --local user.name "${{ env.GIT_USER_NAME }}"
           git config --local user.email "${{ env.GIT_USER_EMAIL }}"
           
-          # 3. Commit changes to main
+          # 3. Pull latest changes before committing
+          echo "Fetching latest changes from remote repository..."
+          git pull --rebase origin main
+          
+          # 4. Commit changes to main
           git add config/canary-config.json src/config/canary-config.js version.json
           git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%" || echo "No changes to commit"
-          git push origin main
           
-          # 4. Note for the deployment step
+          # 5. Push with retry mechanism
+          echo "Pushing changes to main branch..."
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if git push origin main; then
+              echo "Successfully pushed changes to main branch"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "Push failed, retrying in 5 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
+                sleep 5
+                git pull --rebase origin main
+              else
+                echo "::warning::Failed to push changes after $MAX_RETRIES attempts"
+                # Continue workflow even if push fails - we'll still update gh-pages
+              fi
+            fi
+          done
+          
+          # 6. Deploy to gh-pages
           echo "Deploying updated files to gh-pages branch..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
