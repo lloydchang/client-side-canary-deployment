@@ -198,7 +198,7 @@ jobs:
           ./github/scripts/update-version.sh  # Re-run after reset to ensure we have a fresh version
           
           # 6. Generate new configuration files if they don't exist after reset
-          if [ ! -f "src/config/canary-config.js" ] || [ ! -f "config/canary-config.json" ]; then
+          if [ ! -f "assets/config/canary-config.js" ] || [ ! -f "config/canary-config.json" ]; then
             echo "Regenerating configuration files after reset..."
             chmod +x ./.github/scripts/canary-analyzer.js
             node ./.github/scripts/canary-analyzer.js

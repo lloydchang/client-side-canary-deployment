@@ -197,10 +197,10 @@ This library consists of two main components:
 
 ```html
 <!-- First include the main canary library -->
-<script src="src/app/canary.js"></script>
+<script src="assets/app/canary.js"></script>
 
 <!-- Then include the version switcher -->
-<script src="src/app/version-switcher.js"></script>
+<script src="assets/app/version-switcher.js"></script>
 
 <!-- Initialize both components -->
 <script>
