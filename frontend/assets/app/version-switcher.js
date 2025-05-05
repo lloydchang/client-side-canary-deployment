@@ -34,14 +34,16 @@ class VersionSwitcher {
      * @private
      */
     _getCanaryPercentage() {
-        if (window.CanaryConfig && window.CanaryConfig.distribution) {
-            // Prefer the configuration from CanaryConfig first
+        if (window.CanaryConfig && window.CanaryConfig.distribution && 
+            typeof window.CanaryConfig.distribution.canaryPercentage !== 'undefined') {
+            // Properly handle zero percentage case
             return window.CanaryConfig.distribution.canaryPercentage + '%';
-        } else if (window.canary && window.canary._config) {
+        } else if (window.canary && window.canary._config && 
+                   typeof window.canary._config.initialCanaryPercentage !== 'undefined') {
             // Fall back to the runtime config if needed
             return window.canary._config.initialCanaryPercentage + '%';
         }
-        return 'N/A'; // Return "N/A" when no percentage found instead of empty string
+        return 'N/A'; // Return "N/A" when no percentage found
     }
     
     /**
@@ -190,7 +192,10 @@ class VersionSwitcher {
             </style>
             <div>
                 <h4>Version Switcher</h4>
-                <div class="version-info">Canary distribution: ${this.canaryPercentage || 'N/A'}</div>
+                <div class="version-info">
+                    Canary distribution: ${this.canaryPercentage || 'N/A'}
+                    <div style="font-size:10px;margin-top:4px;color:#666;">Config v${this._getConfigVersion()}</div>
+                </div>
                 <div class="version-switcher-options">
                     <button id="vs-home-btn" class="${activePage === 'home' ? 'active' : ''}">
                         Home
@@ -206,6 +211,16 @@ class VersionSwitcher {
         `;
         
         console.log('Active page set to:', activePage);
+    }
+    
+    /**
+     * Get the configuration version timestamp
+     * @returns {string} Configuration version or timestamp
+     * @private
+     */
+    _getConfigVersion() {
+        const savedVersion = localStorage.getItem('app-version') || 'unknown';
+        return savedVersion;
     }
     
     /**
@@ -377,32 +392,28 @@ class VersionSwitcher {
 // Make available globally
 window.VersionSwitcher = VersionSwitcher;
 
-// Self-initialize when the DOM is loaded - immediate initialization
-document.addEventListener('DOMContentLoaded', function() {
-    try {
+// Improve initialization to handle race conditions
+(function() {
+    // Ensure canary config is loaded before initializing
+    const checkAndInitialize = function() {
         if (!window.versionSwitcherInitialized) {
+            // Log config state for debugging
+            console.log('CanaryConfig at init time:', window.CanaryConfig ? 
+                JSON.stringify(window.CanaryConfig.distribution || {}) : 'Not loaded');
+                
             window.versionSwitcher = new VersionSwitcher();
             window.versionSwitcherInitialized = true;
-            console.log('Version switcher self-initialized on DOM content loaded');
+            console.log('Version switcher initialized with percentage:', 
+                window.versionSwitcher.canaryPercentage);
         }
-    } catch (e) {
-        console.error('Failed to self-initialize version switcher:', e);
-    }
-});
-
-// Fallback initialization for browsers where DOMContentLoaded already fired
-(function() {
+    };
+    
+    // Wait slightly longer to ensure configs are loaded
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        setTimeout(function() {
-            try {
-                if (!window.versionSwitcherInitialized) {
-                    window.versionSwitcher = new VersionSwitcher();
-                    window.versionSwitcherInitialized = true;
-                    console.log('Version switcher self-initialized via readyState fallback');
-                }
-            } catch (e) {
-                console.error('Failed to initialize version switcher via fallback:', e);
-            }
-        }, 0);
+        setTimeout(checkAndInitialize, 100); // Small delay to ensure configs are loaded
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkAndInitialize, 100);
+        });
     }
 })();
