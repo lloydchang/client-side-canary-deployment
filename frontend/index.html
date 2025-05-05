@@ -139,6 +139,8 @@
   
   <!-- Dashboard Assets - Now simplified -->
   <script src="assets/embed-dashboard/dashboard-bridge.js"></script>
+  <!-- Use vanilla JS dashboard instead of React -->
+  <script src="assets/js/simple-dashboard.js"></script>
 </head>
 <body>
   <div class="container">
@@ -332,7 +334,7 @@
       }, 1000);
     });
 
-    // Initialize the dashboard after canary is loaded
+    // Initialize the dashboard with vanilla JS
     document.addEventListener('DOMContentLoaded', function() {
       // Check if the root element exists
       const dashboardRoot = document.getElementById('dashboard-root');
@@ -341,7 +343,12 @@
         return;
       }
       
-      // The dashboard-bridge.js will handle initialization
+      // Use simple dashboard instead of React
+      if (window.simpleDashboard && window.canary) {
+        window.simpleDashboard.init(dashboardRoot, window.canary);
+      } else {
+        console.warn('Simple dashboard or canary not available');
+      }
     });
   </script>
   

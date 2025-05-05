@@ -90,10 +90,9 @@
       border-top: 1px solid #ddd;
     }
   </style>
-  <!-- Dashboard Assets -->
-  <link rel="stylesheet" href="../assets/embed-dashboard/dashboard.css">
-  <script src="../assets/embed-dashboard/dashboard.js"></script>
-  <script src="../assets/embed-dashboard/dashboard-bridge.js"></script>
+  <!-- Dashboard Assets - Vanilla JS -->
+  <link rel="stylesheet" href="../assets/css/simple-dashboard.css">
+  <script src="../assets/js/simple-dashboard.js"></script>
 </head>
 <body>
   <div class="container">
@@ -209,7 +208,7 @@
       console.error('Error tracking page view:', e);
     }
 
-    // Initialize the dashboard after canary is loaded
+    // Initialize the dashboard with vanilla JS instead of React
     document.addEventListener('DOMContentLoaded', function() {
       // Check if the root element exists
       const dashboardRoot = document.getElementById('dashboard-root');
@@ -218,19 +217,12 @@
         return;
       }
 
-      // Create React root element
-      const reactRoot = document.createElement('div');
-      reactRoot.id = 'dashboard';
-      dashboardRoot.appendChild(reactRoot);
-
-      // Wait for canary to be available before initializing
-      const checkCanary = setInterval(() => {
-        if (window.canary) {
-          clearInterval(checkCanary);
-          console.log('Initializing dashboard with dashboard data');
-          // The Next.js app will use the global canary object
-        }
-      }, 500);
+      // Use simple dashboard instead of React component
+      if (window.simpleDashboard && window.canary) {
+        window.simpleDashboard.init(dashboardRoot, window.canary);
+      } else {
+        console.warn('Simple dashboard or canary not available');
+      }
     });
   </script>
   

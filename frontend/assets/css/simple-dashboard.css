@@ -1,0 +1,119 @@
+/**
+ * Simple Dashboard Styles
+ */
+
+.dashboard {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #333;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-section {
+  margin-bottom: 20px;
+}
+
+.dashboard-section h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.dashboard-card {
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 12px;
+  border: 1px solid #eee;
+}
+
+.dashboard-row {
+  margin-bottom: 8px;
+}
+
+.dashboard-row strong {
+  font-weight: 500;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.dashboard-table th {
+  font-weight: 500;
+  color: #555;
+}
+
+.events-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.event-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.event-name {
+  font-weight: 500;
+}
+
+.event-time {
+  color: #777;
+  font-size: 0.9em;
+}
+
+.no-events {
+  text-align: center;
+  color: #777;
+  padding: 10px 0;
+}
+
+/* Dark theme support for canary version */
+.dark-theme .dashboard {
+  background-color: #222;
+  color: #eee;
+}
+
+.dark-theme .dashboard-section h3 {
+  color: #eee;
+}
+
+.dark-theme .dashboard-card {
+  background-color: #333;
+  border-color: #444;
+}
+
+.dark-theme .dashboard-table th,
+.dark-theme .dashboard-table td {
+  border-color: #444;
+}
+
+.dark-theme .dashboard-table th {
+  color: #ccc;
+}
+
+.dark-theme .event-item {
+  border-color: #444;
+}
+
+.dark-theme .event-time {
+  color: #aaa;
+}
+
+.dark-theme .no-events {
+  color: #aaa;
+}
