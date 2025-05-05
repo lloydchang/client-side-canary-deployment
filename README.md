@@ -70,6 +70,7 @@ The system ensures all clients stay up-to-date with the latest canary configurat
 
 1. **Server-Side Updates**:
    - Every deployment updates `version.json` with an incremented version number
+     - Maintains two copies: one at root (source of truth) and one in `frontend/` (for deployment)
    - Configuration changes update both `config/canary-config.json` and `src/config/canary-config.js`
    - All changes are deployed to GitHub Pages automatically
 

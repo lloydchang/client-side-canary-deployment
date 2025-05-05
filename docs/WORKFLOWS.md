@@ -31,7 +31,14 @@ The workflow ensures that clients always get the latest configuration:
      - Reads current version from `version.json`
      - Increments the patch version (e.g., 1.0.3 → 1.0.4)
      - Updates the timestamp
-   - This happens for all jobs: deployment, analysis, and adjustments
+     - **Creates two copies of version.json**:
+       - Root version.json: The source of truth used by scripts and GitHub Actions
+       - Frontend version.json: A deployment copy for client-side access
+
+   > **Why two version.json files?** The GitHub Pages deployment only publishes the `frontend/` 
+   > directory to production. However, build scripts and GitHub Actions workflows need access 
+   > to version information from the repository root. This dual-file approach maintains one 
+   > source of truth while ensuring the deployed site has access to the same version data.
 
 2. **Configuration Updates**:
    - The `canary-analyzer.js` script updates:
