@@ -47,8 +47,19 @@ const srcConfigPath = path.join(process.cwd(), 'src', 'config', 'canary-config.j
  */
 function queryPostHog(path, options = {}) {
   return new Promise((resolve, reject) => {
+    // Parse host to extract hostname without protocol
+    let hostname = config.host;
+    let protocol = 'https:';
+    
+    // Check if host includes protocol
+    if (hostname.includes('://')) {
+      const url = new URL(hostname);
+      protocol = url.protocol;
+      hostname = url.hostname;
+    }
+    
     const requestOptions = {
-      hostname: config.host,
+      hostname: hostname,
       path: `/api/projects/${config.projectId}${path}`,
       headers: {
         'Authorization': `Bearer ${config.apiKey}`,
