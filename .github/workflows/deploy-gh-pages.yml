@@ -49,16 +49,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      - name: Install Dependencies 📦
-        run: npm install
-      
       - name: Update Version ⬆️
         run: |
           ./update-version.sh
           cat version.json
-      
-      - name: Build Project
-        run: npx rollup -c --bundleConfigAsCjs
       
       - name: Replace PostHog Keys
         run: |
@@ -120,9 +114,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-      
-      - name: Install Dependencies
-        run: npm install
       
       - name: Run unified canary analysis and update
         id: canary_analysis
@@ -293,9 +284,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-      
-      - name: Install Dependencies
-        run: npm install
       
       - name: Run manual canary update
         env:
