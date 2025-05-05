@@ -189,8 +189,8 @@ Add the following script tags to your HTML:
 
 This library consists of two main components:
 
-1. **Core Canary System** (`src/canary.js`): Handles metrics tracking and variant assignments
-2. **Variant Switcher** (`src/components/variant-switcher.js`): Optional UI component that allows users to manually switch between variants
+1. **Core Canary System** (`frontend/assets/app/canary.js`): Handles metrics tracking and variant assignments
+2. **Variant Switcher** (`frontend/assets/app/variant-switcher.js`): Optional UI component that allows users to manually switch between variants
 
 ### Using the Variant Switcher
 

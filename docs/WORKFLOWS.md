@@ -48,9 +48,8 @@ The workflow ensures that clients always get the latest configuration:
 3. **Clean Deployment**:
    - For full deployments, all files are pushed to `gh-pages`
    - For config-only updates, selective deployment targets only:
-     - `version.json`
-     - `config/**`
-     - `src/config/**`
+     - `frontend/version.json`
+     - `frontend/assets/config/**`
 
 4. **Client Detection**:
    - All HTML pages (index, stable, canary) check for version changes
@@ -191,18 +190,7 @@ When running `analyze-canary` or `adjust-canary` jobs, only specific files are u
 2. `frontend/assets/config/canary-config.json` - Contains the updated canary percentage
 3. `frontend/assets/config/canary-config.js` - JavaScript version of configuration for client use
 
-This selective deployment is implemented through the GitHub Pages deploy action with:
-
-```yaml
-clean: false
-clean-exclude: |
-  **/*
-  !version.json
-  !config/**
-  !src/config/**
-```
-
-The `!` prefix means "only include these files" in the deployment, leaving other files unchanged.
+This selective deployment is implemented through the GitHub Pages deploy action via `deploy-gh-pages.yml`
 
 ## Setting Up GitHub Secrets
 
