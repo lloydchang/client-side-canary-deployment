@@ -232,9 +232,9 @@ jobs:
             # Check if changes are more than just timestamp updates
             ONLY_TIMESTAMP_CHANGES=true
             
-            # Extract current and previous canary percentage
-            CURRENT_PERCENTAGE=$(jq -r '.canary.currentPercentage // .canaryPercentage' frontend/assets/config/canary-config.json)
-            PREVIOUS_PERCENTAGE=$(git show HEAD:frontend/assets/config/canary-config.json 2>/dev/null | jq -r '.canary.currentPercentage // .canaryPercentage' 2>/dev/null || echo "0")
+            # Extract current and previous canary percentage - Fix JSON path
+            CURRENT_PERCENTAGE=$(jq -r '.distribution.canaryPercentage' frontend/assets/config/canary-config.json)
+            PREVIOUS_PERCENTAGE=$(git show HEAD:frontend/assets/config/canary-config.json 2>/dev/null | jq -r '.distribution.canaryPercentage' 2>/dev/null || echo "0")
             
             # Check if canary percentage has changed
             if [ "$CURRENT_PERCENTAGE" != "$PREVIOUS_PERCENTAGE" ]; then
@@ -397,9 +397,9 @@ jobs:
             # Check if changes are more than just timestamp updates
             ONLY_TIMESTAMP_CHANGES=true
             
-            # Extract current and previous canary percentage
-            CURRENT_PERCENTAGE=$(jq -r '.canary.currentPercentage // .canaryPercentage' frontend/assets/config/canary-config.json)
-            PREVIOUS_PERCENTAGE=$(git show HEAD:frontend/assets/config/canary-config.json 2>/dev/null | jq -r '.canary.currentPercentage // .canaryPercentage' 2>/dev/null || echo "0")
+            # Extract current and previous canary percentage - Fix JSON path
+            CURRENT_PERCENTAGE=$(jq -r '.distribution.canaryPercentage' frontend/assets/config/canary-config.json)
+            PREVIOUS_PERCENTAGE=$(git show HEAD:frontend/assets/config/canary-config.json 2>/dev/null | jq -r '.distribution.canaryPercentage' 2>/dev/null || echo "0")
             
             # Check if canary percentage has changed
             if [ "$CURRENT_PERCENTAGE" != "$PREVIOUS_PERCENTAGE" ]; then
@@ -445,7 +445,7 @@ jobs:
                   
                   # Check for meaningful changes again after resolution
                   ONLY_TIMESTAMP_CHANGES_CONFLICT=true
-                  CURRENT_PERCENTAGE_CONFLICT=$(jq -r '.canary.currentPercentage // .canaryPercentage' frontend/assets/config/canary-config.json)
+                  CURRENT_PERCENTAGE_CONFLICT=$(jq -r '.distribution.canaryPercentage' frontend/assets/config/canary-config.json)
 
                   if [ "$CURRENT_PERCENTAGE_CONFLICT" != "$PREVIOUS_PERCENTAGE" ]; then
                      ONLY_TIMESTAMP_CHANGES_CONFLICT=false

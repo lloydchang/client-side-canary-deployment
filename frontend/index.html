@@ -124,7 +124,13 @@
       <ul>
         <li>Deploy new features to a subset of users</li>
         <li>Track metrics and performance differences between variants</li>
+        <li>Automatically adjust canary percentages based on error rates</li>
+        <li>Roll back problematic deployments without server infrastructure</li>
       </ul>
+      
+      <div class="canary-status">
+        <p><strong>Automated Analysis:</strong> Every 6 hours, this system analyzes error rates between stable and canary variants using PostHog data. If errors exceed thresholds, it reduces the canary percentage automatically.</p>
+      </div>
     </div>
     
     <div id="countdown" class="countdown" style="visibility: hidden;">
