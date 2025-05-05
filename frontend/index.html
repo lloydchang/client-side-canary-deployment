@@ -181,6 +181,31 @@
         console.log('[Debug] CanaryConfigManager config status:', 
                     window.CanaryConfigManager._configLoaded, 
                     window.CanaryConfigManager._config);
+                    
+        // Fix path resolution for the home page
+        if (!window.CanaryConfigManager._configLoaded) {
+          console.log('[Debug] Fixing config path for home page');
+          
+          // Add proper frontend prefix for GitHub Pages deployment
+          window.CanaryConfigManager.loadConfig('frontend/assets/config/canary-config.json')
+            .then(() => {
+              console.log('[Debug] Successfully loaded config with corrected path');
+              
+              // Re-initialize canary with corrected config if needed
+              if (window.canary) {
+                window.canary.init({
+                  initialCanaryPercentage: window.CanaryConfigManager.get('CANARY_PERCENTAGE'),
+                  posthogEnabled: true,
+                  posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+                });
+                console.log('Canary re-initialized with corrected path config:', 
+                            window.CanaryConfigManager.get('CANARY_PERCENTAGE'));
+              }
+            })
+            .catch(err => {
+              console.error('[Debug] Failed to load config with corrected path:', err);
+            });
+        }
       }
       
       // Initialize canary first - this is now a backup if the head initialization failed
@@ -205,10 +230,10 @@
       if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
         try {
           window.versionSwitcher = new VersionSwitcher({
-            currentPage: 'home',  // This is correct - the home page should have 'home' selected
+            currentPage: 'home',
             position: 'bottom-right',
             switcherContainerId: 'version-switcher',
-            configPath: 'assets/config/canary-config.json' // Explicitly set config path
+            configPath: 'frontend/assets/config/canary-config.json' // Explicitly set corrected config path
           });
           window.versionSwitcherInitialized = true;
           console.log('[Version Switcher] Initialized for home page');  // Updated logging format for consistency
