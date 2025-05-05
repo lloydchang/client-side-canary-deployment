@@ -175,47 +175,41 @@ class VersionSwitcher {
         let activePage = this.options.currentPage;
         
         // If no current page specified, determine from the URL path first
-        if (!activePage) {
+        if (!activePage || activePage === 'home') {  // Modified this line to also check URL if currentPage is 'home'
             // Check if URL contains /canary/ or /stable/
             const path = window.location.pathname;
-            console.log('Current path for version detection:', path);
+            console.log('[Version Switcher] Current path for version detection:', path);
             
             // More robust detection for GitHub Pages and other environments
             // Check for /canary/ or /canary at the end of the URL
             if (path.includes('/canary/') || path.endsWith('/canary')) {
                 activePage = 'canary';
-                console.log('Detected canary version from URL');
+                console.log('[Version Switcher] Detected canary version from URL');
             } 
             // Check for /stable/ or /stable at the end of the URL
             else if (path.includes('/stable/') || path.endsWith('/stable')) {
                 activePage = 'stable';
-                console.log('Detected stable version from URL');
+                console.log('[Version Switcher] Detected stable version from URL');
             } 
             // Any other path is considered home
             else {
                 activePage = 'home';
-                console.log('Detected home version from URL');
+                console.log('[Version Switcher] Detected home version from URL');
             }
         }
         
         // Now, only check assignment if path detection didn't work
         if (!activePage && window.canary && window.canary._assignment) {
             activePage = window.canary._assignment.version;
-            console.log('Using assignment from localStorage:', activePage);
+            console.log('[Version Switcher] Using assignment from localStorage:', activePage);
         }
         
         // If still no active page is determined, default to home
         if (!activePage) {
             activePage = 'home';
-            console.log('No specific version detected, defaulting to home');
+            console.log('[Version Switcher] No specific version detected, defaulting to home');
         }
 
-        // Ensure home page is always correctly set
-        if (this.options.currentPage === 'home') {
-            activePage = 'home';
-            console.log('Force setting active page to home based on config');
-        }
-        
         container.innerHTML = `
             <style>
                 #version-switcher.version-switcher {

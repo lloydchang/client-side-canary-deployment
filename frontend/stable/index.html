@@ -105,6 +105,21 @@
   <script src="../assets/app/version-switcher.js"></script>
 
   <script>
+    // Initialize version switcher with correct currentPage
+    if (window.VersionSwitcher && !window.versionSwitcherInitialized) {
+      try {
+        window.versionSwitcher = new VersionSwitcher({
+          currentPage: 'stable',  // Explicitly set to stable
+          position: 'bottom-right',
+          switcherContainerId: 'version-switcher'
+        });
+        window.versionSwitcherInitialized = true;
+        console.log('Version switcher initialized for stable page');
+      } catch (e) {
+        console.error('Error initializing version switcher:', e);
+      }
+    }
+
     // Track stable page view
     try {
       if (window.canary && window.canary.trackEvent) {
