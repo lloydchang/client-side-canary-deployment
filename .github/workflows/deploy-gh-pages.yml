@@ -227,77 +227,77 @@ jobs:
           echo "Files staged for commit:"
           git diff --staged --name-status
           
-          # 11. Check if there are changes to commit
+          # 11. Check if there are meaningful changes to commit
+          COMMIT_CHANGES=false
           if ! git diff --staged --quiet; then
-            # Check if changes are more than just timestamp updates
-            ONLY_TIMESTAMP_CHANGES=true
-            
-            # Extract current and previous canary percentage - Fix JSON path
-            CURRENT_PERCENTAGE=$(jq -r '.distribution.canaryPercentage' frontend/assets/config/canary-config.json)
-            PREVIOUS_PERCENTAGE=$(git show HEAD:frontend/assets/config/canary-config.json 2>/dev/null | jq -r '.distribution.canaryPercentage' 2>/dev/null || echo "0")
-            
-            # Check if canary percentage has changed
-            if [ "$CURRENT_PERCENTAGE" != "$PREVIOUS_PERCENTAGE" ]; then
-              ONLY_TIMESTAMP_CHANGES=false
+            # Check if staged changes contain anything other than 'lastUpdated' lines
+            if git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated":' > /dev/null; then
+              echo "Meaningful changes detected (beyond just timestamps)."
+              COMMIT_CHANGES=true
+            else
+              echo "Only timestamp changes detected. Skipping commit to main."
+              COMMIT_CHANGES=false
             fi
+          else
+            echo "No changes staged for commit."
+            COMMIT_CHANGES=false
+          fi
+
+          if [ "$COMMIT_CHANGES" = "true" ]; then
+            # Determine commit message
+            COMMIT_MESSAGE="Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics"
+            git commit -m "$COMMIT_MESSAGE"
             
-            # Check for other significant changes (ignore lines only containing lastUpdated or version)
-            if git diff --staged | grep -v "lastUpdated" | grep -v "\"version\"" | grep -E '^\+' | grep -v '^\+\+\+' > /dev/null; then
-              ONLY_TIMESTAMP_CHANGES=false
-            fi
+            # 12. Push with improved conflict handling
+            echo "Pushing changes to main branch..."
+            MAX_RETRIES=3
+            RETRY_COUNT=0
             
-            # Only commit if there are meaningful changes
-            if [ "$ONLY_TIMESTAMP_CHANGES" = "false" ]; then
-              git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics"
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              # Pull latest changes with rebase to minimize conflicts
+              git pull --rebase origin main
               
-              # 12. Push with improved conflict handling
-              echo "Pushing changes to main branch..."
-              MAX_RETRIES=3
-              RETRY_COUNT=0
-              
-              while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-                # Pull latest changes with rebase to minimize conflicts
-                git pull --rebase origin main
+              # If rebase encounters conflicts, abort and try a different approach
+              if [ $? -ne 0 ]; then
+                echo "Rebase failed due to conflicts, trying alternative approach..."
+                git rebase --abort
+                # Reset to origin/main and apply our changes as a new commit
+                git reset --hard origin/main
+                ./.github/scripts/update-version.sh  # Re-run version update
+                chmod +x ./.github/scripts/canary-analyzer.js
                 
-                # If rebase encounters conflicts, abort and try a different approach
-                if [ $? -ne 0 ]; then
-                  echo "Rebase failed due to conflicts, trying alternative approach..."
-                  git rebase --abort
-                  # Reset to origin/main and apply our changes as a new commit
-                  git reset --hard origin/main
-                  ./.github/scripts/update-version.sh  # Re-run version update
-                  chmod +x ./.github/scripts/canary-analyzer.js
-                  
-                  # Pass all required environment variables explicitly in conflict scenario
-                  POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
-                  POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
-                  POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
-                  POSTHOG_HOST="https://us.i.posthog.com" \
-                  USE_MOCK_DATA="false" \
-                  node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
-                  
-                  git add frontend/version.json frontend/assets/config/canary-config.json
-                  
-                  # Check for meaningful changes again after resolution
-                  ONLY_TIMESTAMP_CHANGES_CONFLICT=true
-                  CURRENT_PERCENTAGE_CONFLICT=$(jq -r '.canary.currentPercentage // .canaryPercentage' frontend/assets/config/canary-config.json)
-                  
-                  if [ "$CURRENT_PERCENTAGE_CONFLICT" != "$PREVIOUS_PERCENTAGE" ]; then
-                    ONLY_TIMESTAMP_CHANGES_CONFLICT=false
-                  fi
-                  
-                  if git diff --staged | grep -v "lastUpdated" | grep -v "\"version\"" | grep -E '^\+' | grep -v '^\+\+\+' > /dev/null; then
-                    ONLY_TIMESTAMP_CHANGES_CONFLICT=false
-                  fi
-                  
-                  if [ "$ONLY_TIMESTAMP_CHANGES_CONFLICT" = "false" ]; then
-                     git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
+                # Pass all required environment variables explicitly in conflict scenario
+                POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+                POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
+                POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
+                POSTHOG_HOST="https://us.i.posthog.com" \
+                USE_MOCK_DATA="false" \
+                node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
+                
+                git add frontend/version.json frontend/assets/config/canary-config.json
+                
+                # Check for meaningful changes again after resolution
+                COMMIT_CHANGES_CONFLICT=false
+                if ! git diff --staged --quiet; then
+                  if git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated":' > /dev/null; then
+                    echo "Meaningful changes detected after conflict resolution."
+                    COMMIT_CHANGES_CONFLICT=true
                   else
-                     echo "No meaningful changes to commit after conflict resolution"
+                    echo "Only timestamp changes detected after conflict resolution. Skipping commit."
+                    COMMIT_CHANGES_CONFLICT=false
                   fi
+                else
+                   echo "No changes to commit after conflict resolution."
+                   COMMIT_CHANGES_CONFLICT=false
                 fi
-                
-                # Try to push
+
+                if [ "$COMMIT_CHANGES_CONFLICT" = "true" ]; then
+                   git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
+                fi
+              fi
+              
+              # Try to push only if there was a commit made
+              if git show HEAD --format=%B -s | grep -q "$COMMIT_MESSAGE"; then
                 if git push origin main; then
                   echo "Successfully pushed changes to main branch"
                   break
@@ -311,12 +311,13 @@ jobs:
                     break
                   fi
                 fi
-              done
-            else
-              echo "No meaningful changes to commit in main branch"
-            fi
+              else
+                echo "No commit was made, skipping push."
+                break # Exit loop if no commit was made
+              fi
+            done
           else
-            echo "No changes to commit in main branch"
+            echo "No meaningful changes to commit in main branch"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -342,7 +343,6 @@ jobs:
             echo "- canary-config.json: Updated with percentage $CANARY_PERCENTAGE%" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ canary-config.json was not created/updated" >> $GITHUB_STEP_SUMMARY
-          fi
 
   # Adjust canary job - manual
   adjust-canary:
@@ -392,77 +392,75 @@ jobs:
           # 7. Stage all changes
           git add frontend/version.json frontend/assets/config/canary-config.json
           
-          # 8. Check if there are changes to commit
+          # 8. Check if there are meaningful changes to commit
+          COMMIT_CHANGES=false
           if ! git diff --staged --quiet; then
-            # Check if changes are more than just timestamp updates
-            ONLY_TIMESTAMP_CHANGES=true
-            
-            # Extract current and previous canary percentage - Fix JSON path
-            CURRENT_PERCENTAGE=$(jq -r '.distribution.canaryPercentage' frontend/assets/config/canary-config.json)
-            PREVIOUS_PERCENTAGE=$(git show HEAD:frontend/assets/config/canary-config.json 2>/dev/null | jq -r '.distribution.canaryPercentage' 2>/dev/null || echo "0")
-            
-            # Check if canary percentage has changed
-            if [ "$CURRENT_PERCENTAGE" != "$PREVIOUS_PERCENTAGE" ]; then
-              ONLY_TIMESTAMP_CHANGES=false
+            # Check if staged changes contain anything other than 'lastUpdated' lines
+            if git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated":' > /dev/null; then
+              echo "Meaningful changes detected (beyond just timestamps)."
+              COMMIT_CHANGES=true
+            else
+              echo "Only timestamp changes detected. Skipping commit to main."
+              COMMIT_CHANGES=false
             fi
+          else
+            echo "No changes staged for commit."
+            COMMIT_CHANGES=false
+          fi
+          
+          if [ "$COMMIT_CHANGES" = "true" ]; then
+            git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%"
             
-            # Check for other significant changes
-            if git diff --staged | grep -v "lastUpdated" | grep -v "\"version\"" | grep -E '^\+' | grep -v '^\+\+\+' > /dev/null; then
-              ONLY_TIMESTAMP_CHANGES=false
-            fi
+            # 9. Push with improved conflict handling
+            echo "Pushing changes to main branch..."
+            MAX_RETRIES=3
+            RETRY_COUNT=0
             
-            # Only commit if there are meaningful changes
-            if [ "$ONLY_TIMESTAMP_CHANGES" = "false" ]; then
-              git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%"
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              # Pull latest changes with rebase to minimize conflicts
+              git pull --rebase origin main
               
-              # 9. Push with improved conflict handling
-              echo "Pushing changes to main branch..."
-              MAX_RETRIES=3
-              RETRY_COUNT=0
-              
-              while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-                # Pull latest changes with rebase to minimize conflicts
-                git pull --rebase origin main
+              # If rebase encounters conflicts, abort and try a different approach
+              if [ $? -ne 0 ]; then
+                echo "Rebase failed due to conflicts, trying alternative approach..."
+                git rebase --abort
+                # Reset to origin/main and apply our changes as a new commit
+                git reset --hard origin/main
+                ./.github/scripts/update-version.sh  # Re-run version update
+                chmod +x ./.github/scripts/canary-analyzer.js
                 
-                # If rebase encounters conflicts, abort and try a different approach
-                if [ $? -ne 0 ]; then
-                  echo "Rebase failed due to conflicts, trying alternative approach..."
-                  git rebase --abort
-                  # Reset to origin/main and apply our changes as a new commit
-                  git reset --hard origin/main
-                  ./.github/scripts/update-version.sh  # Re-run version update
-                  chmod +x ./.github/scripts/canary-analyzer.js
-                  
-                  # Pass all required environment variables explicitly in conflict scenario
-                  POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
-                  POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
-                  POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
-                  POSTHOG_HOST="https://us.i.posthog.com" \
-                  USE_MOCK_DATA="false" \
-                  node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
-                  
-                  git add frontend/version.json frontend/assets/config/canary-config.json
-                  
-                  # Check for meaningful changes again after resolution
-                  ONLY_TIMESTAMP_CHANGES_CONFLICT=true
-                  CURRENT_PERCENTAGE_CONFLICT=$(jq -r '.distribution.canaryPercentage' frontend/assets/config/canary-config.json)
-
-                  if [ "$CURRENT_PERCENTAGE_CONFLICT" != "$PREVIOUS_PERCENTAGE" ]; then
-                     ONLY_TIMESTAMP_CHANGES_CONFLICT=false
-                  fi
-
-                  if git diff --staged | grep -v "lastUpdated" | grep -v "\"version\"" | grep -E '^\+' | grep -v '^\+\+\+' > /dev/null; then
-                     ONLY_TIMESTAMP_CHANGES_CONFLICT=false
-                  fi
-
-                  if [ "$ONLY_TIMESTAMP_CHANGES_CONFLICT" = "false" ]; then
-                     git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
+                # Pass all required environment variables explicitly in conflict scenario
+                POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+                POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
+                POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
+                POSTHOG_HOST="https://us.i.posthog.com" \
+                USE_MOCK_DATA="false" \
+                node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
+                
+                git add frontend/version.json frontend/assets/config/canary-config.json
+                
+                # Check for meaningful changes again after resolution
+                COMMIT_CHANGES_CONFLICT=false
+                if ! git diff --staged --quiet; then
+                  if git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated":' > /dev/null; then
+                    echo "Meaningful changes detected after conflict resolution."
+                    COMMIT_CHANGES_CONFLICT=true
                   else
-                     echo "No meaningful changes to commit after conflict resolution"
+                    echo "Only timestamp changes detected after conflict resolution. Skipping commit."
+                    COMMIT_CHANGES_CONFLICT=false
                   fi
+                else
+                   echo "No changes to commit after conflict resolution."
+                   COMMIT_CHANGES_CONFLICT=false
                 fi
-                
-                # Try to push
+
+                if [ "$COMMIT_CHANGES_CONFLICT" = "true" ]; then
+                   git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
+                fi
+              fi
+              
+              # Try to push only if there was a commit made
+              if git show HEAD --format=%B -s | grep -q "Manual update of canary percentage"; then
                 if git push origin main; then
                   echo "Successfully pushed changes to main branch"
                   break
@@ -476,12 +474,13 @@ jobs:
                     break
                   fi
                 fi
-              done
-            else
-              echo "No meaningful changes to commit in main branch"
-            fi
+              else
+                echo "No commit was made, skipping push."
+                break # Exit loop if no commit was made
+              fi
+            done
           else
-            echo "No changes to commit in main branch"
+            echo "No meaningful changes to commit in main branch"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
