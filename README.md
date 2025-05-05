@@ -48,7 +48,7 @@ graph TD
         
         subgraph "File Updates Process"
             F1[Update config/canary-config.json]
-            F1 --> F2[Update src/config/canary-config.js]
+            F1 --> F2[Update frontend/assets/config/canary-config.js]
             F2 --> V[Update version.json]
         end
         
@@ -71,7 +71,7 @@ The system ensures all clients stay up-to-date with the latest canary configurat
 1. **Server-Side Updates**:
    - Every deployment updates `version.json` with an incremented version number
      - Maintains two copies: one at root (source of truth) and one in `frontend/` (for deployment)
-   - Configuration changes update both `config/canary-config.json` and `src/config/canary-config.js`
+   - Configuration changes update both `config/canary-config.json` and `frontend/assets/config/canary-config.js`
    - All changes are deployed to GitHub Pages automatically
 
 2. **Client-Side Detection**:

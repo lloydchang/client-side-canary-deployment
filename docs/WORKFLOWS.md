@@ -43,7 +43,7 @@ The workflow ensures that clients always get the latest configuration:
 2. **Configuration Updates**:
    - The `canary-analyzer.js` script updates:
      - `config/canary-config.json`: Main JSON configuration 
-     - `src/config/canary-config.js`: JavaScript configuration for client use
+     - `frontend/assets/config/canary-config.js`: JavaScript configuration for client use
 
 3. **Clean Deployment**:
    - For full deployments, all files are pushed to `gh-pages`
@@ -142,12 +142,12 @@ flowchart LR
         
         B --> B1[Update version.json]
         B --> B2[Update config/canary-config.json]
-        B --> B3[Update src/config/canary-config.js]
+        B --> B3[Update frontend/assets/config/canary-config.js]
         B --> B4[Selective deployment to gh-pages]
         
         C --> C1[Update version.json]
         C --> C2[Update config/canary-config.json]
-        C --> C3[Update src/config/canary-config.js]
+        C --> C3[Update frontend/assets/config/canary-config.js]
         C --> C4[Selective deployment to gh-pages]
         
         B2 --"Contains canary percentage"--> Config
@@ -161,7 +161,7 @@ flowchart LR
     
     subgraph "GitHub Pages"
         Config[config/canary-config.json]
-        JSConfig[src/config/canary-config.js]
+        JSConfig[frontend/assets/config/canary-config.js]
         Version[version.json]
     end
     
@@ -179,7 +179,7 @@ flowchart LR
 ```mermaid
 graph LR
     A[GitHub Actions] -->|Reads/Updates| B[config/canary-config.json]
-    A -->|Generates| C[src/config/canary-config.js]
+    A -->|Generates| C[frontend/assets/config/canary-config.js]
     C -->|Loaded by| D[Browser]
     D -->|Accesses via| E[window.CanaryConfig]
 ```
@@ -190,7 +190,7 @@ When running `analyze-canary` or `adjust-canary` jobs, only specific files are u
 
 1. `version.json` - Updated to trigger client refreshes
 2. `config/canary-config.json` - Contains the updated canary percentage
-3. `src/config/canary-config.js` - JavaScript version of configuration for client use
+3. `frontend/assets/config/canary-config.js` - JavaScript version of configuration for client use
 
 This selective deployment is implemented through the GitHub Pages deploy action with:
 

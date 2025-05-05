@@ -47,7 +47,7 @@ graph TD
     
     subgraph "File Updates"
         Decrease --> JSON[Update config/canary-config.json]
-        Decrease --> JS[Update src/config/canary-config.js]
+        Decrease --> JS[Update frontend/assets/config/canary-config.js]
         Increase --> JSON
         Increase --> JS
         JSON --> Version[Update version.json]
@@ -104,7 +104,7 @@ The file update sequence:
 2. **Analysis**: `canary-analyzer.js` evaluates metrics and decides on percentage changes
 3. **Configuration updates**:
    - `config/canary-config.json`: Updates the canary percentage settings
-   - `src/config/canary-config.js`: Updates client-side JavaScript configuration
+   - `frontend/assets/config/canary-config.js`: Updates client-side JavaScript configuration
    - `version.json`: Increments version number to trigger client refreshes
 4. **Deployment**: Files are pushed to GitHub Pages
 5. **Client detection**: Pages detect version changes and reload
@@ -115,7 +115,7 @@ The file update sequence:
    - Makes decisions based on configurable thresholds
 
 2. **Configuration Updates**:
-   - Updates `config/canary-config.json` and `src/config/canary-config.js` with new percentages
+   - Updates `config/canary-config.json` and `frontend/assets/config/canary-config.js` with new percentages
    - Increments `version.json` to trigger client refreshes
    - Deploys changes to GitHub Pages automatically
 
