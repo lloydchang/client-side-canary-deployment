@@ -29,4 +29,7 @@ cat > "$VERSION_FILE" << EOF
 }
 EOF
 
+# Also copy to frontend directory for development convenience
+cp "$VERSION_FILE" "frontend/"
+
 echo "Updated version.json to version $NEW_VERSION"

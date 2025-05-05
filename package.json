@@ -5,6 +5,7 @@
   "main": "dist/canary.js",
   "module": "src/index.js",
   "scripts": {
+    "start": "serve frontend",
     "build": "rollup -c",
     "build-dashboard": "node build-dashboard.js",
     "test": "echo \"Error: no test specified\" && exit 1"

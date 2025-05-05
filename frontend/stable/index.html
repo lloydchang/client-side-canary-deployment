@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Canary Version</title>
+  <title>Stable Version</title>
   
   <script src="../src/canary.js"></script>
   <script src="../src/config/canary-config.js"></script>
@@ -33,11 +33,11 @@
   </script>
   
   <style>
-    /* Red text on black background for canary version */
+    /* Black text on white background for stable version */
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      background-color: black;
-      color: red;
+      background-color: white;
+      color: black;
       margin: 0;
       padding: 20px;
       line-height: 1.6;
@@ -49,20 +49,18 @@
     }
     
     h1, h2, h3 {
-      color: #ff5555;
       margin-top: 0;
     }
     
     .card {
-      border: 1px solid #500;
+      border: 1px solid #ddd;
       border-radius: 4px;
       padding: 16px;
       margin-bottom: 16px;
-      background-color: #1a0000;
     }
     
     button {
-      background-color: #800;
+      background-color: #333;
       color: white;
       border: none;
       padding: 8px 16px;
@@ -72,46 +70,14 @@
     }
     
     button:hover {
-      background-color: #a00;
-    }
-    
-    .feature-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    
-    .feature-item {
-      padding: 5px 0;
-      display: flex;
-      align-items: center;
-    }
-    
-    .feature-enabled {
-      color: #00ff00;
-    }
-    
-    .feature-disabled {
-      color: #ff5555;
+      background-color: #555;
     }
     
     pre {
-      background-color: #300;
-      color: #f55;
+      background-color: #f8f8f8;
       padding: 10px;
       border-radius: 4px;
       overflow: auto;
-    }
-    
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      margin-left: 8px;
-      background-color: #f00;
-      color: #fff;
     }
 
     /* Footer styles */
@@ -119,27 +85,24 @@
       text-align: center;
       margin-top: 40px;
       padding: 20px;
-      color: #ff5555;
+      color: #666;
       font-size: 14px;
-      border-top: 1px solid #500;
+      border-top: 1px solid #ddd;
     }
   </style>
   <!-- Dashboard Assets -->
-  <link rel="stylesheet" href="../src/embed-dashboard/dashboard.css">
-  <script src="../src/embed-dashboard/dashboard.js"></script>
-  <script src="../src/embed-dashboard/dashboard-bridge.js"></script>
+  <link rel="stylesheet" href="../assets/embed-dashboard/dashboard.css">
+  <script src="../assets/embed-dashboard/dashboard.js"></script>
+  <script src="../assets/embed-dashboard/dashboard-bridge.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1>Canary Version</h1>
-    <p>This is the canary version of the application with red text on black background.</p>
+    <h1>Stable Version</h1>
+    <p>This is the stable version of the application with black text on white background.</p>
     
     <div class="card">
       <h2>About This Application</h2>
-      <p>This demonstrates client-side canary deployment functionality. You can switch back to the stable version using the Version Switcher in the bottom right corner.</p>
-      
-      <h3>Enabled Features:</h3>
-      <ul id="feature-list" class="feature-list"></ul>
+      <p>This demonstrates client-side canary deployment functionality. You can switch to the canary version using the Version Switcher in the bottom right corner.</p>
     </div>
     
     <div class="card">
@@ -169,7 +132,7 @@
         onVersionSwitch: function(newVersion) {
           if (window.canary && window.canary.trackEvent) {
             window.canary.trackEvent('manual_version_switch', {
-              fromVersion: 'canary',
+              fromVersion: 'stable',
               toVersion: newVersion,
             });
           } else {
@@ -181,32 +144,13 @@
       console.error('Error initializing version switcher:', e);
     }
     
-    // Display feature flags
-    function displayFeatureFlags() {
-      const featureList = document.getElementById('feature-list');
-      if (featureList && window.CanaryConfig && window.CanaryConfig.featureFlags) {
-        featureList.innerHTML = '';
-        
-        for (const [name, enabled] of Object.entries(window.CanaryConfig.featureFlags)) {
-          const item = document.createElement('li');
-          item.className = 'feature-item';
-          item.innerHTML = `
-            <span class="${enabled ? 'feature-enabled' : 'feature-disabled'}">
-              ${enabled ? '✓' : '✗'} ${name}
-            </span>
-          `;
-          featureList.appendChild(item);
-        }
-      }
-    }
-    
     // Set up event handlers
     document.getElementById('track-click').addEventListener('click', function() {
       window.canary.trackEvent('button_click', {
         button: 'track-click',
-        version: 'canary'
+        version: 'stable'
       });
-      alert('Event tracked in canary version!');
+      alert('Event tracked in stable version!');
     });
     
     document.getElementById('simulate-error').addEventListener('click', function() {
@@ -214,10 +158,10 @@
         type: 'user_initiated'
       });
       try {
-        throw new Error('Simulated canary testing error');
+        throw new Error('Simulated stable testing error');
       } catch (error) {
         alert('Simulated error tracked! Check the console.');
-        console.error('Simulated error for canary testing:', error);
+        console.error('Simulated error for stable testing:', error);
       }
     });
     
@@ -252,14 +196,11 @@
       output.style.display = output.style.display === 'none' ? 'block' : 'none';
     });
     
-    // Display feature flags on page load
-    document.addEventListener('DOMContentLoaded', displayFeatureFlags);
-    
-    // Track canary page view
+    // Track stable page view
     try {
       if (window.canary && window.canary.trackEvent) {
         window.canary.trackEvent('page_view', {
-          page: 'canary_home'
+          page: 'stable_home'
         });
       } else {
         console.error('Canary not initialized properly, cannot track page view');
@@ -291,8 +232,10 @@
         }
       }, 500);
     });
-
-    // Version checker script - moved to end of body for guaranteed DOM access
+  </script>
+  
+  <!-- Version checker script - moved to end of body for guaranteed DOM access -->
+  <script>
     (function() {
       const checkForUpdates = async () => {
         let data;

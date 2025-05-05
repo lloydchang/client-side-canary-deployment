@@ -21,7 +21,7 @@ const path = require('path');
 
 // Import default constants if available or use fallbacks
 let DEFAULT_CONSTANTS;
-const constantsPath = path.join(process.cwd(), 'src', 'config', 'default-constants.js');
+const constantsPath = path.join(process.cwd(), 'frontend', 'assets', 'config', 'default-constants.js');
 try {
   if (fs.existsSync(constantsPath)) {
     DEFAULT_CONSTANTS = require(constantsPath);
@@ -62,8 +62,8 @@ const config = {
 };
 
 // File paths
-const configPath = path.join(process.cwd(), 'config', 'canary-config.json');
-const srcConfigPath = path.join(process.cwd(), 'src', 'config', 'canary-config.js');
+const configPath = path.join(process.cwd(), 'frontend', 'assets', 'config', 'canary-config.json');
+const srcConfigPath = path.join(process.cwd(), 'frontend', 'assets', 'config', 'canary-config.js');
 
 /**
  * Make a request to the PostHog API

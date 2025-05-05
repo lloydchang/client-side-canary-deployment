@@ -4,7 +4,8 @@ const path = require('path');
 console.log('Starting HTML dashboard build process...');
 
 try {
-  const targetDir = path.join(__dirname, 'src', 'embed-dashboard');
+  // Update output directory to frontend/assets/embed-dashboard instead of src/embed-dashboard
+  const targetDir = path.join(__dirname, 'frontend', 'assets', 'embed-dashboard');
   
   // Create embed directory if it doesn't exist
   if (!fs.existsSync(targetDir)) {
@@ -39,7 +40,7 @@ try {
 </div>
 
 <!-- Dashboard Assets -->
-<script src="../src/embed-dashboard/dashboard-bridge.js"></script>`;
+<script src="../frontend/assets/embed-dashboard/dashboard-bridge.js"></script>`;
 
   fs.writeFileSync(path.join(targetDir, 'embed.html'), embedHtml);
   console.log(`Created embed HTML at ${path.join(targetDir, 'embed.html')}`);
@@ -58,7 +59,7 @@ try {
 
 2. Include the dashboard assets:
 \`\`\`html
-<script src="../src/embed-dashboard/dashboard-bridge.js"></script>
+<script src="../frontend/assets/embed-dashboard/dashboard-bridge.js"></script>
 \`\`\`
 
 3. Or simply include the entire embed.html content.
@@ -72,7 +73,7 @@ try {
     fs.writeFileSync(path.join(targetDir, 'dashboard.css'), '/* Placeholder CSS file for backwards compatibility */');
   }
   
-  console.log('HTML Dashboard build complete! Assets are now in src/embed-dashboard/');
+  console.log('HTML Dashboard build complete! Assets are now in frontend/assets/embed-dashboard/');
 } catch (error) {
   console.error('Build process failed:', error);
   process.exit(1);

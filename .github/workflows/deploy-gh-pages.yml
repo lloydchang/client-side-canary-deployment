@@ -62,7 +62,7 @@ jobs:
           echo "Building dashboard with unified script..."
           node build-dashboard.js
           echo "Dashboard build completed successfully"
-          if [ ! -d "src/embed-dashboard" ]; then
+          if [ ! -d "frontend/assets/embed-dashboard" ]; then
             echo "::error::Dashboard build failed - output directory not found"
             exit 1
           fi
@@ -72,9 +72,13 @@ jobs:
       
       - name: Replace PostHog Keys
         run: |
-          mkdir -p config
+          mkdir -p frontend/assets/config
           
-          cat > config/canary-config.json << EOF
+          # Use the template from .github/config to create the runtime config
+          cp .github/config/canary-config-template.json frontend/assets/config/canary-config.json
+          
+          # Update with secrets
+          cat > frontend/assets/config/canary-config.json << EOF
           {
             "posthog": {
               "apiKey": "${{ secrets.POSTHOG_PUBLIC_KEY }}",
@@ -97,7 +101,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: .
+          folder: frontend  # Deploy the frontend directory
           branch: gh-pages
           clean: true
           single-commit: true
