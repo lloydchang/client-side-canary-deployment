@@ -199,7 +199,7 @@
           console.log('[Debug] Fixing config path for home page');
           
           // Add proper frontend prefix for GitHub Pages deployment
-          const configPath = 'frontend/assets/config/canary-config.json';e 'frontend/' prefix
+          const configPath = 'frontend/assets/config/canary-config.json';
           console.log('[Debug] Loading configuration from:', configPath);
           
           window.CanaryConfigManager.loadConfig(configPath)
@@ -305,40 +305,46 @@
       
       console.log('Starting countdown from', secondsLeft, 'seconds');
       
-      // Determine the target version immediately and display it
-      let targetVersion = 'stable'; // Default to stable
-      
-      if (window.canary && window.canary._assignment && window.canary._assignment.version) {
-        targetVersion = window.canary._assignment.version;
-        console.log('Using canary assignment:', targetVersion);
-      } else {
-        console.log('No canary assignment found, using default');
-      }
-      
-      // Update version text immediately
-      if (assignedVersionText) {
-        assignedVersionText.textContent = targetVersion + ' variant';
-      }
-      
-      // Start the countdown immediately
-      const countdownInterval = setInterval(function() {
-        secondsLeft--;
-        console.log('Countdown:', secondsLeft);
+      // Ensure canary is initialized before determining target version
+      function startCountdown() {
+        // Determine the target version immediately and display it
+        let targetVersion = 'stable'; // Default to stable
         
-        // Update the display
-        countdownElement.textContent = secondsLeft.toString();
-        
-        // Check if countdown is complete
-        if (secondsLeft <= 0) {
-          console.log('Countdown complete, redirecting now');
-          
-          // Clear the interval to stop the countdown
-          clearInterval(countdownInterval);
-          
-          // Redirect based on assignment or default
-          window.location.href = targetVersion + '/';
+        if (window.canary && window.canary._assignment && window.canary._assignment.version) {
+          targetVersion = window.canary._assignment.version;
+          console.log('Using canary assignment:', targetVersion);
+        } else {
+          console.log('No canary assignment found, using default');
         }
-      }, 1000);
+        
+        // Update version text immediately with proper format
+        if (assignedVersionText) {
+          assignedVersionText.textContent = targetVersion + ' (your assigned variant)';
+        }
+        
+        // Start the countdown immediately
+        const countdownInterval = setInterval(function() {
+          secondsLeft--;
+          console.log('Countdown:', secondsLeft);
+          
+          // Update the display
+          countdownElement.textContent = secondsLeft.toString();
+          
+          // Check if countdown is complete
+          if (secondsLeft <= 0) {
+            console.log('Countdown complete, redirecting now');
+            
+            // Clear the interval to stop the countdown
+            clearInterval(countdownInterval);
+            
+            // Redirect based on assignment or default
+            window.location.href = targetVersion + '/';
+          }
+        }, 1000);
+      }
+      
+      // Wait a short time to ensure canary initialization is complete
+      setTimeout(startCountdown, 500);
     });
   </script>
   
