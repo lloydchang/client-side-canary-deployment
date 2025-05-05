@@ -264,9 +264,9 @@ jobs:
           target-folder: frontend  # Deploy to frontend directory on gh-pages branch
           clean-exclude: |
             **/*
-            !frontend/version.json
-            !frontend/assets/config/**
-            !frontend/index.html  # Make sure not to overwrite index.html
+            !version.json
+            !assets/config/**
+            !index.html
 
   # Adjust canary job - manual
   adjust-canary:
@@ -375,9 +375,9 @@ jobs:
           target-folder: frontend  # Deploy to frontend directory on gh-pages branch
           clean-exclude: |
             **/*
-            !frontend/version.json
-            !frontend/assets/config/**
-            !frontend/index.html  # Make sure not to overwrite index.html
+            !version.json
+            !assets/config/**
+            !index.html
       
       - name: Create summary report
         run: |
