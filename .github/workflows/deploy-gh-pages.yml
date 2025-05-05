@@ -20,7 +20,6 @@ on:
         type: number
   schedule:
     - cron: '*/5 * * * *' # Run every 5 minutes
-  #   - cron: '0 */1 * * *' # Run hourly
   #   - cron: '0 */6 * * *' # Run every 6 hours
 
 permissions:
