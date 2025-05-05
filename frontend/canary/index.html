@@ -81,7 +81,7 @@
                 posthogEnabled: true,
                 posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
               });
-              console.log('Canary initialized with ConfigManager percentage:', config.CANARY_PERCENTAGE);
+              // PostHog initialization is now handled by analytics.js
             });
           } else {
             // Legacy fallback
@@ -94,7 +94,7 @@
               posthogEnabled: true,
               posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
             });
-            console.log('Canary initialized with legacy percentage:', percentage);
+            // PostHog initialization is now handled by analytics.js
           }
         }
       } catch (e) {

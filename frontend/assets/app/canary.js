@@ -78,7 +78,7 @@
      * @private
      */
     _initAnalytics: function() {
-      // Only initialize if analytics module exists and PostHog is enabled
+      // Simply delegate to the analytics module if available
       if (this._config.posthogEnabled && window.canaryAnalytics && 
           typeof window.canaryAnalytics.initialize === 'function') {
         try {
@@ -233,7 +233,7 @@
         ...properties
       };
       
-      // Use analytics module only - remove direct PostHog interaction
+      // Only use the analytics module - no direct PostHog calls
       if (!this._posthogBlocked && window.canaryAnalytics && 
           typeof window.canaryAnalytics.trackEvent === 'function') {
         window.canaryAnalytics.trackEvent(eventName, eventProperties);
@@ -325,7 +325,7 @@
       if (this._assignment && !this._posthogBlocked) {
         const version = this._assignment.version;
         
-        // Use analytics system only - remove direct PostHog interaction
+        // Only use the analytics module - no direct PostHog calls
         if (window.canaryAnalytics && typeof window.canaryAnalytics.trackPageview === 'function') {
           window.canaryAnalytics.trackPageview(version);
         }
@@ -339,7 +339,7 @@
     _setupErrorTracking: function() {
       const self = this;
       
-      // Capture unhandled errors and send them only through the analytics module
+      // Capture unhandled errors and send only through the analytics module
       window.addEventListener('error', function(event) {
         if (self._assignment && !self._posthogBlocked && 
             window.canaryAnalytics && typeof window.canaryAnalytics.trackEvent === 'function') {

@@ -35,23 +35,30 @@
       }
       
       try {
-        // Load PostHog script - use PostHog's auto-loading snippet but only if not already loaded
+        // Check if PostHog is already loaded by the HTML page
         if (!window.posthog) {
+          console.log('Loading PostHog script from analytics.js');
           !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){
-            // ...existing code...
+            // ...existing PostHog script...
           });
+        } else {
+          console.log('PostHog already loaded, skipping script injection');
         }
         
-        // Initialize PostHog with auto-capture enabled
-        window.posthog.init(config.posthogApiKey, {
-          api_host: config.posthogHost || 'https://us.i.posthog.com',
-          capture_pageview: true, // Enable automatic pageview tracking
-          autocapture: true,      // Enable automatic event capturing
-          persistence: 'localStorage'
-        });
+        // Only initialize if not already initialized
+        if (!window.posthog.__loaded) {
+          window.posthog.init(config.posthogApiKey, {
+            api_host: config.posthogHost || 'https://us.i.posthog.com',
+            capture_pageview: true,
+            autocapture: true,
+            persistence: 'localStorage'
+          });
+          console.log('PostHog initialized by analytics module');
+        } else {
+          console.log('PostHog already initialized, skipping initialization');
+        }
         
         this._initialized = true;
-        console.log('PostHog analytics initialized with automatic tracking');
       } catch (e) {
         console.error('Error initializing PostHog:', e);
       }
@@ -109,10 +116,10 @@
     }
   };
   
-  // Make analytics available globally for canary.js to use
+  // Make analytics available globally
   window.canaryAnalytics = canaryAnalytics;
   
-  // Auto-initialize if canary is already loaded with PostHog configuration
+  // Auto-initialize if canary config is available
   if (window.canary && window.canary._config) {
     const config = window.canary._config;
     
