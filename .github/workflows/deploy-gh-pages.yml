@@ -242,7 +242,8 @@ jobs:
                 git reset --hard origin/main
                 ./.github/scripts/update-version.sh  # Re-run version update
                 chmod +x ./.github/scripts/canary-analyzer.js
-                node ./.github/scripts/canary-analyzer.js  # Re-run analysis
+                # Use the already determined percentage value instead of re-analyzing
+                node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
                 git add frontend/version.json frontend/assets/config/canary-config.json frontend/assets/config/canary-config.js
                 git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
               fi
