@@ -1,7 +1,7 @@
 {
   "name": "client-side-canary-deployment",
   "version": "1.0.0",
-  "description": "One-line solution for client-side canary deployments and feature flags",
+  "description": "client-side canary deployment",
   "main": "frontend/assets/js/bundle.js",
   "module": "src/index.js",
   "scripts": {
