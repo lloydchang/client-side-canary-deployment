@@ -239,7 +239,7 @@ jobs:
               COMMIT_CHANGES=falseage change detected."
             fiCOMMIT_CHANGES=true
           elseThen check for other non-timestamp changes
-            echo "No changes staged for commit."+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' | grep -v '"timestamp"' > /dev/null; then
+            echo "No changes staged for commit."+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' > /dev/null; then
             COMMIT_CHANGES=falsegful changes detected."
           fi  COMMIT_CHANGES=true
             else
@@ -286,7 +286,7 @@ jobs:
                     echo "Canary percentage change detected after conflict resolution."
                     COMMIT_CHANGES_CONFLICT=trued frontend/version.json frontend/assets/config/canary-config.json
                   # Then check for other non-timestamp changes
-                  elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' | grep -v '"timestamp"' > /dev/null; thenain after resolution
+                  elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' > /dev/null; thenain after resolution
                     echo "Other meaningful changes detected after conflict resolution."IT_CHANGES_CONFLICT=false
                     COMMIT_CHANGES_CONFLICT=true git diff --staged --quiet; then
                   else' | grep -v '"lastUpdated":' > /dev/null; then
@@ -413,7 +413,7 @@ else
               echo "Canary percentage change detected."else
               COMMIT_CHANGES=true    echo "Only timestamp changes detected. Skipping commit to main."
             # Then check for other non-timestamp changes
-            elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' | grep -v '"timestamp"' > /dev/null; then
+            elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' > /dev/null; then
               echo "Other meaningful changes detected."
               COMMIT_CHANGES=true
             elseCOMMIT_CHANGES=false
@@ -466,7 +466,7 @@ else
                     echo "Canary percentage change detected after conflict resolution." echo "No changes to commit after conflict resolution."
                     COMMIT_CHANGES_CONFLICT=true   COMMIT_CHANGES_CONFLICT=false
                   # Then check for other non-timestamp changes  fi
-                  elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' | grep -v '"timestamp"' > /dev/null; then
+                  elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"' > /dev/null; then
                     echo "Other meaningful changes detected after conflict resolution.""true" ]; then
                     COMMIT_CHANGES_CONFLICT=truete of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
                   elsere too
