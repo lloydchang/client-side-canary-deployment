@@ -237,7 +237,6 @@ The project includes a comprehensive GitHub Actions workflow that automates all 
 The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of canary deployment:
 
 - **Deployment**: Triggered by pushes to main branch
-  - Builds the project with npm/Rollup
   - Injects PostHog API keys from GitHub secrets
   - Deploys to GitHub Pages
 
