@@ -70,13 +70,12 @@ The system ensures all clients stay up-to-date with the latest canary configurat
 
 1. **Server-Side Updates**:
    - Every deployment updates `version.json` with an incremented version number
-     - Maintains two copies: one at root (source of truth) and one in `frontend/` (for deployment)
-   - Configuration changes update both `frontend/assets/config/canary-config.json` and `frontend/assets/config/canary-config.js`
+   - Configuration changes update `frontend/assets/config/canary-config.json`
    - All changes are deployed to GitHub Pages automatically
 
 2. **Client-Side Detection**:
+   - The `CanaryConfigManager` loads configuration from multiple sources with proper precedence
    - All pages poll for changes to `version.json` every 5 minutes
-   - A cache-busting query parameter ensures fresh data: `?nocache=[timestamp]`
    - When version changes are detected, the page triggers a hard reload
    - Local version information is stored in localStorage for comparison
 
@@ -98,8 +97,8 @@ In this approach, the traffic shaping decision (which version a user receives) h
 ```mermaid
 graph TD
     subgraph "Server-Side Canary Deployment"
-        A[User Request] --> GA[Global Accelerator]
-        GA --> SSDL{Server-Side Decision Logic at Edge}
+        A[User Request] --> GA[Global Accelerator and Domain Name Service]
+        GA --> SSDL{Server-Side Decision Logic}
         SSDL -->|95% of users| StablePath[Route to Stable]
         SSDL -->|5% of users| CanaryPath[Route to Canary]
 
@@ -133,12 +132,12 @@ graph TD
         L --> PHL[PostHog JS SDK - Canary]
     end
 
-    %% Styles for PostHog components
     style PHK fill:#ffefc6,stroke:#333,stroke-width:1px
     style PHL fill:#ffe6cc,stroke:#333,stroke-width:1px
     style PSA fill:#ffefc6,stroke:#333,stroke-width:1px
     style PSC fill:#ffe6cc,stroke:#333,stroke-width:1px
     style J fill:#af9,stroke:#333
+    style SSDL fill:#af9,stroke:#333
 ```
 
 ## PostHog Analytics Integration
@@ -237,7 +236,6 @@ The project includes a comprehensive GitHub Actions workflow that automates all 
 The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of canary deployment:
 
 - **Deployment**: Triggered by pushes to main branch
-  - Builds the project with npm/Rollup
   - Injects PostHog API keys from GitHub secrets
   - Deploys to GitHub Pages
 
