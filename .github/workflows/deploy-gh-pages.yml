@@ -91,7 +91,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend  # Deploy the frontend directory
+          folder: .  # Deploy the root directory
           branch: gh-pages
           clean: true
           single-commit: true
