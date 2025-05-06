@@ -94,7 +94,7 @@ jobs:
         run: |
           git config --local user.name "${{ env.GIT_USER_NAME }}"
           git config --local user.email "${{ env.GIT_USER_EMAIL }}"
-          git add frontend/version.json version.json
+          git add frontend/version.json
           # Commit only if there are changes
           git commit -m "Update version to $(jq -r .version frontend/version.json) [skip ci]" || echo "No changes to commit"
           # Pull before pushing to integrate remote changes
