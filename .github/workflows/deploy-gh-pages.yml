@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: 'Task to run (build-and-deploy, analyze-canary, or adjust-canary)'
+        description: 'Task to run (deploy, analyze, or adjust-canary)'
         required: true
-        default: 'build-and-deploy'
+        default: 'deploy'
         type: choice
         options:
-          - build-and-deploy
-          - analyze-canary
+          - deploy
+          - analyze
           - adjust-canary
       canary_percentage:
         description: 'New canary percentage (only for adjust-canary task)'
