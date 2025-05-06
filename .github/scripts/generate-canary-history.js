@@ -19,8 +19,18 @@ function getFileHistory() {
       if (!hash) continue;
 
       try {
-        const fileContent = execSync(`git show ${hash}:${configFile}`, { encoding: 'utf-8' });
-        const config = JSON.parse(fileContent);
+        const configFileContent = execSync(`git show ${hash}:${configFile}`, { encoding: 'utf-8' });
+        const config = JSON.parse(configFileContent);
+        
+        let appVersion = null;
+        try {
+          const versionFileContent = execSync(`git show ${hash}:frontend/version.json`, { encoding: 'utf-8' });
+          const versionData = JSON.parse(versionFileContent);
+          appVersion = versionData.version;
+        } catch (e) {
+          // frontend/version.json might not exist in older commits or might be unparseable
+          console.warn(`Could not retrieve version.json for commit ${hash}: ${e.message}`);
+        }
         
         const percentage = config.distribution?.canaryPercentage;
         // Use lastUpdated from the file, fallback to commitDate if not present or invalid
@@ -33,7 +43,8 @@ function getFileHistory() {
           history.push({
             timestamp: new Date(timestamp).toISOString(),
             percentage: percentage,
-            commit: hash.substring(0,7)
+            commit: hash.substring(0,7),
+            version: appVersion // Add the application version
           });
         }
       } catch (e) {

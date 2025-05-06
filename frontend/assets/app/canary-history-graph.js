@@ -149,10 +149,15 @@
                     label += ': ';
                   }
                   label += `${tooltipItem.formattedValue}%`;
-                  // Add commit hash to tooltip
+                  // Add commit hash and version to tooltip
                   const dataIndex = tooltipItem.dataIndex;
-                  if (historyData[dataIndex] && historyData[dataIndex].commit) {
-                     label += ` (commit: ${historyData[dataIndex].commit})`;
+                  if (historyData[dataIndex]) {
+                    if (historyData[dataIndex].commit) {
+                       label += ` (commit: ${historyData[dataIndex].commit})`;
+                    }
+                    if (historyData[dataIndex].version) {
+                       label += ` (version: ${historyData[dataIndex].version})`;
+                    }
                   }
                   return label;
                 }
