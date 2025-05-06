@@ -98,7 +98,7 @@ jobs:
           # Commit only if there are changes
           git commit -m "Update version to $(jq -r .version frontend/version.json) [skip ci]" || echo "No changes to commit"
           # Pull before pushing to integrate remote changes
-          git pull --rebase origin main || (git rebase --abort && git pull origin main --no-rebase)
+          git pull origin main || (git rebase --abort && git pull origin main --no-rebase)
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
