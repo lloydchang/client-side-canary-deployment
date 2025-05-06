@@ -119,7 +119,7 @@
               max: 100,
               title: {
                 display: true,
-                text: 'canary percentage (%)',
+                text: 'canary distribution %',
                 color: colorScheme.textColor
               },
               grid: {
