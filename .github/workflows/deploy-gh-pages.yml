@@ -365,6 +365,7 @@ jobs:
             echo "- canary-config.json: Updated with percentage $CANARY_PERCENTAGE%" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ canary-config.json was not created/updated" >> $GITHUB_STEP_SUMMARY
+          fi
 
   # Adjust canary job - manual
   adjust-canary:
