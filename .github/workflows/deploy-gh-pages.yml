@@ -265,7 +265,7 @@ jobs:
 
           COMMIT_MADE=false # Initialize flag
           if [ "$COMMIT_CHANGES" = "true" ]; then
-            git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics"
+            git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics [skip ci]"
             COMMIT_MADE=true # Set flag if commit happens
             
             # 12. Push with improved conflict handling
@@ -316,7 +316,7 @@ jobs:
                 fi
 
                 if [ "$COMMIT_CHANGES_CONFLICT" = "true" ]; then
-                   git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution)"
+                   git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution) [skip ci]"
                    COMMIT_MADE=true # Set flag if commit happens here too
                 fi
               fi
@@ -444,7 +444,7 @@ jobs:
           
           COMMIT_MADE=false # Initialize flag
           if [ "$COMMIT_CHANGES" = "true" ]; then
-            git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}%"
+            git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% [skip ci]"
             COMMIT_MADE=true # Set flag if commit happens
             
             # 9. Push with improved conflict handling
@@ -495,7 +495,7 @@ jobs:
                 fi
 
                 if [ "$COMMIT_CHANGES_CONFLICT" = "true" ]; then
-                   git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution)"
+                   git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution) [skip ci]"
                    COMMIT_MADE=true # Set flag if commit happens here too
                 fi
               fi
