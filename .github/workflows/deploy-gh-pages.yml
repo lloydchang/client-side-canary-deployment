@@ -35,7 +35,7 @@ env:
 
 jobs:
   # Deployment job
-  build-and-deploy:
+  deploy:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'deploy')
     runs-on: ubuntu-latest
     steps:
@@ -104,7 +104,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Analytics job with consolidated script
-  analyze-canary:
+  analyze:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'analyze')
     runs-on: ubuntu-latest
     steps:
