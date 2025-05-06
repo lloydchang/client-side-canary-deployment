@@ -6,16 +6,16 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: 'Task to run (deploy, analyze, or adjust-canary)'
+        description: 'Task to run (deploy, analyze, or adjust)'
         required: true
         default: 'deploy'
         type: choice
         options:
           - deploy
           - analyze
-          - adjust-canary
+          - adjust
       canary_percentage:
-        description: 'New canary percentage (only for adjust-canary task)'
+        description: 'New canary percentage (only for adjust task)'
         required: false
         type: number
   schedule:
@@ -368,8 +368,8 @@ jobs:
           fi
 
   # Adjust canary job - manual
-  adjust-canary:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'adjust-canary'
+  adjust:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'adjust'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout and setup
