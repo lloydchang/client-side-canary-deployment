@@ -33,7 +33,7 @@ function getFileHistory() {
           history.push({
             timestamp: new Date(timestamp).toISOString(),
             percentage: percentage,
-            hash.substring(0,7)
+            commit: hash.substring(0,7)
           });
         }
       } catch (e) {
