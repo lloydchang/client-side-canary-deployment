@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stable Variant</title>
   
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
   <style>
     /* Black text on white background for stable version */
     body {
@@ -41,6 +45,17 @@
       font-size: 14px;
       border-top: 1px solid #ddd;
     }
+
+    .chart-container {
+      position: relative;
+      height: 40vh;
+      width: 80vw;
+      max-width: 750px;
+      margin: 20px auto;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+    }
   </style>
 
   <!-- Load default constants first to establish base config -->
@@ -54,6 +69,12 @@
     <div class="card">
       <h2>About This Application</h2>
       <p>This demonstrates client-side canary deployment functionality. You can switch to the canary variant using the Variant Switcher in the bottom right corner.</p>
+    </div>
+    
+    <div class="card">
+      <div class="chart-container">
+        <canvas id="canaryHistoryChartStable"></canvas>
+      </div>
     </div>
     
     <!-- Add version footer -->
@@ -103,6 +124,7 @@
   
   <!-- Include variant switcher component LAST -->
   <script src="../assets/app/variant-switcher.js"></script>
+  <script src="../assets/app/canary-history-graph.js"></script>
 
   <script>
     // Initialize variant switcher with correct currentPage
@@ -115,6 +137,11 @@
         });
         window.variantSwitcherInitialized = true;
         console.log('Variant switcher initialized for stable page');
+        
+        // Render canary history graph
+        if (typeof window.renderCanaryHistoryGraph === 'function') {
+          window.renderCanaryHistoryGraph('canaryHistoryChartStable', '../', { variant: 'stable' });
+        }
       } catch (e) {
         console.error('Error initializing variant switcher:', e);
       }

@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Client-Side Canary Deployment</title>
   
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -110,6 +114,14 @@
       font-size: 14px;
       border-top: 1px solid #eaeaea;
     }
+
+    .chart-container {
+      position: relative;
+      height: 40vh;
+      width: 80vw;
+      max-width: 750px;
+      margin: 20px auto;
+    }
   </style>
   
   <!-- Load default constants first to establish base config -->
@@ -128,6 +140,12 @@
       </ul>
     </div>
     
+    <div class="card">
+      <div class="chart-container">
+        <canvas id="canaryHistoryChart"></canvas>
+      </div>
+    </div>
+    
     <div id="countdown" class="countdown" style="visibility: hidden;">
       Redirecting to <span id="assigned-version-text"></span> in <span id="countdown-number" class="countdown-number">10</span> seconds...
     </div>
@@ -144,45 +162,19 @@
   <!-- Include the analytics integration -->
   <script src="assets/app/analytics.js"></script>
   
-  <!-- Initialize canary -->
-  <script>
-    try {
-      if (window.canary) {
-        // Use the ConfigManager to get the percentage
-        if (window.CanaryConfigManager) {
-          window.CanaryConfigManager.onConfigReady(config => {
-            window.canary.init({
-              initialCanaryPercentage: config.CANARY_PERCENTAGE,
-              posthogEnabled: true, 
-              posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
-            });
-            // PostHog initialization is now handled by analytics.js
-          });
-        } else {
-          // Legacy fallback
-          const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
-            window.CanaryConfig.distribution.canaryPercentage : 
-            (window.DEFAULT_CONSTANTS ? window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE : 5);
-          
-          window.canary.init({
-            initialCanaryPercentage: percentage,
-            posthogEnabled: true,
-            posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
-          });
-          // PostHog initialization is now handled by analytics.js
-        }
-      }
-    } catch (e) {
-      console.error('Failed to initialize canary:', e);
-    }
-  </script>
-  
   <!-- Include the variant switcher component LAST -->
   <script src="assets/app/variant-switcher.js"></script>
+  <script src="assets/app/canary-history-graph.js"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM fully loaded');
+      
+      // Render canary history graph
+      if (typeof window.renderCanaryHistoryGraph === 'function') {
+        // For the main index.html, the path prefix to assets/data/ is empty or './'
+        window.renderCanaryHistoryGraph('canaryHistoryChart', '', { variant: 'default' }); 
+      }
       
       // Add this debug line to check configuration loading
       if (window.CanaryConfigManager) {

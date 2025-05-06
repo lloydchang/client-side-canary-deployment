@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Canary Variant</title>
   
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  
   <style>
     /* Red text on black background for canary version */
     body {
@@ -43,6 +47,28 @@
       font-size: 14px;
       border-top: 1px solid #500;
     }
+
+    .chart-container {
+      position: relative;
+      height: 40vh;
+      width: 80vw;
+      max-width: 750px;
+      margin: 20px auto;
+      background-color: #111;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #500;
+    }
+    /* Ensure chart.js tooltips are visible on dark background */
+    .chartjs-tooltip {
+      background: rgba(255, 255, 255, 0.9) !important;
+      color: black !important;
+      border-radius: 4px !important;
+      padding: 6px !important;
+    }
+    .chartjs-tooltip-key {
+      color: black !important;
+    }
   </style>
   
   <!-- Load default constants first to establish base config -->
@@ -56,6 +82,12 @@
     <div class="card">
       <h2>About This Application</h2>
       <p>This demonstrates client-side canary deployment functionality. You can switch to the stable variant using the Variant Switcher in the bottom right corner.</p>
+    </div>
+    
+    <div class="card">
+      <div class="chart-container">
+        <canvas id="canaryHistoryChartCanary"></canvas>
+      </div>
     </div>
     
     <!-- Add version footer -->
@@ -105,6 +137,7 @@
   
   <!-- Include only the variant switcher component -->
   <script src="../assets/app/variant-switcher.js"></script>
+  <script src="../assets/app/canary-history-graph.js"></script>
 
   <script>
     // Initialize variant switcher with correct currentPage
@@ -117,6 +150,11 @@
         });
         window.variantSwitcherInitialized = true;
         console.log('Variant switcher initialized for canary page');
+        
+        // Render canary history graph
+        if (typeof window.renderCanaryHistoryGraph === 'function') {
+          window.renderCanaryHistoryGraph('canaryHistoryChartCanary', '../', { variant: 'canary' });
+        }
       } catch (e) {
         console.error('Error initializing variant switcher:', e);
       }

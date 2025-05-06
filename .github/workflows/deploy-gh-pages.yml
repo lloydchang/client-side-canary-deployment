@@ -105,13 +105,22 @@ jobs:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'analyze')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout and setup
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Get full history for the generate-canary-history.js script
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '18'
+      
+      - name: Generate Canary History Data
+        id: generate_history
+        run: |
+          chmod +x .github/scripts/generate-canary-history.js
+          node .github/scripts/generate-canary-history.js
+        working-directory: ${{ github.workspace }}
       
       - name: Run unified canary analysis and update
         id: canary_analysis
@@ -356,7 +365,6 @@ jobs:
             echo "- canary-config.json: Updated with percentage $CANARY_PERCENTAGE%" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ canary-config.json was not created/updated" >> $GITHUB_STEP_SUMMARY
-          fi
 
   # Adjust canary job - manual
   adjust-canary:
