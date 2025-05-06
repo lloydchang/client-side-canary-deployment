@@ -324,7 +324,7 @@ function readCanaryConfig() {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       return {
         // Read from the correct path in the config structure
-        currentPercentage: config.distribution?.canaryPercentage || DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
+        currentPercentage: config.distribution?.canaryPercentage ?? DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
         config: config
       };
     }
