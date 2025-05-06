@@ -16,11 +16,11 @@
     // Define color schemes based on page variant
     const colorSchemes = {
       default: {
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-        pointBackgroundColor: 'rgb(75, 192, 192)',
+        borderColor: '#0366d6',
+        backgroundColor: 'rgba(3,102,214,0.1)',
+        pointBackgroundColor: '#0366d6',
         gridColor: 'rgba(0, 0, 0, 0.1)',
-        textColor: '#666'
+        textColor: '#666' // Text color for axes and legend.
       },
       stable: {
         borderColor: 'rgb(0, 0, 0)',
