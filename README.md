@@ -190,14 +190,14 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
 
 ## Comparisons with Other Tools/Services
 
-While this project focuses on a purely client-side JavaScript-driven canary deployment, many CI/CD and orchestration tools can support or offer alternative (often server-side) canary strategies. The following documents explore how various tools and services can be used in the context of or to facilitate client-side canary deployments, primarily by helping to serve different application versions and manage the `canary-config.json` file:
+While this project facilitates client-side JavaScript-driven canary deployments via GitHub Actions, other Orchestration, CI/CD and GitOps tools can support or offer alternative (often server-side) canary strategies. The following documents explore how various tools and services can be used:
 
-*   **Cloud Platforms & Orchestration:**
+*   **Orchestration:**
     *   [Amazon ECS](./docs/comparisons/amazon-ecs/README.md)
     *   [Amazon EKS](./docs/comparisons/amazon-eks/README.md)
     *   [Google Kubernetes Engine (GKE)](./docs/comparisons/google-gke/README.md)
     *   [Azure Kubernetes Service (AKS)](./docs/comparisons/azure-aks/README.md)
-*   **CI/CD & GitOps Tools:**
+*   **CI/CD & GitOps:**
     *   [AWS CodePipeline](./docs/comparisons/aws-codepipeline/README.md)
     *   [CircleCI](./docs/comparisons/circleci/README.md)
     *   [Argo CD](./docs/comparisons/argo-cd/README.md)
