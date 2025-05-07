@@ -210,11 +210,11 @@ These comparisons aim to clarify how each tool can contribute to a client-side c
 ## Documentation
 
 - [README.md](./README.md) (this file)
+- [docs/comparisons](./docs/comparisons) (see above)
 - [docs/ADVANCED.md](./docs/ADVANCED.md)
 - [docs/ANALYTICS.md](./docs/ANALYTICS.md)
 - [docs/ART.md](./docs/ART.md)
 - [docs/WORKFLOWS.md](./docs/WORKFLOWS.md)
-- [docs/comparisons](./docs/comparisons)
 
 ## Demonstration: Static Web Application
 
