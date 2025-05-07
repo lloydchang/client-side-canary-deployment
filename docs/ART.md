@@ -9,5 +9,3 @@
 ![canary-deployment-4](https://github.com/user-attachments/assets/30ae2ba5-b5bf-47fb-bb78-ba083065b393)
 
 [![watch video: canary-deployment-4](https://github.com/user-attachments/assets/02fb22e3-3d9f-4fac-a297-ca82d08dcbb5)](https://github.com/user-attachments/assets/02fb22e3-3d9f-4fac-a297-ca82d08dcbb5)
-
-![watch video: canary-deployment-4](https://github.com/user-attachments/assets/02fb22e3-3d9f-4fac-a297-ca82d08dcbb5)
