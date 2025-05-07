@@ -1,0 +1,39 @@
+name: 'Commit Changes'
+description: 'Commits changes to the repository'
+
+inputs:
+  message:
+    description: 'Commit message'
+    required: true
+  files:
+    description: 'Files to commit (space-separated)'
+    required: true
+  token:
+    description: 'GitHub token'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure Git
+      shell: bash
+      run: |
+        git config --local user.name "${{ env.GIT_USER_NAME }}"
+        git config --local user.email "${{ env.GIT_USER_EMAIL }}"
+      env:
+        GIT_USER_NAME: ${{ env.GIT_USER_NAME }}
+        GIT_USER_EMAIL: ${{ env.GIT_USER_EMAIL }}
+    
+    - name: Commit changes
+      shell: bash
+      run: |
+        git add ${{ inputs.files }}
+        git commit -m "${{ inputs.message }}" || echo "No changes to commit"
+    
+    - name: Push changes
+      shell: bash
+      run: |
+        git pull origin main || (git rebase --abort && git pull origin main --no-rebase)
+        git push origin main
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}

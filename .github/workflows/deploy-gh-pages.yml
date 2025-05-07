@@ -44,35 +44,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       
-      - name: Update Version ⬆️
+      - name: Update Version and Config
         run: |
           ./.github/scripts/update-version.sh
-          cat frontend/version.json
-      
-      - name: Replace PostHog Keys
-        run: |
-          mkdir -p frontend/assets/config
-          cp .github/config/canary-config-template.json frontend/assets/config/canary-config.json
-          cat > frontend/assets/config/canary-config.json << EOF
-          {
-            "posthog": {
-              "apiKey": "${{ secrets.POSTHOG_PUBLIC_KEY }}",
-              "projectId": "${{ secrets.POSTHOG_PROJECT_ID }}",
-              "host": "https://us.i.posthog.com"
-            },
-            "canary": {
-              "initialPercentage": 5,
-              "maxPercentage": 50,
-              "incrementStep": 5
-            }
-          }
-          EOF
-      
-      - name: Configure Base Path
-        run: |
-          touch .nojekyll
-          mkdir -p config
-          echo '{ "baseUrl": "/client-side-canary-deployment" }' > config/gh-pages.json
+          ./.github/scripts/update-config.sh
+        env:
+          POSTHOG_PUBLIC_KEY: ${{ secrets.POSTHOG_PUBLIC_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
       
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
@@ -83,16 +61,12 @@ jobs:
           single-commit: true
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Commit Updated Version 💾
-        run: |
-          git config --local user.name "${{ env.GIT_USER_NAME }}"
-          git config --local user.email "${{ env.GIT_USER_EMAIL }}"
-          git add frontend/version.json
-          git commit -m "Update version to $(jq -r .version frontend/version.json) [skip ci]" || echo "No changes to commit"
-          git pull origin main || (git rebase --abort && git pull origin main --no-rebase)
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit Updated Version
+        uses: ./.github/actions/commit-changes
+        with:
+          message: "Update version to $(jq -r .version frontend/version.json) [skip ci]"
+          files: "frontend/version.json"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   analyze:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'analyze')
@@ -108,8 +82,9 @@ jobs:
         with:
           node-version: '18'
       
-      - name: Run Canary Analysis and Update Config
+      - name: Run Canary Analysis
         id: canary_analysis
+        run: ./.github/scripts/run-analysis.sh
         env:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
@@ -120,136 +95,19 @@ jobs:
           INCREMENT_STEP: ${{ vars.INCREMENT_STEP || '5' }}
           MAX_PERCENTAGE: ${{ vars.MAX_PERCENTAGE || '50' }}
           SAFETY_THRESHOLD: ${{ vars.SAFETY_THRESHOLD || '2' }}
-          USE_MOCK_DATA: 'false'
-        run: |
-          chmod +x ./.github/scripts/canary-analyzer.js
-          node ./.github/scripts/canary-analyzer.js
-          CANARY_PERCENTAGE=$(jq -r '.recommendation.percentage' canary-analysis.json)
-          echo "CANARY_PERCENTAGE=$CANARY_PERCENTAGE" >> $GITHUB_ENV
       
-      - name: Commit canary config and version to main
+      - name: Update Configuration and History
+        run: ./.github/scripts/update-canary-config.sh
         env:
+          GIT_USER_NAME: ${{ env.GIT_USER_NAME }}
+          GIT_USER_EMAIL: ${{ env.GIT_USER_EMAIL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ./.github/scripts/update-version.sh
-          git config --local user.name "${{ env.GIT_USER_NAME }}"
-          git config --local user.email "${{ env.GIT_USER_EMAIL }}"
-          git fetch origin main
-          git checkout main
-          git reset --hard origin/main
-          ./.github/scripts/update-version.sh
-          chmod +x ./.github/scripts/canary-analyzer.js
-          POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
-          POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
-          POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
-          POSTHOG_HOST="https://us.i.posthog.com" \
-          USE_MOCK_DATA="false" \
-          node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
-          git add frontend/version.json frontend/assets/config/canary-config.json
-          COMMIT_CHANGES=false
-          if ! git diff --staged --quiet; then
-            if git diff --staged | grep -E '[+-].*"canaryPercentage"' > /dev/null; then
-              COMMIT_CHANGES=true
-            elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"'; then
-              COMMIT_CHANGES=true
-            else
-              COMMIT_CHANGES=false
-            fi
-          fi
-          if [ "$COMMIT_CHANGES" = "true" ]; then
-            git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics [skip ci]"
-            MAX_RETRIES=3
-            RETRY_COUNT=0
-            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              git pull --rebase origin main
-              if [ $? -ne 0 ]; then
-                git rebase --abort
-                git reset --hard origin/main
-                ./.github/scripts/update-version.sh
-                POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
-                POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
-                POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
-                POSTHOG_HOST="https://us.i.posthog.com" \
-                USE_MOCK_DATA="false" \
-                node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
-                git add frontend/version.json frontend/assets/config/canary-config.json
-                if ! git diff --staged --quiet; then
-                  if git diff --staged | grep -E '[+-].*"canaryPercentage"' > /dev/null; then
-                    git commit -m "Update canary percentage to $CANARY_PERCENTAGE% and version.json based on analytics (conflict resolution) [skip ci]"
-                  fi
-                fi
-              fi
-              if git push origin main; then
-                break
-              else
-                RETRY_COUNT=$((RETRY_COUNT + 1))
-                if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                  sleep 5
-                else
-                  break
-                fi
-              fi
-            done
-          fi
-      
-      - name: Generate Canary History Data
-        id: generate_history
-        run: |
-          git pull origin main --rebase
-          chmod +x .github/scripts/generate-canary-history.js
-          node .github/scripts/generate-canary-history.js
-      
-      - name: Commit canary history to main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config --local user.name "${{ env.GIT_USER_NAME }}"
-          git config --local user.email "${{ env.GIT_USER_EMAIL }}"
-          git add frontend/assets/data/canary-history.json
-          if ! git diff --staged --quiet frontend/assets/data/canary-history.json; then
-            git commit -m "Update canary history data [skip ci]"
-            MAX_RETRIES=3
-            RETRY_COUNT=0
-            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              git pull --rebase origin main
-              if [ $? -ne 0 ]; then
-                git rebase --abort
-              fi
-              if git push origin main; then
-                break
-              else
-                RETRY_COUNT=$((RETRY_COUNT + 1))
-                if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                  sleep 5
-                else
-                  break
-                fi
-              fi
-            done
-          fi
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          POSTHOG_PUBLIC_KEY: ${{ secrets.POSTHOG_PUBLIC_KEY }}
       
       - name: Create summary report
-        run: |
-          echo "# Canary Deployment Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Analysis timestamp: $(date)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Version | Pageviews | Errors | Error Rate |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|-----------|--------|------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Stable | $(jq -r '.analytics.stable.pageviews' canary-analysis.json) | $(jq -r '.analytics.stable.errors' canary-analysis.json) | $(jq -r '.analytics.stable.errorRate' canary-analysis.json) |" >> $GITHUB_STEP_SUMMARY
-          echo "| Canary | $(jq -r '.analytics.canary.pageviews' canary-analysis.json) | $(jq -r '.analytics.canary.errors' canary-analysis.json) | $(jq -r '.analytics.canary.errorRate' canary-analysis.json) |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Relative error increase: $(jq -r '.analytics.analysis.relativeErrorIncrease' canary-analysis.json)" >> $GITHUB_STEP_SUMMARY
-          echo "- Exceeds threshold: $(jq -r '.analytics.analysis.exceedsThreshold' canary-analysis.json)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Recommended action**: $(jq -r '.analytics.analysis.recommendedAction' canary-analysis.json)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Canary Update" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **$CANARY_UPDATE_MESSAGE**" >> $GITHUB_STEP_SUMMARY
+        run: ./.github/scripts/generate-analysis-report.sh
       
       - name: Save Analytics Results
         uses: actions/upload-artifact@v4
@@ -266,19 +124,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           folder: frontend
           target-folder: frontend
-      
-      - name: Update summary report with configuration details
-        run: |
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Configuration Update" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The following configuration files were updated:" >> $GITHUB_STEP_SUMMARY
-          echo "- version.json: $(jq -r .version frontend/version.json)" >> $GITHUB_STEP_SUMMARY
-          if [ -f "frontend/assets/config/canary-config.json" ]; then
-            echo "- canary-config.json: Updated with percentage $CANARY_PERCENTAGE%" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ canary-config.json was not created/updated" >> $GITHUB_STEP_SUMMARY
-          fi
 
   adjust:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'adjust'
@@ -292,73 +137,16 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       
-      - name: Run manual canary update
+      - name: Adjust Canary Percentage
+        run: ./.github/scripts/adjust-canary.sh
         env:
+          CANARY_PERCENTAGE: ${{ github.event.inputs.canary_percentage }}
+          GIT_USER_NAME: ${{ env.GIT_USER_NAME }}
+          GIT_USER_EMAIL: ${{ env.GIT_USER_EMAIL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_PUBLIC_KEY: ${{ secrets.POSTHOG_PUBLIC_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
-          USE_MOCK_DATA: 'false'
-        run: |
-          chmod +x ./.github/scripts/canary-analyzer.js
-          node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
-      
-      - name: Update repositories and deploy
-        run: |
-          ./.github/scripts/update-version.sh
-          git config --local user.name "${{ env.GIT_USER_NAME }}"
-          git config --local user.email "${{ env.GIT_USER_EMAIL }}"
-          git fetch origin
-          git reset --hard origin/main
-          ./.github/scripts/update-version.sh
-          chmod +x ./.github/scripts/canary-analyzer.js
-          node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
-          git add frontend/version.json frontend/assets/config/canary-config.json
-          COMMIT_CHANGES=false
-          if ! git diff --staged --quiet; then
-            if git diff --staged | grep -E '[+-].*"canaryPercentage"' > /dev/null; then
-              COMMIT_CHANGES=true
-            elif git diff --staged | grep -E '^\+' | grep -v '^\+\+\+' | grep -v '"lastUpdated"'; then
-              COMMIT_CHANGES=true
-            else
-              COMMIT_CHANGES=false
-            fi
-          fi
-          if [ "$COMMIT_CHANGES" = "true" ]; then
-            git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% [skip ci]"
-            MAX_RETRIES=3
-            RETRY_COUNT=0
-            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              git pull --rebase origin main
-              if [ $? -ne 0 ]; then
-                git rebase --abort
-                git reset --hard origin/main
-                ./.github/scripts/update-version.sh
-                chmod +x ./.github/scripts/canary-analyzer.js
-                POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
-                POSTHOG_PROJECT_ID="${{ secrets.POSTHOG_PROJECT_ID }}" \
-                POSTHOG_PUBLIC_KEY="${{ secrets.POSTHOG_PUBLIC_KEY }}" \
-                POSTHOG_HOST="https://us.i.posthog.com" \
-                USE_MOCK_DATA="false" \
-                node ./.github/scripts/canary-analyzer.js --percentage=${{ github.event.inputs.canary_percentage }}
-                git add frontend/version.json frontend/assets/config/canary-config.json
-                if ! git diff --staged --quiet; then
-                  if git diff --staged | grep -E '[+-].*"canaryPercentage"' > /dev/null; then
-                    git commit -m "Manual update of canary percentage to ${{ github.event.inputs.canary_percentage }}% (conflict resolution) [skip ci]"
-                  fi
-                fi
-              fi
-              if git push origin main; then
-                break
-              else
-                RETRY_COUNT=$((RETRY_COUNT + 1))
-                if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                  sleep 5
-                else
-                  break
-                fi
-              fi
-            done
-          fi
+          POSTHOG_PUBLIC_KEY: ${{ secrets.POSTHOG_PUBLIC_KEY }}
       
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
