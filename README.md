@@ -191,14 +191,29 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
 ## Documentation
 
 - [README.md](./README.md) (this file)
-
 - [docs/ADVANCED.md](./docs/ADVANCED.md)
-
 - [docs/ANALYTICS.md](./docs/ANALYTICS.md)
-
 - [docs/ART.md](./docs/ART.md)
-
 - [docs/WORKFLOWS.md](./docs/WORKFLOWS.md)
+
+## Comparisons with Other Tools/Services
+
+While this project focuses on a purely client-side JavaScript-driven canary deployment, many CI/CD and orchestration tools can support or offer alternative (often server-side) canary strategies. The following documents explore how various tools and services can be used in the context of or to facilitate client-side canary deployments, primarily by helping to serve different application versions and manage the `canary-config.json` file:
+
+*   **Cloud Platforms & Orchestration:**
+    *   [Amazon ECS](./comparisons/amazon-ecs/README.md)
+    *   [Amazon EKS](./comparisons/amazon-eks/README.md)
+    *   [Google Kubernetes Engine (GKE)](./comparisons/google-gke/README.md)
+    *   [Azure Kubernetes Service (AKS)](./comparisons/azure-aks/README.md)
+*   **CI/CD & GitOps Tools:**
+    *   [AWS CodePipeline](./comparisons/aws-codepipeline/README.md)
+    *   [CircleCI](./comparisons/circleci/README.md)
+    *   [Argo CD](./comparisons/argo-cd/README.md)
+    *   [Argo Rollouts](./comparisons/argo-rollouts/README.md) (Primarily server-side, for comparison)
+    *   [Flux](./comparisons/flux/README.md)
+    *   [PipeCD](./comparisons/pipecd/README.md)
+
+These comparisons aim to clarify how each tool can contribute to a client-side canary setup or how their native canary functionalities differ.
 
 ## Demonstration: Static Web Application
 
