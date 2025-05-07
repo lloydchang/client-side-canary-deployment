@@ -21,9 +21,9 @@ PipeCD can facilitate this by:
 *   **Deploying Application Versions**: Managing the deployment of stable and canary versions of your frontend application assets.
 *   **Managing `canary-config.json`**:
     *   If deploying to Kubernetes, `canary-config.json` can be a `ConfigMap` defined in Git and managed by PipeCD.
-    *   If deploying static sites to cloud storage, PipeCD can manage the upload of the `canary-config.json` file alongside other assets.
-    *   If deploying to ECS, `canary-config.json` can be included as part of the container image or served from a storage bucket, but PipeCD does not natively manage static asset uploads to S3 as part of ECS deployments.
-*   **Progressive Delivery Features**: PipeCD has built-in support for canary, blue/green, and metrics-based analysis for supported application kinds (primarily Kubernetes, Cloud Run, Lambda, and partially ECS).
+    *   If deploying static sites to cloud storage, PipeCD can manage the upload of the `canary-config.json` file alongside other assets (potentially via custom deployment logic).
+    *   If deploying to ECS, `canary-config.json` would typically be part of the frontend application's container image or served from a separate S3 bucket. PipeCD manages the ECS service deployment (which serves the application), but not direct S3 asset uploads as part of its ECS application kind.
+*   **Progressive Delivery Features**: PipeCD has built-in support for canary, blue/green, and metrics-based analysis for supported application kinds (Kubernetes, Cloud Run, Lambda). For ECS, it supports Blue/Green deployments (leveraging AWS CodeDeploy) and can facilitate Canary-style rollouts.
 
 ## How PipeCD Supports Client-Side Canary
 
@@ -69,81 +69,91 @@ PipeCD doesn't have a dedicated "static site" application kind out-of-the-box as
 
 ### 3. Frontend on Amazon ECS (Managed by PipeCD)
 
-PipeCD supports deploying and managing ECS services using a GitOps workflow. However, its ECS support is focused on service deployments and does not natively handle static asset uploads to S3 or direct management of files like `canary-config.json` outside the ECS service itself.
+PipeCD supports deploying and managing Amazon ECS services using a GitOps workflow. It leverages ECS's native capabilities, including the `EXTERNAL` deployment controller type and integration with AWS CodeDeploy, to enable progressive delivery strategies like Blue/Green.
 
 **How PipeCD interacts with ECS:**
 
 1.  **Git Repository**:
-    *   Contains ECS service definitions (in JSON or YAML), including task definitions for stable and canary versions.
-    *   PipeCD application manifest (`app.pipecd.yaml`) defines the ECS application and points to these definitions.
+    *   Contains ECS task definition files (e.g., `taskdef.json`) and optionally service definition files (e.g., `servicedef.yaml`).
+    *   PipeCD application manifest (`app.pipecd.yaml`) defines the ECS application, pointing to these definitions, and specifies deployment strategies.
 
 2.  **PipeCD Workflow**:
-    *   When ECS task/service definitions are updated in Git:
-        *   PipeCD detects the change and deploys the new ECS service/task definition.
-        *   Supports updating container images, environment variables, and other ECS service parameters.
+    *   When ECS task/service definitions or image versions are updated in Git:
+        *   PipeCD detects the change and plans a deployment.
+        *   It updates ECS task definitions and services according to the strategy defined in `app.pipecd.yaml`.
     *   **Supported ECS deployment strategies:**
-        *   Standard ECS rolling update.
-        *   [External deployment type](https://dev.to/t-kikuc/ecs-external-deployment-taskset-complete-guide-21dl) (for advanced use cases).
-        *   Partial support for blue/green and canary deployments via ECS task sets (see limitations below).
+        *   **`QUICK_SYNC`**: Standard ECS rolling update. PipeCD updates the ECS service to use the new task definition.
+        *   **`BLUE_GREEN_SYNC`**: PipeCD orchestrates a blue/green deployment using AWS CodeDeploy. This typically involves:
+            *   Defining `primaryTargetGroupArn`, `canaryTargetGroupArn` (for the new version, often referred to as "canary" in this context), and `listenerArn` in `app.pipecd.yaml`.
+            *   PipeCD creating a new task set (the "green" deployment) and using CodeDeploy to shift traffic from the "blue" (current) to the "green" (new) deployment. The ECS deployment controller type is often set to `EXTERNAL` to allow PipeCD (via CodeDeploy) to manage the traffic shifting lifecycle.
+        *   **Canary-style rollouts**: While not a distinct "Canary" strategy with fine-grained percentage control directly managed by PipeCD's core logic like in Kubernetes, PipeCD can facilitate canary deployments on ECS by:
+            *   Deploying a new version as a separate task set (similar to the initial phase of Blue/Green).
+            *   Configuring Application Load Balancer (ALB) weighted target groups. The `canary-config.json` would then be served by containers in these task sets. The actual traffic splitting percentages are managed at the ALB level, potentially configured via Infrastructure as Code tools managed in Git and applied by PipeCD if the IaC tool is supported (e.g. Terraform).
 
 3.  **Client-Side Logic**:
-    *   If your frontend is served from ECS (e.g., via an NGINX container), you can deploy both stable and canary versions as separate ECS services or task sets.
-    *   The `canary-config.json` can be served by the ECS service, but PipeCD does **not** manage S3 asset uploads or S3-based config updates as part of ECS deployments.
-    *   For S3-hosted assets, you must manage asset uploads outside of PipeCD's ECS integration.
+    *   Your frontend application (e.g., an NGINX container serving static files, or a Node.js app) is deployed as an ECS service.
+    *   The `canary-config.json` can be:
+        *   Baked into the container image of your frontend application.
+        *   Served by the frontend application itself.
+        *   Hosted on S3.
+    *   PipeCD manages the deployment of the ECS service. If `canary-config.json` is part of the image or served by the app, deploying a new version of the app via PipeCD updates the config.
+    *   If `canary-config.json` is on S3, its update must be managed by a separate process (e.g., a CI/CD pipeline step or a different PipeCD application for static sites), as PipeCD's ECS application kind does not directly manage S3 file uploads.
 
 **Supported Features in ECS with PipeCD:**
 
-- GitOps-based ECS service and task definition management.
-- Automated deployment of new ECS task definitions.
+- GitOps-based management of ECS service and task definitions.
+- Automated deployment of new ECS task definitions and service updates.
 - Supports both EC2 and Fargate launch types.
-- Supports [external deployment type](https://dev.to/t-kikuc/ecs-external-deployment-taskset-complete-guide-21dl) for advanced deployment flows.
-- Partial support for blue/green and canary via ECS task sets (see [#4387](https://github.com/pipe-cd/pipecd/issues/4387), [#4467](https://github.com/pipe-cd/pipecd/issues/4467)).
-- Rollback and diff features for ECS service definitions.
+- **Blue/Green deployments**: Leverages AWS CodeDeploy, task sets, and ALB target groups. Requires `deploymentStrategy: BLUE_GREEN_SYNC` and configuration of target groups/listeners in `app.pipecd.yaml`. (See [PipeCD ECS Blue/Green Example](https://pipecd.dev/docs-v0.51.x/user-guide/examples/#ecs-bluegreen-sync)).
+- **Canary-style rollouts**: Facilitated by deploying new task sets. Traffic shifting relies on ALB weighted target groups, which PipeCD can help configure if managed as part of the ECS service definition or related IaC.
+- Support for the `EXTERNAL` deployment controller type, allowing PipeCD to manage complex rollout processes.
+- Rollback and diff features for ECS service and task definitions.
 
-**Unsupported or Limited Features in ECS:**
+**Unsupported or Limited Features in ECS for Client-Side Canary:**
 
-- **No native static asset upload to S3**: PipeCD does not manage S3 uploads as part of ECS deployments. You must use a separate process or CI/CD step for static assets and `canary-config.json` if they are stored in S3.
-- **Limited progressive delivery**: Full blue/green and canary deployment support is not as mature as in Kubernetes. Traffic shifting and automated analysis are limited ([see discussion](https://github.com/pipe-cd/pipecd/discussions/4709)).
-- **No direct management of S3-hosted config files**: Updating `canary-config.json` in S3 is not handled by PipeCD's ECS integration.
-- **No built-in support for ECS Service Connect or App Mesh**: Advanced traffic routing features are not natively integrated.
+- **No direct S3 asset/config file management**: PipeCD's ECS application kind focuses on deploying the ECS service itself. It does not natively upload/manage static assets or individual configuration files (like `canary-config.json`) in S3 as part of an ECS deployment. This needs a separate mechanism.
+- **Fine-grained traffic splitting (like Kubernetes Canary)**: While PipeCD can set up environments for canary testing (e.g., new task sets), direct, percentage-based traffic splitting controlled by PipeCD's core progressive delivery (analyze, promote) is not as integrated as with Kubernetes. It relies more on AWS native features like ALB weighted routing, which PipeCD helps set up.
+- **Automated analysis for ECS Canary/BlueGreen**: Metrics-based analysis and automated promotion/rollback for ECS deployments are less mature compared to Kubernetes.
 
 **Summary Table: PipeCD ECS Support**
 
-| Feature                                 | Supported? | Notes                                                                 |
-|------------------------------------------|------------|-----------------------------------------------------------------------|
-| ECS Service/Task Definition Management   | Yes        | GitOps-driven, supports EC2/Fargate                                   |
-| Rolling Update Deployments               | Yes        | Standard ECS rolling update                                           |
-| Blue/Green Deployments                   | Partial    | Via external deployment type/task sets, manual steps may be required  |
-| Canary Deployments                       | Partial    | Limited, see [#4387](https://github.com/pipe-cd/pipecd/issues/4387)   |
-| S3 Asset Uploads                         | No         | Must be handled outside PipeCD                                        |
-| S3 `canary-config.json` Management       | No         | Not managed as part of ECS deployment                                 |
-| Automated Traffic Shifting/Analysis      | No         | Not natively supported for ECS                                        |
+| Feature                                 | Supported? | Notes                                                                                                                               |
+|------------------------------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| ECS Service/Task Definition Management   | Yes        | GitOps-driven, supports EC2/Fargate. Manages `taskdef.json`, `servicedef.yaml`.                                                      |
+| Rolling Update Deployments (`QUICK_SYNC`)| Yes        | Standard ECS rolling update.                                                                                                        |
+| Blue/Green Deployments (`BLUE_GREEN_SYNC`)| Yes        | Leverages AWS CodeDeploy, task sets, ALB target groups. Requires specific `app.pipecd.yaml` configuration.                           |
+| Canary Deployments                       | Partial    | Facilitates by deploying new task sets. Traffic shifting via ALB weighted target groups, configured as part of service or external IaC. |
+| S3 Asset Uploads for Frontend            | No         | Not part of ECS application kind. Must be handled by other means (e.g., custom script, separate PipeCD app for static sites).         |
+| S3 `canary-config.json` Management       | No         | Not directly managed by ECS application kind.                                                                                       |
+| Automated Traffic Shifting & Analysis    | Limited    | Relies on AWS CodeDeploy for Blue/Green traffic shifting. Advanced analysis/promotion less mature than Kubernetes.                    |
 
 **References:**
-- [PipeCD ECS Application Guide](https://pipecd.dev/docs-v0.50.x/user-guide/managing-application/defining-app-configuration/ecs/)
-- [PipeCD ECS Issues and Discussions](https://github.com/pipe-cd/pipecd/issues/4387), [#4467](https://github.com/pipe-cd/pipecd/issues/4467), [Discussion #4709](https://github.com/pipe-cd/pipecd/discussions/4709)
-- [ECS External Deployment Type Guide](https://dev.to/t-kikuc/ecs-external-deployment-taskset-complete-guide-21dl)
+- [PipeCD ECS Application Configuration](https://pipecd.dev/docs-v0.50.x/user-guide/managing-application/defining-app-configuration/ecs/)
+- [PipeCD ECS Blue/Green Example](https://pipecd.dev/docs-v0.51.x/user-guide/examples/#ecs-bluegreen-sync)
+- [GitHub Discussion on ECS Blue/Green](https://github.com/pipe-cd/pipecd/discussions/4709)
+- [GitHub Issue: ECS Canary Deployment](https://github.com/pipe-cd/pipecd/issues/4387)
+- [GitHub Issue: ECS Blue/Green with EXTERNAL controller](https://github.com/pipe-cd/pipecd/issues/4467)
+- [Understanding ECS External Deployment Tasksets](https://dev.to/t-kikuc/ecs-external-deployment-taskset-complete-guide-21dl)
 
 ---
 
 ## Updating Canary Percentage with PipeCD
 
-1.  **Modify Config in Git**: Update the `canary-config.json` content (whether as a raw file for static sites, as data in a `ConfigMap` manifest for Kubernetes, or as part of your ECS container image or service).
+1.  **Modify Config in Git**:
+    *   **For `canary-config.json` served by the application (Kubernetes/ECS):** Update the configuration within your application's source code or a ConfigMap/secret, then update the image tag or ConfigMap data in your Git repository.
+    *   **For `canary-config.json` on S3 (Static Sites or ECS with S3 config):** Update the `canary-config.json` file in your Git repository.
 2.  **Commit and Push**: Push the changes to Git.
-3.  **PipeCD Sync**: PipeCD detects the commit and plans a new deployment.
-    *   For Kubernetes, it applies the updated `ConfigMap`.
-    *   For static sites (conceptual), it re-uploads the modified `canary-config.json`.
-    *   For ECS, it redeploys the ECS service/task definition, but does **not** update S3 assets/configs.
-4.  **Client Impact**: Clients fetching the `canary-config.json` will get the new percentages (if served by the application), or you must separately update S3 if using S3-hosted configs.
+3.  **PipeCD Sync**:
+    *   **Kubernetes**: PipeCD applies the updated `ConfigMap` or deploys the new image.
+    *   **Static Sites (conceptual or custom)**: PipeCD re-uploads the modified `canary-config.json` to S3.
+    *   **ECS**: PipeCD redeploys the ECS service with the new task definition (containing the updated application/image). If `canary-config.json` is on S3, this step does **not** update it; a separate process is needed.
+4.  **Client Impact**: Clients fetching `canary-config.json` will get the new percentages.
 
 ## Considerations
 
-*   **PipeCD's Progressive Delivery**: PipeCD's built-in canary and analysis features are primarily for server-side traffic shifting and health checks of application instances (Kubernetes, Cloud Run, Lambda). ECS support is more limited.
-    *   If you use PipeCD's canary for your frontend *service* on Kubernetes, it's a server-side canary.
-    *   For ECS, blue/green/canary is possible but less automated and may require manual steps.
-    *   For client-side canary, PipeCD's role is more about deploying the *assets* and the *config file* that the client uses.
-*   **Customization**: PipeCD's design allows for custom deployment logic, which could be leveraged for managing static site deployments if not directly supported.
-*   **Focus on GitOps**: PipeCD strongly adheres to GitOps principles, making Git the source of truth for deployment configurations.
-*   **Piped**: The control plane component of PipeCD, `piped`, runs in your environment (e.g., Kubernetes cluster, ECS host) and executes deployments.
+*   **PipeCD's Progressive Delivery Focus**:
+    *   **Kubernetes, Cloud Run, Lambda**: Strong support for server-side canary with traffic shifting and analysis.
+    *   **ECS**: Good support for Blue/Green deployments via AWS CodeDeploy. Canary-style rollouts are possible by managing task sets and ALB configurations, but direct percentage-based traffic control and analysis by PipeCD are less extensive.
+    *   **Client-Side Canary**: PipeCD's primary role is deploying the application versions and, where applicable (Kubernetes ConfigMaps, or custom static site deployments), the `canary-config.json` file itself. For ECS, if the config file is on S3, its deployment is typically outside the scope of PipeCD's ECS application management.
 
-PipeCD can support client-side canary deployments by managing the deployment of different frontend versions and the crucial `canary-config.json` file through a GitOps workflow. While its advanced progressive delivery features are more aligned with server-side canaries (especially in Kubernetes), its core GitOps capabilities are valuable for maintaining the infrastructure needed by a client-side strategy. For ECS, PipeCD is best used for service/task definition management, with static asset and S3 config management handled externally.
+PipeCD can support client-side canary deployments by managing the deployment of different frontend versions and the crucial `canary-config.json` file through a GitOps workflow. While its advanced progressive delivery features are more aligned with server-side canaries (especially in Kubernetes), its core GitOps capabilities are valuable for maintaining the infrastructure needed by a client-side strategy. For ECS, PipeCD excels at managing service and task definition deployments, including orchestrating Blue/Green updates, while management of static assets or S3-hosted configuration files for client-side logic often requires a complementary process.
