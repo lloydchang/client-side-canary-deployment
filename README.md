@@ -188,6 +188,14 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
   - `analyze`: Run analytics to evaluate canary performance
   - `adjust-canary`: Update the canary percentage for traffic allocation
 
-For detailed information on the workflow and supporting scripts, see [docs/WORKFLOWS.md](./docs/WORKFLOWS.md).
+## Documentation
 
-For more details on the analytics integration, see [docs/ANALYTICS.md](./docs/ANALYTICS.md).
+- [README.md](./README.md) (this file)
+
+- [docs/ADVANCED.md](./docs/ADVANCED.md)
+
+- [docs/ANALYTICS.md](./docs/ANALYTICS.md)
+
+- [docs/ART.md](./docs/ART.md)
+
+- [docs/WORKFLOWS.md](./docs/WORKFLOWS.md)
