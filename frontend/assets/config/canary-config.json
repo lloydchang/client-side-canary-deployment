@@ -1,7 +1,7 @@
 {
   "canaryVersion": "1.0.0",
   "distribution": {
-    "canaryPercentage": 25,
+    "canaryPercentage": 0,
     "gradualRollout": true,
     "rolloutPeriod": 7,
     "safetyThreshold": 2
