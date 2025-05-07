@@ -188,14 +188,6 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
   - `analyze`: Run analytics to evaluate canary performance
   - `adjust-canary`: Update the canary percentage for traffic allocation
 
-## Documentation
-
-- [README.md](./README.md) (this file)
-- [docs/ADVANCED.md](./docs/ADVANCED.md)
-- [docs/ANALYTICS.md](./docs/ANALYTICS.md)
-- [docs/ART.md](./docs/ART.md)
-- [docs/WORKFLOWS.md](./docs/WORKFLOWS.md)
-
 ## Comparisons with Other Tools/Services
 
 While this project focuses on a purely client-side JavaScript-driven canary deployment, many CI/CD and orchestration tools can support or offer alternative (often server-side) canary strategies. The following documents explore how various tools and services can be used in the context of or to facilitate client-side canary deployments, primarily by helping to serve different application versions and manage the `canary-config.json` file:
@@ -214,6 +206,14 @@ While this project focuses on a purely client-side JavaScript-driven canary depl
     *   [PipeCD](./docs/comparisons/pipecd/README.md)
 
 These comparisons aim to clarify how each tool can contribute to a client-side canary setup or how their native canary functionalities differ.
+
+## Documentation
+
+- [README.md](./README.md) (this file)
+- [docs/ADVANCED.md](./docs/ADVANCED.md)
+- [docs/ANALYTICS.md](./docs/ANALYTICS.md)
+- [docs/ART.md](./docs/ART.md)
+- [docs/WORKFLOWS.md](./docs/WORKFLOWS.md)
 
 ## Demonstration: Static Web Application
 
