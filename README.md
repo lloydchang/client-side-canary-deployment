@@ -214,6 +214,7 @@ These comparisons aim to clarify how each tool can contribute to a client-side c
 - [docs/ANALYTICS.md](./docs/ANALYTICS.md)
 - [docs/ART.md](./docs/ART.md)
 - [docs/WORKFLOWS.md](./docs/WORKFLOWS.md)
+- [docs/comparisons](./docs/comparisons)
 
 ## Demonstration: Static Web Application
 
