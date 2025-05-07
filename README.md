@@ -199,3 +199,7 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
 - [docs/ART.md](./docs/ART.md)
 
 - [docs/WORKFLOWS.md](./docs/WORKFLOWS.md)
+
+## Demonstration: Static Web Application
+
+- https://lloydchang.github.io/client-side-canary-deployment
