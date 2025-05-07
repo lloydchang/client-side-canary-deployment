@@ -1,4 +1,4 @@
-![canary-deployment-1](https://github.com/user-attachments/assets/35112b11-eeaa-4383-ac94-94bc4a02d3a7)
+![canary-deployment-1](https://github.com/user-attachments/assets/4538befe-5438-4d09-94ed-3c559d408a80)
 
 ![canary-deployment-2](https://github.com/user-attachments/assets/c24395cb-7564-4acc-803a-a1bb1bbbcc25)
 
