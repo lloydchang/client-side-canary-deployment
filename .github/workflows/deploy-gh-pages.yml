@@ -108,7 +108,7 @@ jobs:
         with:
           node-version: '18'
       
-      - name: Run unified canary analysis and update config
+      - name: Run Canary Analysis and Update Config
         id: canary_analysis
         env:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
