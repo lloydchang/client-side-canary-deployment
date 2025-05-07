@@ -201,7 +201,7 @@ While this project facilitates client-side JavaScript-driven canary deployments 
     *   [AWS CodePipeline](./docs/comparisons/aws-codepipeline/README.md)
     *   [CircleCI](./docs/comparisons/circleci/README.md)
     *   [Argo CD](./docs/comparisons/argo-cd/README.md)
-    *   [Argo Rollouts](./docs/comparisons/argo-rollouts/README.md) (Primarily server-side, for comparison)
+    *   [Argo Rollouts](./docs/comparisons/argo-rollouts/README.md)
     *   [Flux](./docs/comparisons/flux/README.md)
     *   [PipeCD](./docs/comparisons/pipecd/README.md)
 
