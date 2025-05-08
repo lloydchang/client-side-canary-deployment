@@ -57,8 +57,7 @@ Key features include:
 | **Complexity**      | Higher (requires understanding Rollouts CRD, service mesh/Ingress integration, metric setup) | Simpler for the canary logic itself; infrastructure for assets/config can be simple (e.g., S3) or complex (Kubernetes) |
 | **Use Cases**       | Critical services, backend APIs, full-stack applications requiring robust, automated, metric-driven rollouts | UI/UX changes, frontend A/B testing, feature flagging, especially on static sites or when fine-grained client control is needed |
 | **Rollback**        | Automated by Argo Rollouts based on metrics or manual trigger| Update `canary-config.json` (e.g., set canary percentage to 0)    |
-| **Why Server-Side (Argo Rollouts)?** | Provides very robust, automated, and safe deployments for critical applications on Kubernetes. Reduces risk through metric-driven decisions. Standardizes complex deployment strategies. |
-| **Why Client-Side?** | Offers flexibility for frontend experiments directly controlled by frontend teams. Can be simpler to implement for UI changes if advanced server-side infrastructure is not already in place or desired. |
+| **Why?**            | Provides very robust, automated, and safe deployments for critical applications on Kubernetes. Reduces risk through metric-driven decisions. Standardizes complex deployment strategies. | Offers flexibility for frontend experiments directly controlled by frontend teams. Can be simpler to implement for UI changes if advanced server-side infrastructure is not already in place or desired. |
 
 **Conclusion**:
 Argo Rollouts is a powerful, specialized tool for **server-side** progressive delivery in Kubernetes, offering sophisticated canary and blue-green deployment strategies with automated traffic shaping and metric-driven analysis. It is ideal for reducing the risk of deploying new versions of critical applications.
