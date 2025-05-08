@@ -180,5 +180,7 @@ CircleCI offers several authentication methods for AWS integration:
 2. **Pipeline Duration Limits**: Break into multiple jobs or use continuation workflows
 3. **Resource Class Constraints**: Use strategic test splitting and parallelism
 
+---
+
 **Conclusion**:
 CircleCI is a versatile CI/CD platform that can effectively orchestrate server-side canary deployments by integrating with various cloud platforms and Kubernetes tools that handle the actual traffic shifting and analysis. This allows teams to leverage powerful canary features within their automated pipelines. For client-side canary strategies, CircleCI excels at building and deploying the necessary frontend assets and the `canary-config.json` to their respective hosting locations, while the canary decision logic remains in the browser.
