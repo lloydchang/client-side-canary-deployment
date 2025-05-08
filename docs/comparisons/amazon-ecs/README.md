@@ -140,49 +140,44 @@ Server-side canary deployments with ECS involve routing a small percentage of us
 
 ## Advanced Considerations for ECS in Canary Deployments
 
-### Technical Integration Patterns
+### Integration with CI/CD Tools
 
-#### ECS with CodePipeline and CircleCI
-When implementing canary deployments, teams often combine these tools in specific ways:
+#### AWS-Native Stack vs Hybrid Approach
 
-- **ECS + CodePipeline (AWS-Native Stack)**:
-  - **Advantage**: End-to-end AWS solution with seamless IAM permissions flow
-  - **Implementation**: CodePipeline builds container images in CodeBuild, stores them in ECR, then creates new task definitions and deploys them to ECS with incremental traffic shifting via CodeDeploy
-  - **Monitoring**: CloudWatch metrics and alarms automatically trigger rollbacks through CodeDeploy
-  - **Configuration**: Typically defined as Infrastructure as Code through CloudFormation or AWS CDK
+- **ECS + CodePipeline (AWS-Native)**:
+  - **Advantage**: End-to-end AWS solution with seamless IAM permissions
+  - **Implementation**: CodeBuild creates images, CodeDeploy handles traffic shifting
+  - **Monitoring**: CloudWatch metrics can automatically trigger rollbacks
+  - **Configuration**: Typically defined as Infrastructure as Code via CloudFormation/CDK
 
-- **ECS + CircleCI (Hybrid Approach)**:
-  - **Advantage**: Leveraging CircleCI's superior testing capabilities with ECS's operational environment
-  - **Implementation**: CircleCI builds and tests containers with custom logic, then uses AWS CLI commands or direct API calls to create task definitions and update services
-  - **Challenge**: Managing AWS credentials securely in CircleCI environment variables
-  - **Solution**: Using CircleCI contexts or AWS OpenID Connect integration for keyless authentication
+- **ECS + CircleCI (Hybrid)**:
+  - **Advantage**: Superior testing capabilities with ECS's operational environment
+  - **Implementation**: CircleCI builds/tests containers, then updates ECS via AWS CLI/API
+  - **Security Solution**: CircleCI contexts or AWS OpenID Connect for keyless authentication
 
-### Unique Technical Capabilities of ECS
+### Unique Technical Capabilities
 
-Beyond the features previously mentioned, ECS offers several unique capabilities not found in the other tools:
+ECS offers several features not found in general CI/CD tools:
 
-- **Service Auto Scaling**: Scale ECS tasks based on CloudWatch metrics, independent of EC2 instance scaling (unique from Kubernetes which requires metrics adapters)
-- **Capacity Provider Strategies**: Intelligently place tasks across Fargate and EC2 (including Spot) instances to optimize cost
-- **App Mesh Integration**: Native service mesh capabilities for monitoring and controlling service-to-service communication during canary deployments
-- **Integration with AWS Step Functions**: Orchestrate complex deployment workflows with task execution, including canary steps
-- **ECS Exec**: Debugging capability to gain shell access to running containers without SSH access
+- **Service Auto Scaling**: Scale tasks based on CloudWatch metrics, independent of EC2 scaling
+- **Capacity Provider Strategies**: Intelligently place tasks across Fargate and EC2 (including Spot) for cost optimization
+- **App Mesh Integration**: Native service mesh for monitoring service-to-service communication during canaries
+- **ECS Exec**: Debug running containers without SSH access
 
-### Implementation Considerations
+### Implementation Challenges and Solutions
 
-When choosing ECS as your container platform for canary deployments:
-
-1. **Service Discovery Challenges**:
-   - ECS service discovery via AWS Cloud Map works well for internal services
-   - External services typically require ALB with DNS, complicating granular traffic shifting
+1. **Service Discovery**:
+   - AWS Cloud Map works well for internal services
+   - External services typically require ALB with DNS
 
 2. **Stateful Workloads**:
-   - ECS works best with stateless workloads for canary deployments
-   - For stateful workloads, consider using external state stores like Amazon RDS or DynamoDB
+   - Use external state stores like RDS or DynamoDB
+   - Canary works best with stateless services
 
 3. **Cross-Region Canary**:
-   - ECS doesn't natively support cross-region canary deployment
-   - Would require custom implementation using Route 53 weighted routing or Global Accelerator
+   - Implement with Route 53 weighted routing or Global Accelerator
+   - ECS has no native cross-region canary capability
 
-4. **Container Image Optimization**:
-   - Container image size affects ECS task startup time, which impacts canary deployment speed
-   - Use multi-stage builds and minimal base images for faster deployments
+4. **Performance Optimization**:
+   - Container image size affects task startup time and deployment speed
+   - Use multi-stage builds and minimal base images

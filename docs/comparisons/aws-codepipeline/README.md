@@ -99,63 +99,60 @@ A typical CodePipeline setup for server-side canary:
 
 ## Advanced Considerations for CodePipeline in Canary Deployments
 
-### Technical Integration Deep Dive
+### Unique Capabilities
 
 #### Custom Action Types
-While not commonly used, CodePipeline supports custom action types which can extend its functionality beyond AWS-native integrations:
+CodePipeline supports custom action types to extend its functionality:
 
-- **Custom Build/Test Actions**: Organizations can create custom actions that integrate with proprietary build systems
-- **Third-Party Tool Integration**: Custom actions can wrap third-party deployment or testing tools
-- **Implementation Challenge**: Requires maintaining an action worker (typically on EC2) that polls CodePipeline for jobs
+- **Custom Build/Test Actions**: Integrate with proprietary build systems
+- **Third-Party Tool Integration**: Wrap third-party deployment or testing tools
+- **Implementation Challenge**: Requires maintaining an action worker (typically on EC2) that polls for jobs
 
-#### CodePipeline and Multi-Region Deployments
-One distinctive capability of CodePipeline for canary deployments:
+#### Multi-Region Deployment Strategy
+A distinctive capability for canary deployments:
 
-- **Cross-Region Actions**: CodePipeline can deploy to different AWS regions in a single pipeline
-- **Progressive Regional Rollout**: Can implement canary as a regional deployment (e.g., deploy to us-west-2 first, monitor, then deploy to other regions)
-- **Global/Local Pattern**: Use a global pipeline in one region that orchestrates deployment actions in multiple regions
+- **Cross-Region Actions**: Deploy to different AWS regions in a single pipeline
+- **Progressive Regional Rollout**: Implement canary as a regional deployment (e.g., deploy to us-west-2 first, monitor, then deploy to other regions)
+- **Global/Local Pattern**: Use a global pipeline to orchestrate deployment actions across multiple regions
 
-### Integration with Monitoring for Automated Canary Analysis
+### Advanced Monitoring Integration
 
-CodePipeline can integrate with several monitoring solutions to automate the canary analysis:
+CodePipeline can integrate with AWS monitoring solutions for automated canary analysis:
 
 - **With CloudWatch**:
-  - Lambda functions in the pipeline can evaluate CloudWatch metrics and automatically approve/reject the canary
+  - Lambda functions in the pipeline can evaluate metrics and automatically approve/reject canaries
   - CloudWatch Alarms can trigger SNS notifications that pause the pipeline via API calls
 
 - **With AWS X-Ray**:
-  - Can analyze trace data from the canary version to detect latency or error increases
-  - Custom Lambda actions can incorporate this data in deployment decisions
+  - Analyze trace data to detect latency or error increases
+  - Incorporate trace data in deployment decisions through Lambda functions
 
 - **With Amazon DevOps Guru**:
-  - ML-driven anomaly detection can identify issues in canary deployments
-  - Lambda functions in CodePipeline can query DevOps Guru insights via API
+  - Use ML-driven anomaly detection to identify issues in canary deployments
+  - Query DevOps Guru insights via API in pipeline actions
 
 ### Technical Limitations and Workarounds
 
-Some CodePipeline limitations to be aware of when implementing canary deployments:
-
 1. **Pipeline Execution Concurrency**:
-   - Only one execution of a given pipeline can be in progress at a time
+   - Only one execution of a given pipeline can run at a time
    - Workaround: Create parallel pipelines for independent components
 
 2. **Limited Built-in Testing Capabilities**:
    - Relies on CodeBuild or Lambda for test execution
-   - Workaround: Use CircleCI for robust testing, then trigger CodePipeline for AWS deployments
+   - Workaround: Use CircleCI for testing, then trigger CodePipeline for deployment
 
 3. **Artifact Size Limitations**:
-   - Pipeline artifacts are stored in S3 with size limitations
-   - Workaround: For large artifacts, store references rather than the artifacts themselves
+   - Pipeline artifacts have S3-based size limits
+   - Workaround: Store references rather than the artifacts themselves
 
 4. **Action Timeout Constraints**:
    - Actions have maximum timeout limits
-   - Workaround: Break long-running processes into multiple actions or use external orchestration
+   - Workaround: Break long-running processes into multiple actions
 
-### Advanced Use Cases
+### Advanced Use Case: Hybrid Client/Server Canary
 
-- **Hybrid Client/Server Canary**:
-   - Use CodePipeline to deploy both backend services to ECS (server-side canary via CodeDeploy) and frontend assets to S3/CloudFront (for client-side canary) in a coordinated manner
-   - CloudFront distribution can be set up to route requests to different backend environments based on request parameters, allowing for end-to-end canary testing
+- Deploy both backend services (server-side canary via CodeDeploy) and frontend assets (for client-side canary) in a coordinated manner
+- Set up CloudFront to route requests to different backend environments based on request parameters for end-to-end canary testing
 
 ## Further Comparison: CodePipeline, ECS, and CircleCI
 
