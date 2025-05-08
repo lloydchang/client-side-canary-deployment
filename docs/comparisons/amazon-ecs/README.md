@@ -58,8 +58,7 @@ Server-side canary deployments with ECS involve routing a small percentage of us
 | **Use Cases**       | Full-stack changes, backend dependencies, infrastructure tests | UI/UX changes, frontend-specific features, A/B testing            |
 | **Rollback**        | Shift traffic via ALB/CodeDeploy                             | Update `canary-config.json` (e.g., set canary percentage to 0)    |
 | **Monitoring**      | Infrastructure metrics, application logs from canary instances | Client-side analytics, error tracking for canary users            |
-| **Why Server-Side?**| Robust for any application type. Tests entire new version. Centralized control. Automated promotion/rollback with CodeDeploy. |
-| **Why Client-Side?**| Simpler for frontend teams to manage UI experiments. More dynamic targeting. Less direct infra changes for config updates. |
+| **Why?**| Robust for any application type. Tests entire new version. Centralized control. Automated promotion/rollback with CodeDeploy. | Simpler for frontend teams to manage UI experiments. More dynamic targeting. Less direct infra changes for config updates. |
 
 **Conclusion**:
 ECS excels at server-side canary deployments using ALB weighted target groups or AWS CodeDeploy, providing robust, infrastructure-level traffic management. This is suitable for testing entire application versions. Client-side canary offers a different approach, giving control to the browser for frontend-specific changes, where ECS's role is to serve the necessary assets and configuration. The choice depends on the specific needs, the scope of changes, and team expertise.
