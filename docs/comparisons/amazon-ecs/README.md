@@ -138,5 +138,51 @@ Server-side canary deployments with ECS involve routing a small percentage of us
 - **CodePipeline**: Only one with native AWS event triggers and managed deployment integrations (e.g., CodeDeploy).
 - **CircleCI**: Only one with Orbs, local pipeline execution, and broad OS/language support for CI.
 
-**Conclusion**:
-ECS excels at server-side canary deployments using ALB weighted target groups or AWS CodeDeploy, providing robust, infrastructure-level traffic management. This is suitable for testing entire application versions. Client-side canary offers a different approach, giving control to the browser for frontend-specific changes, where ECS's role is to serve the necessary assets and configuration. The choice depends on the specific needs, the scope of changes, and team expertise.
+## Advanced Considerations for ECS in Canary Deployments
+
+### Technical Integration Patterns
+
+#### ECS with CodePipeline and CircleCI
+When implementing canary deployments, teams often combine these tools in specific ways:
+
+- **ECS + CodePipeline (AWS-Native Stack)**:
+  - **Advantage**: End-to-end AWS solution with seamless IAM permissions flow
+  - **Implementation**: CodePipeline builds container images in CodeBuild, stores them in ECR, then creates new task definitions and deploys them to ECS with incremental traffic shifting via CodeDeploy
+  - **Monitoring**: CloudWatch metrics and alarms automatically trigger rollbacks through CodeDeploy
+  - **Configuration**: Typically defined as Infrastructure as Code through CloudFormation or AWS CDK
+
+- **ECS + CircleCI (Hybrid Approach)**:
+  - **Advantage**: Leveraging CircleCI's superior testing capabilities with ECS's operational environment
+  - **Implementation**: CircleCI builds and tests containers with custom logic, then uses AWS CLI commands or direct API calls to create task definitions and update services
+  - **Challenge**: Managing AWS credentials securely in CircleCI environment variables
+  - **Solution**: Using CircleCI contexts or AWS OpenID Connect integration for keyless authentication
+
+### Unique Technical Capabilities of ECS
+
+Beyond the features previously mentioned, ECS offers several unique capabilities not found in the other tools:
+
+- **Service Auto Scaling**: Scale ECS tasks based on CloudWatch metrics, independent of EC2 instance scaling (unique from Kubernetes which requires metrics adapters)
+- **Capacity Provider Strategies**: Intelligently place tasks across Fargate and EC2 (including Spot) instances to optimize cost
+- **App Mesh Integration**: Native service mesh capabilities for monitoring and controlling service-to-service communication during canary deployments
+- **Integration with AWS Step Functions**: Orchestrate complex deployment workflows with task execution, including canary steps
+- **ECS Exec**: Debugging capability to gain shell access to running containers without SSH access
+
+### Implementation Considerations
+
+When choosing ECS as your container platform for canary deployments:
+
+1. **Service Discovery Challenges**:
+   - ECS service discovery via AWS Cloud Map works well for internal services
+   - External services typically require ALB with DNS, complicating granular traffic shifting
+
+2. **Stateful Workloads**:
+   - ECS works best with stateless workloads for canary deployments
+   - For stateful workloads, consider using external state stores like Amazon RDS or DynamoDB
+
+3. **Cross-Region Canary**:
+   - ECS doesn't natively support cross-region canary deployment
+   - Would require custom implementation using Route 53 weighted routing or Global Accelerator
+
+4. **Container Image Optimization**:
+   - Container image size affects ECS task startup time, which impacts canary deployment speed
+   - Use multi-stage builds and minimal base images for faster deployments
