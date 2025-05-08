@@ -60,8 +60,7 @@ Flux itself focuses on ensuring the Kubernetes cluster state matches Git. For se
 | **Automation**      | High (automated traffic shifting, metric analysis, rollback)| Flux automates deployment of assets/config from Git             |
 | **Use Cases**       | Critical services, backend APIs, full-stack applications    | UI/UX changes, frontend A/B testing                               |
 | **Rollback**        | Automated by Flagger based on metrics; or Git revert        | Update `canary-config.json` in Git (synced by Flux)               |
-| **Why Server-Side?**| Robust, automated, metric-driven canary releases. Reduces risk for critical updates. Integrates deeply with Kubernetes networking. |
-| **Why Client-Side?**| Simpler for frontend-only changes if Flagger setup is too complex. Flux still provides GitOps benefits for deploying versions and config. |
+| **Why?**            | Robust, automated, metric-driven canary releases. Reduces risk for critical updates. Integrates deeply with Kubernetes networking. | Simpler for frontend-only changes if Flagger setup is too complex. Flux still provides GitOps benefits for deploying versions and config. |
 
 **Conclusion**:
 Flux, when combined with Flagger, provides a powerful GitOps-driven solution for server-side canary deployments in Kubernetes. Flagger handles the complexities of traffic shifting and metric-based analysis, while Flux ensures the cluster reflects the desired state from Git. For a client-side canary strategy, Flux can still be valuable for managing the deployment of frontend versions and the `canary-config.json` (as a ConfigMap) via GitOps, but the canary logic itself remains separate and client-driven.
