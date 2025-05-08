@@ -58,8 +58,7 @@ Server-side canary deployments on GKE involve routing a percentage of traffic to
 | **Use Cases**       | Full-stack changes, backend API canaries, microservices      | UI/UX changes, frontend A/B testing, feature flagging             |
 | **Rollback**        | Reconfigure Ingress/service mesh, or automated by tools      | Update `canary-config.json`                                       |
 | **Monitoring**      | Cloud Monitoring, Prometheus for service health              | Client-side analytics, error tracking for canary users            |
-| **Why Server-Side?**| Robust for any workload. Centralized traffic control. Integrates with Kubernetes ecosystem tools for automation and analysis. |
-| **Why Client-Side?**| Simpler for frontend-specific experiments. Dynamic targeting based on client-side info. Less reliance on complex GKE networking features if not already used. |
+| **Why?**            | Robust for any workload. Centralized traffic control. Integrates with Kubernetes ecosystem tools for automation and analysis. | Simpler for frontend-specific experiments. Dynamic targeting based on client-side info. Less reliance on complex GKE networking features if not already used. |
 
 **Conclusion**:
 GKE offers powerful server-side canary deployment capabilities through its Ingress controllers, integration with service meshes like Istio, and support for progressive delivery tools. This approach provides robust, infrastructure-level traffic management suitable for testing entire application versions and backend services. Client-side canary offers a complementary strategy, particularly for frontend changes, where GKE's role is to host the application versions and configuration, while the browser handles the canary logic. The choice depends on the deployment needs, the nature of the changes, and existing infrastructure.
