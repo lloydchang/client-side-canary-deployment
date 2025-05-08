@@ -182,5 +182,7 @@ ECS offers several features not found in general CI/CD tools:
    - Container image size affects task startup time and deployment speed
    - Use multi-stage builds and minimal base images
 
+---
+
 **Conclusion**:
 ECS excels at server-side canary deployments using ALB weighted target groups or AWS CodeDeploy, providing robust, infrastructure-level traffic management. This is suitable for testing entire application versions. Client-side canary offers a different approach, giving control to the browser for frontend-specific changes, where ECS's role is to serve the necessary assets and configuration. The choice depends on the specific needs, the scope of changes, and team expertise.
