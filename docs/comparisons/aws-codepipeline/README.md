@@ -1,67 +1,69 @@
-# Client-Side Canary Deployments with AWS CodePipeline
+# Canary Deployments with AWS CodePipeline
 
-This document describes how AWS CodePipeline can automate the deployment process supporting a client-side canary strategy. The core client-side canary logic (JavaScript in the browser deciding based on a configuration) remains the same, while CodePipeline helps manage the delivery of application versions and the crucial `canary-config.json`.
+This document describes how AWS CodePipeline typically orchestrates server-side canary deployments by integrating with other AWS services like CodeDeploy, and contrasts this with using CodePipeline to support a client-side canary strategy.
 
-## Core Concepts
+## Core Concepts of CodePipeline for Server-Side Canary Orchestration
 
-In a client-side canary deployment:
-1. Client-side JavaScript fetches a `canary-config.json` file.
-2. This config dictates the percentage of users directed to the canary version.
-3. The script then loads assets for either the stable or canary version.
+AWS CodePipeline automates the software release process. For server-side canary deployments, it acts as an orchestrator, leveraging other AWS services for traffic shifting and deployment management.
 
-AWS CodePipeline facilitates this by:
+*   **Workflow Automation**: Defines stages (Source, Build, Deploy, Test) for application delivery.
+*   **Integration with AWS Deployment Services**:
+    *   **AWS CodeDeploy**: CodePipeline's primary integration for sophisticated deployments to EC2, ECS, and Lambda. CodeDeploy handles the actual traffic shifting (e.g., linear, all-at-once with baking) and can manage canary releases.
+    *   **AWS Lambda**: Can deploy new Lambda versions and update weighted aliases for canary releases.
+    *   **Amazon S3/CloudFront with ALB/API Gateway**: For applications fronted by ALB or API Gateway, CodePipeline can trigger updates to target group weights or stage deployments, often via AWS CLI, SDK actions in CodeBuild, or Lambda functions.
+*   **Manual Approvals**: CodePipeline supports manual approval actions, allowing human intervention before promoting a canary.
 
-*   **Automating Builds**: Building your frontend application (e.g., running `npm install` and `npm run build`).
-*   **Deploying Static Assets**: Deploying the stable and canary versions of your static assets (HTML, CSS, JS) to a hosting solution like Amazon S3 (often with Amazon CloudFront for distribution).
-    *   Example: `s3://my-bucket/app/stable/` and `s3://my-bucket/app/canary/`.
-*   **Managing `canary-config.json`**: Automating the update and deployment of the `canary-config.json` file to a known, accessible location (e.g., `s3://my-bucket/config/canary-config.json`).
-*   **Orchestrating Stages**: Defining a pipeline with stages for source control, build, test, and deployment of both application assets and the configuration file.
+## How CodePipeline Orchestrates Server-Side Canary
 
-## How CodePipeline Supports Client-Side Canary
+A typical CodePipeline setup for server-side canary:
 
-1.  **Source Stage**:
-    *   CodePipeline monitors your source repository (e.g., AWS CodeCommit, GitHub, Bitbucket).
-    *   A commit to the main branch (or a specific release branch) can trigger the pipeline.
+1.  **Source Stage**: Monitors a repository (CodeCommit, GitHub, S3).
+2.  **Build Stage**: AWS CodeBuild compiles code, builds artifacts (e.g., Docker images, deployment packages).
+3.  **Deploy Canary Stage**:
+    *   **Using AWS CodeDeploy (for ECS/EC2/Lambda)**:
+        *   CodePipeline action invokes CodeDeploy.
+        *   CodeDeploy deploys the new version to a segment of the fleet or traffic (e.g., `CodeDeployDefault.ECSLinear10PercentEvery3Minutes`).
+        *   CodeDeploy can run validation tests via lifecycle hooks.
+    *   **Using AWS Lambda Weighted Aliases**:
+        *   A CodePipeline action (often CodeBuild running CLI commands or a Lambda function) deploys a new Lambda version and updates an alias to send a percentage of traffic to it.
+    *   **Using ALB Weighted Target Groups**:
+        *   A CodePipeline action (CodeBuild/Lambda) deploys the new version to a new target group and then updates ALB listener rule weights.
 
-2.  **Build Stage**:
-    *   AWS CodeBuild (or Jenkins, etc., integrated with CodePipeline) builds your frontend application.
-    *   This stage can produce two sets of assets: one for stable and one for canary if they differ, or a single build that can be configured.
-    *   It can also prepare or update the `canary-config.json` based on parameters or a file in the repository.
+4.  **Test/Validation Stage (Optional)**:
+    *   Run automated tests against the canary endpoint.
+    *   Could involve third-party testing tools integrated via CodeBuild or Lambda.
 
-3.  **Deployment Stage(s)**:
-    *   **Application Assets**:
-        *   Deploy the built static assets for the stable version to its S3 path.
-        *   Deploy the built static assets for the canary version to its S3 path.
-    *   **Configuration File**:
-        *   A separate action in CodePipeline (or a step in CodeBuild) updates `canary-config.json` in its designated S3 location. This update is key to controlling the canary rollout percentage.
-        *   This step could involve:
-            *   Taking a `canary-config.json` from the repository.
-            *   Using an AWS Lambda function invoked by CodePipeline to dynamically generate or update the JSON file based on external inputs (e.g., analytics results, manual approval).
-            *   Using AWS CLI commands within CodeBuild to upload the file.
+5.  **Promote/Approval Stage**:
+    *   If tests pass or after a baking period, a manual approval action can be inserted.
+    *   Upon approval, another CodePipeline action (again, often CodeDeploy or a script) shifts remaining traffic to the new version or finalizes the CodeDeploy deployment.
 
-4.  **Client-Side Logic**:
-    *   The client application (served from S3 via CloudFront) fetches `canary-config.json`.
-    *   Based on the percentage, it loads assets from either the `/stable/` or `/canary/` path.
+6.  **Rollback**: If issues occur, CodeDeploy can automatically roll back. For other methods, a rollback pipeline or manual steps might be triggered.
 
-## Example Pipeline Flow for Updating Canary Percentage
+## Comparison: CodePipeline-Orchestrated Server-Side Canary vs. Client-Side Canary (with CodePipeline)
 
-1.  **Trigger**: A developer manually triggers the pipeline with a new canary percentage (e.g., as a parameter) or an automated system (monitoring analytics) triggers it.
-2.  **Source**: (Optional if only config changes) CodePipeline might fetch the latest source if other app changes are bundled.
-3.  **Config Update Action**:
-    *   A CodeBuild project or Lambda function:
-        *   Receives the new percentage.
-        *   Modifies the `canary-config.json` file.
-        *   Uploads the updated `canary-config.json` to S3.
-    *   This action could also update a `version.json` file to trigger client-side refreshes if your application polls for it.
-4.  **Deployment to S3**: The updated `canary-config.json` is now live.
-5.  **CloudFront Invalidation (Optional but Recommended)**: Invalidate the CloudFront cache for `canary-config.json` to ensure clients fetch the latest version quickly.
+### CodePipeline-Orchestrated Server-Side Canary
+*   **Mechanism**: CodePipeline triggers AWS services (like CodeDeploy, Lambda) or custom scripts that perform server-side traffic shifting.
+*   **Decision Logic**: Resides in the configuration of the AWS service handling the deployment (e.g., CodeDeploy deployment configuration, Lambda alias weights, ALB listener rules).
+*   **Scope**: Affects entire user requests routed to the canary. Suitable for full-stack testing.
+*   **CodePipeline Role**: Orchestrates the end-to-end release process, including triggering the canary deployment, managing approvals, and promoting to production.
 
-## Considerations
+### Client-Side Canary (with CodePipeline for Deployments)
+*   **Mechanism**: JavaScript in the browser fetches a `canary-config.json` (e.g., from S3) and decides which version of assets/features to load.
+*   **Decision Logic**: Resides in client-side JavaScript.
+*   **Scope**: Granular control over frontend elements.
+*   **CodePipeline Role**: Automates the build and deployment of stable/canary frontend assets and the `canary-config.json` file, typically to S3 (often with CloudFront).
 
-*   **Granular Control**: CodePipeline allows for fine-grained control over each step of the deployment.
-*   **Integration**: It integrates well with other AWS services like S3, CodeBuild, Lambda, CloudFormation, and IAM.
-*   **`canary-config.json` Management**: The strategy for updating `canary-config.json` is crucial. It should be easy to modify and deploy this file independently of full application deployments if only the percentage needs to change.
-*   **Atomic Updates**: Ensure that if you're updating both application assets and the config, they are consistent. Client-side logic should be resilient to temporary mismatches if asset deployment takes time.
-*   **Rollback**: Define a rollback strategy. For client-side canary, this often means quickly updating `canary-config.json` to set the canary percentage to 0. CodePipeline can have a separate pipeline or manual action for this.
+### Key Differences & Considerations
 
-AWS CodePipeline provides the automation backbone to reliably deploy the different frontend asset versions and, most importantly, the `canary-config.json` that drives the client-side canary decision-making process.
+| Feature             | CodePipeline Server-Side Canary Orchestration               | Client-Side Canary (CodePipeline for Deployments)             |
+|---------------------|-------------------------------------------------------------|-------------------------------------------------------------------|
+| **Decision Point**  | AWS Deployment Service (Server), orchestrated by CodePipeline | User's Browser (Client)                                           |
+| **Granularity**     | Application version (instance, service, Lambda alias)       | Per-feature, per-user attribute, specific assets                  |
+| **Complexity**      | Higher (integration with CodeDeploy, ALB/Lambda configurations)| Simpler CodePipeline setup for S3 asset/config deployment       |
+| **Use Cases**       | Full-stack changes, backend APIs, critical service updates  | UI/UX changes, frontend A/B testing on static sites             |
+| **Rollback**        | Handled by CodeDeploy; or manual/scripted traffic reversal  | Deploy updated `canary-config.json` (e.g., percentage to 0) via CodePipeline |
+| **Why Server-Side?**| Leverages robust, AWS-native deployment services for controlled rollouts. Centralized management and monitoring within AWS. |
+| **Why Client-Side?**| Simpler CI/CD for frontend experiments if server-side tools are not needed. CodePipeline efficiently handles S3 deployments. |
+
+**Conclusion**:
+AWS CodePipeline is a powerful orchestrator for server-side canary deployments within the AWS ecosystem, primarily by integrating with AWS CodeDeploy for EC2/ECS/Lambda, or by managing Lambda alias weights and ALB configurations. This provides a structured, automated way to perform controlled rollouts. For client-side canary strategies, CodePipeline is effective in automating the deployment of frontend assets and the `canary-config.json` to S3, allowing the browser to manage the canary logic.

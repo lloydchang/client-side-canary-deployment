@@ -1,67 +1,65 @@
-# Client-Side Canary Deployments with Amazon ECS
+# Canary Deployments with Amazon ECS
 
-This document outlines how Amazon Elastic Container Service (ECS) can be used to support a client-side canary deployment strategy. In a client-side canary approach, the browser's JavaScript makes the decision to show a stable or canary version based on a configuration, while ECS helps serve the necessary application versions and configuration files.
+This document outlines how Amazon Elastic Container Service (ECS) is typically used for canary deployments, primarily through server-side traffic shifting mechanisms, and contrasts this with a client-side canary approach.
 
-## Core Concepts
+## Core Concepts of ECS Canary Deployments (Server-Side)
 
-Client-side canary deployment relies on JavaScript running in the user's browser to:
-1. Fetch a configuration file (e.g., `canary-config.json`) that specifies the canary percentage.
-2. Assign the user to a "stable" or "canary" group based on this percentage.
-3. Load the appropriate version of the application assets (JS, CSS, HTML).
+Server-side canary deployments with ECS involve routing a small percentage of user traffic to a new version of an application. The decision is made by the infrastructure. ECS facilitates this using:
 
-Amazon ECS can support this by:
+*   **AWS Application Load Balancer (ALB)**: ALBs support weighted target groups, allowing you to distribute traffic between two versions of your application (e.g., 95% to stable, 5% to canary). ECS services register tasks with these target groups.
+*   **AWS CodeDeploy**: For more sophisticated deployment strategies like blue/green, CodeDeploy can manage traffic shifting to new task sets in ECS. While primarily blue/green, it can be used for canary-style testing by controlling traffic shift percentages and potentially integrating with testing and rollback hooks.
+*   **Multiple ECS Services/Task Definitions**: You deploy the stable and canary versions of your application as separate ECS services or as different task definitions within the same service (managed by CodeDeploy).
 
-*   **Hosting Application Versions**: Deploying multiple versions (stable and canary) of your containerized frontend application. Each version can be a separate ECS service or task definition.
-*   **Serving Static Assets**: ECS tasks, typically running a web server like Nginx or Apache, serve the static HTML, CSS, JavaScript files for both stable and canary versions. These could be served from different paths or be part of different container images.
-*   **Serving Configuration Files**: The `canary-config.json` file, which dictates the canary rollout percentage, can be:
-    *   Baked into a specific version of the frontend application container (less flexible for dynamic updates).
-    *   Stored in Amazon S3 and fetched by the client. ECS tasks might need IAM roles to allow an auxiliary process to update this file in S3, or it could be updated by a CI/CD pipeline.
-    *   Served via a small API endpoint also hosted on ECS.
-*   **Load Balancing (Optional for Asset Serving)**: An Application Load Balancer (ALB) can sit in front of your ECS services. While client-side canary doesn't strictly need ALB traffic shifting for the *canary decision itself*, ALB can be used to route to different ECS services that serve distinct versions of assets if needed, or simply to provide a stable endpoint for your frontend application.
+## How ECS Facilitates Server-Side Canary
 
-## How ECS Facilitates Client-Side Canary
+1.  **Deploy New Version**:
+    *   Package your new application version as a Docker image.
+    *   Create a new ECS task definition pointing to this image.
+    *   Deploy this new task definition. This could be:
+        *   A new ECS service pointing to a "canary" target group.
+        *   A new task set within an existing service managed by CodeDeploy.
 
-1.  **Deployment of Versions**:
-    *   You maintain two (or more) versions of your frontend application, packaged as Docker images (e.g., `myapp:stable`, `myapp:canary`).
-    *   Deploy these as separate ECS services or update existing services with new task definitions pointing to these images.
-    *   The key is that both versions' assets are accessible. For example, `https://myapp.com/stable-assets/` and `https://myapp.com/canary-assets/`, or the client-side logic dynamically constructs asset paths based on the assigned version.
+2.  **Traffic Shifting**:
+    *   **Using ALB Weighted Target Groups**:
+        *   Configure two target groups: one for the stable version, one for the canary version.
+        *   Adjust the weights on the ALB listener rule to send a small percentage of traffic (e.g., 5%) to the canary target group and the rest to the stable.
+        *   Monitor the canary version. Gradually increase the weight to the canary target group.
+    *   **Using AWS CodeDeploy**:
+        *   Define a CodeDeploy application and deployment group for your ECS service.
+        *   Specify a deployment configuration (e.g., `CodeDeployDefault.ECSLinear10PercentEvery1Minute` or a custom one).
+        *   CodeDeploy creates a new task set for the canary version, shifts a portion of traffic, runs validation tests (via lifecycle hooks), and then incrementally shifts more traffic or rolls back.
 
-2.  **Managing `canary-config.json`**:
-    *   This configuration file is central to the client-side logic.
-    *   **CI/CD Pipeline (e.g., AWS CodePipeline, Jenkins, GitHub Actions)**: When you want to adjust the canary percentage (e.g., from 5% to 10%), your CI/CD pipeline updates `canary-config.json`.
-    *   This updated file is then deployed to a location accessible by all clients (e.g., a specific S3 bucket and path).
-    *   The client-side JavaScript in *all* versions of your application (stable and canary) fetches this *same* `canary-config.json` to determine user assignment.
+3.  **Monitoring and Rollout/Rollback**:
+    *   Monitor key metrics (errors, latency, business KPIs) for the canary version.
+    *   If the canary is healthy, gradually increase traffic.
+    *   If issues arise, shift traffic back to the stable version (by adjusting ALB weights to 0% for canary or initiating a CodeDeploy rollback).
 
-3.  **Client-Side Logic**:
-    *   The JavaScript in `index.html` (served by ECS) fetches `canary-config.json`.
-    *   Based on the percentage in the config and potentially a user ID or random assignment, it decides if the user is "stable" or "canary".
-    *   It then dynamically loads the appropriate CSS/JS bundles or redirects to the correct version-specific HTML page (all served by ECS).
+## Comparison: ECS Server-Side Canary vs. Client-Side Canary
 
-## Example Workflow
+### ECS Server-Side Canary
+*   **Mechanism**: Traffic is split at the load balancer (ALB) or orchestrated by CodeDeploy. The server infrastructure decides which version a user sees.
+*   **Decision Logic**: Resides in ALB listener rules (weights) or CodeDeploy configurations.
+*   **Scope**: Affects the entire user session/request for users routed to the canary. Can test backend and frontend changes together.
+*   **ECS Role**: Hosts both application versions and integrates with ALB/CodeDeploy for traffic management.
 
-1.  **Initial Setup**:
-    *   ECS Service A runs `myapp:stable`.
-    *   ECS Service B runs `myapp:canary` (or Service A is updated to serve both, distinguishable by path).
-    *   `canary-config.json` is in S3, initially set to `{"CANARY_PERCENTAGE": 0}`.
+### Client-Side Canary
+*   **Mechanism**: JavaScript in the user's browser fetches a configuration file (e.g., `canary-config.json`) and decides whether to load stable or canary assets/features.
+*   **Decision Logic**: Resides in the client-side JavaScript.
+*   **Scope**: Can be more granular (e.g., specific features, UI components). Primarily for frontend changes.
+*   **ECS Role**: Serves the different versions of frontend assets and potentially the `canary-config.json` file. No direct involvement in traffic splitting for the canary decision itself.
 
-2.  **Starting Canary**:
-    *   CI/CD pipeline updates `canary-config.json` in S3 to `{"CANARY_PERCENTAGE": 5}`.
+### Key Differences & Considerations
 
-3.  **User Visit**:
-    *   User's browser loads `index.html` from the main application URL (served by ECS).
-    *   JavaScript fetches `s3://your-bucket/canary-config.json`.
-    *   JavaScript assigns the user (e.g., 5% to canary).
-    *   If canary, it loads assets from the canary path/version (served by ECS). Otherwise, stable assets.
+| Feature             | ECS Server-Side Canary                                       | Client-Side Canary                                                |
+|---------------------|--------------------------------------------------------------|-------------------------------------------------------------------|
+| **Decision Point**  | Load Balancer / CodeDeploy (Server)                          | User's Browser (Client)                                           |
+| **Granularity**     | Per-request/session, entire application version              | Per-feature, per-user attribute, specific assets                  |
+| **Complexity**      | Higher (ALB/CodeDeploy setup, IAM roles)                     | Lower infrastructure complexity if config is external (e.g., S3)  |
+| **Use Cases**       | Full-stack changes, backend dependencies, infrastructure tests | UI/UX changes, frontend-specific features, A/B testing            |
+| **Rollback**        | Shift traffic via ALB/CodeDeploy                             | Update `canary-config.json` (e.g., set canary percentage to 0)    |
+| **Monitoring**      | Infrastructure metrics, application logs from canary instances | Client-side analytics, error tracking for canary users            |
+| **Why Server-Side?**| Robust for any application type. Tests entire new version. Centralized control. Automated promotion/rollback with CodeDeploy. |
+| **Why Client-Side?**| Simpler for frontend teams to manage UI experiments. More dynamic targeting. Less direct infra changes for config updates. |
 
-4.  **Rollout/Rollback**:
-    *   To increase rollout, CI/CD updates `CANARY_PERCENTAGE` in S3.
-    *   To rollback, CI/CD sets `CANARY_PERCENTAGE` to 0 in S3.
-
-## Considerations
-
-*   **Stateless Frontend**: This approach works best for stateless frontend applications where assets can be switched easily.
-*   **Configuration Accessibility**: Ensure `canary-config.json` is highly available and has appropriate caching/CDN settings (e.g., using Amazon CloudFront in front of S3).
-*   **CI/CD Integration**: A robust CI/CD pipeline is crucial for managing the deployment of application versions and updating the `canary-config.json`.
-*   **Server-Side vs. Client-Side**: ECS with ALBs can also perform server-side canary deployments using weighted target groups. This is a different pattern where the load balancer, not the client, makes the routing decision. The client-side approach discussed here gives more control to the frontend application logic itself.
-
-By using ECS to serve the different application asset versions and ensuring the `canary-config.json` is accessible and updatable, you can effectively implement a client-side canary deployment strategy.
+**Conclusion**:
+ECS excels at server-side canary deployments using ALB weighted target groups or AWS CodeDeploy, providing robust, infrastructure-level traffic management. This is suitable for testing entire application versions. Client-side canary offers a different approach, giving control to the browser for frontend-specific changes, where ECS's role is to serve the necessary assets and configuration. The choice depends on the specific needs, the scope of changes, and team expertise.

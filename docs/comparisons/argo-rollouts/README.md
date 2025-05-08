@@ -1,52 +1,66 @@
-# Client-Side Canary Deployments and Argo Rollouts
+# Canary Deployments with Argo Rollouts (Server-Side)
 
-This document clarifies the relationship between a client-side canary deployment strategy and Argo Rollouts, a Kubernetes controller for progressive delivery. While they can coexist, they address canary deployments at different layers.
+This document explains Argo Rollouts, a Kubernetes controller designed for server-side progressive delivery, including advanced canary deployments. It then contrasts this with a client-side canary strategy.
 
 ## Argo Rollouts: Server-Side Progressive Delivery
 
-Argo Rollouts provides advanced deployment capabilities like canary, blue-green, and automated analysis directly within Kubernetes. Key features include:
+Argo Rollouts is a Kubernetes controller that provides advanced deployment strategies like canary and blue-green. It is specifically designed for **server-side** progressive delivery.
 
-*   **Fine-grained Traffic Shaping**: Argo Rollouts can precisely control the percentage of traffic sent to a new (canary) version of an application at the Kubernetes service or Ingress level, often integrating with service meshes (like Istio, Linkerd) or Ingress controllers (like NGINX, ALB Ingress Controller).
-*   **Automated Analysis**: It can query metrics from providers (like Prometheus, Datadog, New Relic) during a rollout to automatically promote or rollback the canary based on its performance.
-*   **Declarative Configuration**: Rollout strategies are defined via a custom Kubernetes resource (`Rollout`).
+Key features include:
 
-**Argo Rollouts primarily implements *server-side* canary deployments.** The decision of which version a user sees is made by the infrastructure (service mesh, load balancer) based on the Rollout strategy, before the request even reaches the application pod in many cases, or by routing to different backend pods.
+*   **Advanced Traffic Shaping**: Argo Rollouts precisely controls the percentage of traffic sent to a new (canary) version of an application. It integrates with various service meshes (e.g., Istio, Linkerd, AWS App Mesh) and Ingress controllers (e.g., NGINX, Traefik, AWS ALB Ingress Controller) to manage traffic.
+*   **Automated Analysis & Promotion/Rollback**: It can query metrics from providers (like Prometheus, Datadog, New Relic, CloudWatch) during a rollout. Based on the analysis of these metrics against predefined success criteria, Argo Rollouts can automatically promote the canary to production or roll it back.
+*   **Declarative Configuration**: Rollout strategies are defined via a custom Kubernetes resource called `Rollout`. This CRD replaces the standard `Deployment` object for applications managed by Argo Rollouts.
+*   **Blue/Green Deployments**: Besides canary, it also supports blue/green deployments with similar traffic management and analysis capabilities.
 
-## Client-Side Canary Deployments
+## How Argo Rollouts Facilitates Server-Side Canary
 
-As detailed in this repository, client-side canary deployment involves:
-1. JavaScript in the user's browser fetching a `canary-config.json` file.
-2. This configuration (e.g., `{"CANARY_PERCENTAGE": 10}`) dictates the assignment.
-3. The client-side script then decides whether to load stable or canary assets/features.
+1.  **Define `Rollout` Resource**:
+    *   Replace your Kubernetes `Deployment` with an Argo Rollouts `Rollout` resource.
+    *   In the `Rollout` spec, define the canary strategy:
+        *   `steps`: A list of actions, such as setting traffic weights (e.g., send 10% to canary), pausing for analysis, or pausing for manual approval.
+        *   `analysis`: Configuration for querying metrics from providers and defining success/failure conditions.
+        *   Integration with a service mesh or Ingress controller for traffic management.
 
-**The decision logic is entirely within the client's browser.**
+2.  **Triggering a Rollout**:
+    *   Updating the pod template in the `Rollout` resource (e.g., changing the container image tag) triggers a new rollout.
 
-## How They Can Coexist or Relate
+3.  **Execution by Argo Rollouts Controller**:
+    *   The controller creates a new ReplicaSet for the canary version.
+    *   It executes the defined steps:
+        *   Adjusts traffic weights via the configured service mesh or Ingress controller.
+        *   Pauses for analysis, querying metrics.
+        *   If analysis passes (or manual approval is given), proceeds to the next step or promotes the canary.
+        *   If analysis fails, it rolls back the canary version and aborts the rollout.
 
-1.  **Serving Different Frontend Asset Versions**:
-    *   You might have two distinct versions of your frontend application (e.g., `frontend-v1` for stable, `frontend-v2` for canary) packaged as Docker images.
-    *   Argo Rollouts *could* be used to manage the deployment of the pods serving these static assets. For instance, you could have a `Rollout` resource that gradually introduces pods running `frontend-v2`.
-    *   However, for purely static frontends where the client makes the choice, a simpler Kubernetes `Deployment` for each version (stable and canary) might suffice. The client-side logic would then fetch assets from `/stable/bundle.js` or `/canary/bundle.js` based on its own decision.
+## Comparison: Argo Rollouts (Server-Side) vs. Client-Side Canary
 
-2.  **Managing `canary-config.json`**:
-    *   The `canary-config.json` file, which drives the client-side decision, would typically be managed as a Kubernetes `ConfigMap`.
-    *   This ConfigMap can be deployed and updated using standard Kubernetes practices, potentially via GitOps tools like Argo CD (which is often used alongside Argo Rollouts).
-    *   Argo Rollouts itself doesn't directly manage this client-specific configuration file, but the CI/CD process that triggers an Argo Rollout for a backend might also update this `canary-config.json` for the frontend.
+### Argo Rollouts (Server-Side Canary)
+*   **Mechanism**: Argo Rollouts controller manipulates underlying Kubernetes resources (ReplicaSets, Services) and integrates with service meshes/Ingress controllers to shift traffic at the server/infrastructure level.
+*   **Decision Logic**: Defined declaratively in the `Rollout` CRD, driven by metric analysis and predefined steps.
+*   **Scope**: Affects entire user requests routed to the canary version. Ideal for testing full-stack changes, backend services, and critical frontend applications.
+*   **Argo Rollouts Role**: Actively manages the entire lifecycle of the progressive delivery, including traffic shaping, metric analysis, and automated promotion or rollback.
 
-3.  **Complementary Strategies**:
-    *   **Backend Canaries with Argo Rollouts, Frontend Canaries Client-Side**: You could use Argo Rollouts for canaries of your backend APIs, while the frontend uses a client-side canary strategy to test new UI features that consume these (or older) backend APIs. The `canary-config.json` for the frontend could enable features that specifically target a canary version of a backend API endpoint.
-    *   **Informing Client-Side Config**: The success or failure of a backend canary managed by Argo Rollouts could inform the decision to increase the percentage in the client-side `canary-config.json`.
+### Client-Side Canary
+*   **Mechanism**: JavaScript in the user's browser fetches a configuration file (e.g., `canary-config.json`) and decides whether to load stable or canary assets/features.
+*   **Decision Logic**: Resides in the client-side JavaScript.
+*   **Scope**: Can be more granular (e.g., specific features, UI components, user segments). Primarily for frontend changes.
+*   **Argo Rollouts Role (Indirect)**: Argo Rollouts would not directly manage the client-side canary logic. However, it could be used to deploy the Kubernetes `Deployments` that serve the different frontend asset versions and the `ConfigMap` for `canary-config.json`, if a `Rollout` object was used instead of a standard `Deployment` for these frontend servers. But this is not its primary use case for client-side canary.
 
-4.  **Different Use Cases**:
-    *   **Argo Rollouts**: Ideal for microservices, backend APIs, or when infrastructure-level traffic control is desired for any application component. It offers robust automated analysis and rollback based on metrics.
-    *   **Client-Side Canary**: Particularly useful for static frontends, testing UI changes, or when fine-grained control within the client (based on user attributes, etc.) is needed without complex infrastructure changes. It's simpler for purely static sites hosted on CDNs or basic storage.
+### Key Differences & Considerations
 
-## When to Choose Which (or Both)
+| Feature             | Argo Rollouts (Server-Side)                                  | Client-Side Canary                                                |
+|---------------------|--------------------------------------------------------------|-------------------------------------------------------------------|
+| **Decision Point**  | Argo Rollouts Controller / Service Mesh / Ingress (Server)   | User's Browser (Client)                                           |
+| **Granularity**     | Application version (pods, ReplicaSets)                      | Per-feature, per-user attribute, specific assets                  |
+| **Automation**      | High (automated traffic shifting, metric analysis, promotion/rollback) | Canary logic is custom; deployment of assets/config can be automated |
+| **Complexity**      | Higher (requires understanding Rollouts CRD, service mesh/Ingress integration, metric setup) | Simpler for the canary logic itself; infrastructure for assets/config can be simple (e.g., S3) or complex (Kubernetes) |
+| **Use Cases**       | Critical services, backend APIs, full-stack applications requiring robust, automated, metric-driven rollouts | UI/UX changes, frontend A/B testing, feature flagging, especially on static sites or when fine-grained client control is needed |
+| **Rollback**        | Automated by Argo Rollouts based on metrics or manual trigger| Update `canary-config.json` (e.g., set canary percentage to 0)    |
+| **Why Server-Side (Argo Rollouts)?** | Provides very robust, automated, and safe deployments for critical applications on Kubernetes. Reduces risk through metric-driven decisions. Standardizes complex deployment strategies. |
+| **Why Client-Side?** | Offers flexibility for frontend experiments directly controlled by frontend teams. Can be simpler to implement for UI changes if advanced server-side infrastructure is not already in place or desired. |
 
-*   **If you need infrastructure-level traffic splitting, automated metric analysis for promotion/rollback for any service (frontend or backend) running on Kubernetes**: Use Argo Rollouts.
-*   **If you want to test frontend changes (UI, UX) with decisions made in the browser, especially for static sites, and want to manage rollout percentages via a simple JSON config**: Use client-side canary.
-*   **If your frontend (served via Kubernetes) needs to interact with backend services that are being canaried using Argo Rollouts**: The client-side logic can be made aware of different backend endpoints, or the `canary-config.json` can toggle features that use these canary backends.
+**Conclusion**:
+Argo Rollouts is a powerful, specialized tool for **server-side** progressive delivery in Kubernetes, offering sophisticated canary and blue-green deployment strategies with automated traffic shaping and metric-driven analysis. It is ideal for reducing the risk of deploying new versions of critical applications.
 
-**Key Distinction**: Argo Rollouts shifts *server-side traffic* to different application *instances/versions*. Client-side canary shifts *user experience within the browser* by loading different *assets or enabling features* based on a client-fetched configuration.
-
-While Argo Rollouts is a powerful tool for server-side progressive delivery, the client-side canary mechanism described in this repository operates independently at the browser level. They can be used in conjunction where Argo Rollouts manages backend services or even the deployment of different frontend server versions, while the client-side JavaScript still uses its `canary-config.json` to make the final rendering decision.
+Client-side canary is a distinct approach where the canary logic resides in the browser. While Argo Rollouts *could* deploy the Kubernetes resources that serve assets for a client-side canary, its strengths lie in managing server-side traffic and automated rollouts. The two strategies address different layers of the deployment process and can be chosen based on whether control and analysis need to be server-side and infrastructure-managed, or client-side and application-managed.

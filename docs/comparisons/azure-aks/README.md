@@ -1,60 +1,61 @@
-# Client-Side Canary Deployments with Azure Kubernetes Service (AKS)
+# Canary Deployments with Azure Kubernetes Service (AKS)
 
-This document describes how Azure Kubernetes Service (AKS) can be utilized to support a client-side canary deployment strategy. In this model, AKS hosts the application versions and configuration, but the canary assignment logic is executed by JavaScript in the user's browser.
+This document describes how Azure Kubernetes Service (AKS) typically supports canary deployments using server-side traffic management, and contrasts this with a client-side canary approach.
 
-## Core Concepts
+## Core Concepts of AKS Canary Deployments (Server-Side)
 
-A client-side canary deployment involves:
-1. Client-side JavaScript fetching a `canary-config.json` file.
-2. This configuration file defining the canary rollout percentage.
-3. The script then loading assets for either the stable or canary application version.
+Server-side canary deployments on AKS involve routing a portion of user traffic to a new application version at the infrastructure level. AKS facilitates this through:
 
-AKS can support this by:
+*   **Azure Application Gateway Ingress Controller (AGIC)**: AGIC allows Azure Application Gateway to be used as an Ingress for AKS. Application Gateway supports backend pools with weighted traffic distribution, enabling canary releases by splitting traffic between services representing stable and canary versions.
+*   **Service Mesh (e.g., Istio, Linkerd, Open Service Mesh)**: Installing a service mesh on AKS provides advanced traffic management capabilities, including fine-grained weighted routing, header-based routing, and traffic mirroring, which are essential for sophisticated canary strategies.
+*   **NGINX Ingress Controller (or other Ingress controllers)**: Many Ingress controllers deployed on AKS offer canary features, often through annotations or custom resources, to manage traffic splitting (e.g., `nginx.ingress.kubernetes.io/canary-*` annotations).
+*   **Kubernetes Deployments and Services**: Standard Kubernetes resources deploy stable and canary application versions, targeted by Ingress or service mesh routing rules.
+*   **Progressive Delivery Tools (e.g., Argo Rollouts, Flagger)**: These tools can be deployed on AKS to automate canary rollouts, including traffic shifting, metric analysis (e.g., from Azure Monitor or Prometheus), and automated promotion/rollback.
 
-*   **Hosting Frontend Applications**: Running containerized frontend web servers (e.g., Nginx) as Kubernetes Deployments on AKS.
-*   **Serving Multiple Versions**:
-    *   Deploying separate Kubernetes Deployments for the stable (`frontend-stable`) and canary (`frontend-canary`) versions.
-    *   Each deployment uses a distinct Docker image (e.g., `myacr.azurecr.io/frontend:stable-v1`, `myacr.azurecr.io/frontend:canary-v2`) stored in Azure Container Registry (ACR).
-*   **Serving `canary-config.json`**:
-    *   **ConfigMap**: Storing `canary-config.json` content within a Kubernetes ConfigMap. This can be mounted into frontend server pods or exposed via a service.
-    *   **External Storage**: Clients fetch `canary-config.json` from an external source like Azure Blob Storage, which is updated by CI/CD pipelines.
-*   **Ingress for Access**: Using Kubernetes Ingress (e.g., with Azure Application Gateway Ingress Controller or NGINX Ingress) to expose frontend applications.
+## How AKS Facilitates Server-Side Canary
 
-## How AKS Facilitates Client-Side Canary
+1.  **Deploy Versions**:
+    *   Package stable and canary application versions as Docker images (e.g., stored in Azure Container Registry - ACR).
+    *   Create separate Kubernetes `Deployment` resources for `app-stable` and `app-canary`.
+    *   Expose each Deployment with a distinct Kubernetes `Service` (e.g., `app-stable-svc`, `app-canary-svc`).
 
-1.  **Deployment of Application Versions**:
-    *   Define Kubernetes `Deployment` manifests for stable and canary frontend versions.
-    *   Store Docker images in Azure Container Registry (ACR).
-    *   Expose these Deployments via Kubernetes `Service` resources.
+2.  **Configure Traffic Shifting**:
+    *   **Using AGIC**: Configure backend pools in Azure Application Gateway corresponding to stable and canary services, and adjust traffic weights.
+    *   **Using a Service Mesh (e.g., Istio)**: Define Istio `VirtualService` and `DestinationRule` resources to split traffic between stable and canary services.
+    *   **Using NGINX Ingress**: Use canary annotations on the Ingress resource to specify the canary service, traffic weight, or header-based routing.
+    *   **Using Progressive Delivery Tools**: Define a `Rollout` (Argo Rollouts) or `Canary` (Flagger) CRD. These tools then manage the underlying traffic shifting mechanisms.
 
-2.  **Managing and Serving `canary-config.json`**:
-    *   **Option A: ConfigMap on AKS**:
-        *   Create a `ConfigMap` with `canary-config.json` data.
-        *   Mount this ConfigMap into frontend server pods (e.g., Nginx) to serve the file (e.g., at `/config/canary.json`).
-        *   Updates to the ConfigMap (e.g., changing `CANARY_PERCENTAGE`) are applied to the AKS cluster. Pods might need a rolling update to pick up changes.
-    *   **Option B: Azure Blob Storage**:
-        *   Store `canary-config.json` in an Azure Blob Storage container.
-        *   Client-side JavaScript fetches the config directly from Blob Storage (ensure CORS and cache settings are appropriate).
-        *   CI/CD pipelines (e.g., Azure Pipelines, GitHub Actions) update this blob.
+3.  **Monitor and Promote/Rollback**:
+    *   Monitor metrics for the canary version (e.g., Azure Monitor for containers, Prometheus).
+    *   If healthy, gradually increase traffic to the canary.
+    *   If issues arise, shift traffic back to the stable version or trigger an automated rollback.
 
-3.  **Client-Side Logic**:
-    *   The `index.html` (served by AKS-hosted pods) contains JavaScript.
-    *   This script fetches `canary-config.json` (from AKS via ConfigMap path, or from Azure Blob Storage).
-    *   Based on the config, it decides to load stable or canary assets, which are also served by AKS.
+## Comparison: AKS Server-Side Canary vs. Client-Side Canary
 
-4.  **CI/CD Integration (e.g., Azure Pipelines, GitHub Actions, Jenkins, Argo CD, Flux)**:
-    *   To change `CANARY_PERCENTAGE`:
-        *   The CI/CD pipeline updates the `ConfigMap` manifest (if using GitOps) and applies it to AKS.
-        *   Or, it uses `kubectl apply` with the updated ConfigMap definition.
-        *   Or, it updates the `canary-config.json` in Azure Blob Storage using Azure CLI or SDKs.
-    *   The pipeline also manages deployments of new stable/canary frontend images to AKS.
+### AKS Server-Side Canary
+*   **Mechanism**: Traffic is split at the Ingress/Load Balancer (e.g., Application Gateway) or within a service mesh. The infrastructure decides which version a user request hits.
+*   **Decision Logic**: Resides in Ingress controller configuration (AGIC, NGINX), service mesh rules, or progressive delivery tool configurations.
+*   **Scope**: Affects entire user requests routed to the canary. Suitable for testing full-stack changes.
+*   **AKS Role**: Provides the Kubernetes platform, integrates with Azure networking services (like Application Gateway via AGIC), and supports service meshes and progressive delivery tools.
 
-## Considerations for AKS
+### Client-Side Canary
+*   **Mechanism**: JavaScript in the browser fetches a `canary-config.json` and decides which version of assets/features to load.
+*   **Decision Logic**: Resides in client-side JavaScript.
+*   **Scope**: Granular control over frontend elements, features, or user segments.
+*   **AKS Role**: Hosts the different versions of frontend application pods and potentially serves the `canary-config.json` (e.g., via a ConfigMap mounted into a pod). It's not directly involved in the canary decision traffic splitting.
 
-*   **AKS Ingress Controllers**: Azure Application Gateway Ingress Controller (AGIC) or other Ingress solutions like NGINX can perform server-side traffic splitting for canary releases. This is a distinct pattern from client-side canary, where AKS's role is primarily to host the assets and config that the *client* uses.
-*   **ConfigMap Updates**: Be mindful of how applications consume ConfigMap updates on Kubernetes.
-*   **Managed Identity**: Use Azure AD Pod Identity (or Workload Identity for AKS as it becomes more prevalent) for AKS pods to securely access other Azure resources like Blob Storage without managing secrets directly.
-*   **Alternative: Server-Side Canary**: AKS, especially with service meshes like Istio or Linkerd, or advanced Ingress capabilities, is well-suited for server-side canary deployments.
-*   **GitOps**: Tools like Flux or Argo CD can be integrated with AKS for declarative management of frontend Deployments and `canary-config` ConfigMaps.
+### Key Differences & Considerations
 
-Using AKS for client-side canary deployments involves leveraging its robust container orchestration to serve different versions of your frontend application and potentially the `canary-config.json` itself. The decision logic remains in the client's browser, driven by the fetched configuration.
+| Feature             | AKS Server-Side Canary                                       | Client-Side Canary (AKS for Hosting)                          |
+|---------------------|--------------------------------------------------------------|-------------------------------------------------------------------|
+| **Decision Point**  | Ingress / Service Mesh / Progressive Delivery Tool (Server)  | User's Browser (Client)                                           |
+| **Granularity**     | Per-request, entire application version/service instance     | Per-feature, per-user attribute, specific assets                  |
+| **Complexity**      | Higher (Ingress rules, service mesh setup, tool configuration)| Lower infrastructure complexity for canary logic itself           |
+| **Use Cases**       | Full-stack changes, backend API canaries, microservices      | UI/UX changes, frontend A/B testing, feature flagging             |
+| **Rollback**        | Reconfigure Ingress/service mesh, or automated by tools      | Update `canary-config.json`                                       |
+| **Monitoring**      | Azure Monitor, Prometheus for service health                 | Client-side analytics, error tracking for canary users            |
+| **Why Server-Side?**| Robust for any workload. Centralized traffic control. Integrates with Azure ecosystem tools for automation and analysis. Leverages Kubernetes strengths. |
+| **Why Client-Side?**| Simpler for frontend-specific experiments. Dynamic targeting based on client-side info. Less reliance on complex AKS networking features if not already used. |
+
+**Conclusion**:
+AKS provides a strong platform for server-side canary deployments through integration with Azure Application Gateway (via AGIC), support for various service meshes, and compatibility with progressive delivery tools like Argo Rollouts and Flagger. This approach offers robust, infrastructure-level traffic management for testing entire application versions. Client-side canary is a distinct strategy, mainly for frontend changes, where AKS would host application versions and configuration, with the browser handling canary logic. The best approach depends on specific requirements and existing infrastructure.

@@ -1,72 +1,64 @@
-# Client-Side Canary Deployments with Argo CD
+# Canary Deployments with Argo CD (and Argo Rollouts/Flagger)
 
-This document explains how Argo CD, a declarative, GitOps continuous delivery tool for Kubernetes, can support a client-side canary deployment strategy. Argo CD manages the Kubernetes resources that serve your application versions and configuration, while the client-side JavaScript handles the actual canary assignment.
+This document explains how Argo CD, a GitOps continuous delivery tool, typically supports server-side canary deployments in Kubernetes, usually by managing resources for progressive delivery controllers like Argo Rollouts or Flagger. It then contrasts this with using Argo CD for a client-side canary strategy.
 
-## Core Concepts
+## Core Concepts of Argo CD for Server-Side Canary (with Argo Rollouts/Flagger)
 
-In a client-side canary deployment:
-1. JavaScript in the browser fetches a `canary-config.json` file.
-2. This configuration specifies the canary rollout percentage.
-3. The script loads assets for either the stable or canary version.
+Argo CD itself is a GitOps engine that ensures the Kubernetes cluster state matches the configuration in Git. For server-side canary deployments, it's commonly paired with:
 
-Argo CD facilitates this by:
+*   **Argo CD (GitOps Management)**:
+    *   Synchronizes Kubernetes manifests from a Git repository to the cluster.
+    *   Manages the lifecycle of applications defined in Git, including `Deployment`, `Service`, `Ingress` resources, and custom resources for progressive delivery tools.
+*   **Argo Rollouts or Flagger (Progressive Delivery Execution)**:
+    *   These tools execute the canary deployment strategy (traffic shifting, metric analysis, automated promotion/rollback).
+    *   Argo CD deploys and manages the `Rollout` (for Argo Rollouts) or `Canary` (for Flagger) custom resources, along with the application's base manifests.
 
-*   **GitOps Management**: Ensuring that the state of your Kubernetes cluster (including frontend deployments and configuration) matches the desired state defined in a Git repository.
-*   **Deploying Application Versions**: Managing Kubernetes `Deployment` resources for stable (`frontend-stable`) and canary (`frontend-canary`) versions of your frontend application. These deployments serve the static assets.
-*   **Managing `canary-config.json`**:
-    *   The `canary-config.json` data can be stored as a Kubernetes `ConfigMap` manifest within the Git repository that Argo CD monitors.
-    *   When this ConfigMap manifest is updated in Git, Argo CD automatically applies the change to the cluster.
-*   **Automated Synchronization**: Argo CD continuously monitors the Git repository and the live state in the Kubernetes cluster, automatically syncing changes or alerting on drift.
-
-## How Argo CD Supports Client-Side Canary
+## How Argo CD Supports Server-Side Canary (with Argo Rollouts/Flagger)
 
 1.  **Git Repository Structure**:
-    *   Your Git repository contains Kubernetes manifests for:
-        *   `Deployment` for the stable frontend version.
-        *   `Deployment` for the canary frontend version.
-        *   `Service` resources for these deployments.
-        *   `Ingress` resource to expose the application.
-        *   A `ConfigMap` manifest containing the `canary-config.json` data (e.g., `canary-config-cm.yaml`).
-            ```yaml
-            # canary-config-cm.yaml
-            apiVersion: v1
-            kind: ConfigMap
-            metadata:
-              name: canary-settings
-            data:
-              config.json: |
-                {
-                  "CANARY_PERCENTAGE": 10,
-                  "FEATURE_FLAGS": {}
-                }
-            ```
+    *   Contains all Kubernetes manifests, including:
+        *   Standard application manifests (e.g., `Deployment` or the base for a `Rollout`).
+        *   `Service` and `Ingress` manifests.
+        *   The `Rollout` (Argo Rollouts) or `Canary` (Flagger) custom resource defining the canary strategy (steps, analysis, traffic management integration).
+    *   These are organized in a way Argo CD can consume (e.g., plain manifests, Helm charts, Kustomize overlays).
 
 2.  **Argo CD Application**:
-    *   You define an Argo CD `Application` CRD that points to your Git repository and the path containing these manifests.
-    *   Argo CD deploys these resources to your Kubernetes cluster (e.g., EKS, GKE, AKS).
-    *   The frontend pods (e.g., Nginx) are configured to serve the `config.json` from the mounted ConfigMap (e.g., at `/app/config/canary.json`).
+    *   An Argo CD `Application` CRD is defined, pointing to the Git repository path containing the above manifests.
+    *   Argo CD applies these manifests to the cluster. This deploys the application and tells Argo Rollouts/Flagger how to manage its progressive delivery.
 
-3.  **Updating Canary Percentage**:
-    *   To change the `CANARY_PERCENTAGE`:
-        1.  A developer (or an automated process) updates the `canary-config-cm.yaml` file in the Git repository (e.g., changes `CANARY_PERCENTAGE` from 10 to 20).
-        2.  Commit and push the change to Git.
-        3.  Argo CD detects the change in the Git repository.
-        4.  Argo CD automatically syncs this change to the Kubernetes cluster, updating the `ConfigMap`.
-    *   Frontend pods might need a rolling update if they don't dynamically reload the config, or if an intermediate service serves the config. Argo CD can also manage this if the Deployment spec changes (e.g., an annotation to trigger a rollout).
+3.  **Triggering and Managing the Canary Rollout**:
+    *   **Change in Git**: A developer updates the application's image tag or any other relevant configuration in the Git repository.
+    *   **Argo CD Sync**: Argo CD detects the change and syncs the manifests to the cluster. This might update the pod template in a `Rollout` resource or a `Deployment` monitored by Flagger.
+    *   **Argo Rollouts/Flagger Execution**: The progressive delivery controller (Argo Rollouts or Flagger) takes over:
+        *   It initiates the canary process based on its custom resource definition.
+        *   Performs traffic shifting, metric analysis, and automated promotion or rollback.
+    *   Argo CD provides visibility into the sync status of these resources and the overall application health, often reflecting the status reported by Argo Rollouts/Flagger.
 
-4.  **Client-Side Logic**:
-    *   The `index.html` (served by Kubernetes pods managed by Argo CD) contains JavaScript.
-    *   This script fetches `canary-config.json` (e.g., from `/app/config/canary.json`).
-    *   Based on the configuration, it loads stable or canary assets (also served by pods managed by Argo CD).
+## Comparison: Argo CD with Server-Side Tools vs. Client-Side Canary (with Argo CD)
 
-## Considerations
+### Argo CD with Argo Rollouts/Flagger (Server-Side Canary)
+*   **Mechanism**: Argo Rollouts/Flagger manage the server-side traffic shifting and analysis. Argo CD ensures that the declarative configuration for the application and its canary strategy (defined in Git) is applied and maintained in the cluster.
+*   **Decision Logic**: Resides in the `Rollout` or `Canary` CRD, executed by Argo Rollouts/Flagger, often driven by metrics.
+*   **Scope**: Affects entire user requests routed to the canary version. Ideal for full-stack testing.
+*   **Argo CD Role**: GitOps engine for all Kubernetes resources, including those that define and enable server-side canary. It doesn't perform traffic shifting itself but ensures the tools that do are correctly configured as per Git.
 
-*   **Git as Single Source of Truth**: With Argo CD, Git becomes the single source of truth for both your application deployments and the `canary-config.json`.
-*   **Rollbacks**: Rollbacks are straightforward: revert the commit in Git that changed the `canary-config-cm.yaml` (or application image versions), and Argo CD will sync the cluster back to the previous state.
-*   **ConfigMap Updates and Pod Restarts**: If the `canary-config.json` is served directly from a file mounted from a ConfigMap, pods might need to be restarted to pick up changes. Some strategies include:
-    *   Using a tool like `Reloader` to watch for ConfigMap changes and trigger rolling updates on Deployments.
-    *   Having an intermediate small service that reads the ConfigMap and serves it, which can be updated more dynamically.
-    *   The client-side application fetching the config with cache-busting headers.
-*   **Argo Rollouts for Server-Side Canary**: Argo CD is often used with Argo Rollouts for more advanced server-side canary deployments. If you are using Argo Rollouts, it would manage the traffic shifting between different versions of a backend service or even a frontend service at the Ingress/Service Mesh level. Client-side canary can complement this or be an alternative for purely static frontends. The `canary-config.json` for client-side logic would still be managed via GitOps by Argo CD.
+### Client-Side Canary (with Argo CD for Deployments)
+*   **Mechanism**: JavaScript in the browser fetches a `canary-config.json` and decides which version of assets/features to load.
+*   **Decision Logic**: Resides in client-side JavaScript.
+*   **Scope**: Granular control over frontend elements.
+*   **Argo CD Role**: Manages the deployment of different frontend application versions (as Kubernetes `Deployments`) and the `canary-config.json` (typically as a `ConfigMap`) from Git. Argo CD ensures these specific resources are in the desired state.
 
-Argo CD streamlines the management of Kubernetes resources needed for a client-side canary strategy by enforcing GitOps principles. It ensures that your frontend versions and the critical `canary-config.json` (as a ConfigMap) are consistently deployed and updated according to the definitions in your Git repository.
+### Key Differences & Considerations
+
+| Feature             | Argo CD + Server-Side Tools (e.g., Rollouts)                | Client-Side Canary (Argo CD for Deployments)                  |
+|---------------------|-------------------------------------------------------------|-------------------------------------------------------------------|
+| **Decision Point**  | Argo Rollouts/Flagger (Server-side, metric-driven)          | User's Browser (Client)                                           |
+| **Granularity**     | Application version (pods, services)                        | Per-feature, per-user attribute, specific assets                  |
+| **Automation**      | High (GitOps for config; automated execution by Rollouts/Flagger) | Argo CD automates deployment of assets/config from Git             |
+| **Use Cases**       | Critical services, backend APIs, full-stack applications    | UI/UX changes, frontend A/B testing                               |
+| **Rollback**        | Automated by Rollouts/Flagger; or Git revert synced by Argo CD | Update `canary-config.json` in Git (synced by Argo CD)            |
+| **Why Server-Side?**| Robust, automated, metric-driven canary releases via GitOps. Reduces risk for critical updates. Centralizes deployment strategy in Git. |
+| **Why Client-Side?**| Simpler for frontend-only changes if progressive delivery tools are overkill. Argo CD still provides strong GitOps benefits for deploying versions and config. |
+
+**Conclusion**:
+Argo CD, when paired with progressive delivery controllers like Argo Rollouts or Flagger, provides a comprehensive GitOps solution for server-side canary deployments in Kubernetes. Argo CD handles the declarative configuration management from Git, while Argo Rollouts/Flagger execute the complex traffic shifting and analysis. For a client-side canary strategy, Argo CD is highly effective for managing the deployment of frontend application versions and the `canary-config.json` (as a ConfigMap) using GitOps principles, even though the canary decision logic itself is client-driven.
