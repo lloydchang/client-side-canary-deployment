@@ -195,13 +195,14 @@ While this project facilitates client-side JavaScript-driven canary deployments 
 *   **Orchestration:**
     *   [Amazon Elastic Container Service (ECS)](./docs/comparisons/amazon-ecs/README.md)
     *   [Amazon Elastic Kubernetes Service (EKS)](./docs/comparisons/amazon-eks/README.md)
-    *   [Google Kubernetes Engine (GKE)](./docs/comparisons/google-gke/README.md)
     *   [Azure Kubernetes Service (AKS)](./docs/comparisons/azure-aks/README.md)
+    *   [Google Kubernetes Engine (GKE)](./docs/comparisons/google-gke/README.md)
 *   **CI/CD & GitOps:**
-    *   [AWS CodePipeline](./docs/comparisons/aws-codepipeline/README.md)
-    *   [CircleCI](./docs/comparisons/circleci/README.md)
     *   [Argo CD](./docs/comparisons/argo-cd/README.md)
     *   [Argo Rollouts](./docs/comparisons/argo-rollouts/README.md)
+    *   [AWS CodePipeline](./docs/comparisons/aws-codepipeline/README.md)
+    *   [CircleCI](./docs/comparisons/circleci/README.md)
+    *   [Flagger](./docs/comparisons/flagger/README.md)
     *   [Flux](./docs/comparisons/flux/README.md)
     *   [PipeCD](./docs/comparisons/pipecd/README.md)
 
