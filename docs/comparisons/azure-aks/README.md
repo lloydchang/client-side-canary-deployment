@@ -56,5 +56,7 @@ Server-side canary deployments on AKS involve routing a portion of user traffic 
 | **Monitoring**      | Azure Monitor, Prometheus for service health                 | Client-side analytics, error tracking for canary users            |
 | **Why?**            | Robust for any workload. Centralized traffic control. Integrates with Azure ecosystem tools for automation and analysis. Leverages Kubernetes strengths. | Simpler for frontend-specific experiments. Dynamic targeting based on client-side info. Less reliance on complex AKS networking features if not already used. |
 
+---
+
 **Conclusion**:
 AKS provides a strong platform for server-side canary deployments through integration with Azure Application Gateway (via AGIC), support for various service meshes, and compatibility with progressive delivery tools like Argo Rollouts and Flagger. This approach offers robust, infrastructure-level traffic management for testing entire application versions. Client-side canary is a distinct strategy, mainly for frontend changes, where AKS would host application versions and configuration, with the browser handling canary logic. The best approach depends on specific requirements and existing infrastructure.
