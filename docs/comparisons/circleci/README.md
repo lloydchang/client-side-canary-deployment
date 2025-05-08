@@ -60,8 +60,7 @@ A CircleCI `config.yml` would define jobs and workflows:
 | **Complexity**      | Higher (integration with platform-specific canary tools)    | Simpler deployment jobs in CircleCI for assets/config             |
 | **Use Cases**       | Full-stack changes, backend APIs, critical service updates  | UI/UX changes, frontend A/B testing                               |
 | **Rollback**        | Trigger rollback on deployment platform via CircleCI job    | Deploy updated `canary-config.json` (e.g., percentage to 0) via CircleCI |
-| **Why Server-Side?**| Leverages robust, platform-native canary capabilities. Centralized control and monitoring via the chosen platform. CircleCI provides the CI/CD pipeline. |
-| **Why Client-Side?**| Simpler CI/CD for frontend experiments if server-side tools are not needed. CircleCI efficiently handles asset and config file deployments. |
+| **Why?**            | Leverages robust, platform-native canary capabilities. Centralized control and monitoring via the chosen platform. CircleCI provides the CI/CD pipeline. | Simpler CI/CD for frontend experiments if server-side tools are not needed. CircleCI efficiently handles asset and config file deployments. |
 
 **Conclusion**:
 CircleCI is a versatile CI/CD platform that can effectively orchestrate server-side canary deployments by integrating with various cloud platforms and Kubernetes tools that handle the actual traffic shifting and analysis. This allows teams to leverage powerful canary features within their automated pipelines. For client-side canary strategies, CircleCI excels at building and deploying the necessary frontend assets and the `canary-config.json` to their respective hosting locations, while the canary decision logic remains in the browser.
