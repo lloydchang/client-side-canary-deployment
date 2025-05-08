@@ -13,6 +13,7 @@ Key features include:
     *   **Service Meshes**: Istio, Linkerd, AWS App Mesh, Kuma, Open Service Mesh (OSM).
     *   **Ingress Controllers**: NGINX, Traefik, Gloo Edge, Contour, Skipper, AWS Application Load Balancer (ALB) Ingress Controller.
     Flagger uses these integrations to control traffic shifting between stable (primary) and canary versions.
+*   **GitOps Compatibility**: Flagger is declarative and reacts to Kubernetes events. It can be configured with Kubernetes custom resources, making it compatible with any CI/CD solution designed for Kubernetes and ideal for GitOps pipelines alongside tools like Flux, JenkinsX, Carvel, Argo, etc.
 *   **Automated Canary Analysis**: Flagger can query metrics from various providers (e.g., Prometheus, Datadog, Amazon CloudWatch, Google Cloud Monitoring, New Relic) to analyze the health of the canary version.
 *   **Automated Promotion or Rollback**: Based on the success of the canary analysis (metrics thresholds, webhook checks), Flagger automatically promotes the canary to replace the primary version or rolls it back if issues are detected.
 *   **Extensible Webhooks**: Flagger can be configured to call out to webhooks for running load tests, acceptance tests, or any other custom validation during the canary process.
