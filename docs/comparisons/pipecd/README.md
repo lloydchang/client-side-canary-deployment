@@ -101,5 +101,7 @@ If a *client-side* canary strategy is desired (where the browser makes the decis
 | **Rollback**        | Automated by PipeCD or via Git revert triggering PipeCD       | Update `canary-config.json` (potentially via PipeCD/GitOps)       |
 | **Why?**            | Robust, automated, metric-driven rollouts for critical services (especially K8s). Consistent user experience per version. Handles backend changes. Controlled environment for testing new ECS versions via CodeDeploy. | Simpler for frontend-focused experiments if full progressive delivery is not needed. PipeCD can still manage the GitOps of assets/config. More dynamic targeting possible at the client. |
 
+---
+
 **Conclusion**:
 PipeCD excels at orchestrating server-side canary deployments and progressive delivery, offering automated, GitOps-driven rollouts. For Kubernetes, Cloud Run, and Lambda, it provides fine-grained control and metric analysis. For ECS, it leverages AWS CodeDeploy to achieve robust server-side progressive rollouts that include a canary/testing phase. This approach is ideal for validating entire application versions. A client-side canary strategy can be supported by PipeCD through its deployment capabilities for assets and configuration files, but the canary logic itself remains external to PipeCD's core progressive delivery mechanisms.
