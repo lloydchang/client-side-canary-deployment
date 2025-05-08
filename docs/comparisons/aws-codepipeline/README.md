@@ -62,8 +62,7 @@ A typical CodePipeline setup for server-side canary:
 | **Complexity**      | Higher (integration with CodeDeploy, ALB/Lambda configurations)| Simpler CodePipeline setup for S3 asset/config deployment       |
 | **Use Cases**       | Full-stack changes, backend APIs, critical service updates  | UI/UX changes, frontend A/B testing on static sites             |
 | **Rollback**        | Handled by CodeDeploy; or manual/scripted traffic reversal  | Deploy updated `canary-config.json` (e.g., percentage to 0) via CodePipeline |
-| **Why Server-Side?**| Leverages robust, AWS-native deployment services for controlled rollouts. Centralized management and monitoring within AWS. |
-| **Why Client-Side?**| Simpler CI/CD for frontend experiments if server-side tools are not needed. CodePipeline efficiently handles S3 deployments. |
+| **Why?**            | Leverages robust, AWS-native deployment services for controlled rollouts. Centralized management and monitoring within AWS. | Simpler CI/CD for frontend experiments if server-side tools are not needed. CodePipeline efficiently handles S3 deployments. |
 
 **Conclusion**:
 AWS CodePipeline is a powerful orchestrator for server-side canary deployments within the AWS ecosystem, primarily by integrating with AWS CodeDeploy for EC2/ECS/Lambda, or by managing Lambda alias weights and ALB configurations. This provides a structured, automated way to perform controlled rollouts. For client-side canary strategies, CodePipeline is effective in automating the deployment of frontend assets and the `canary-config.json` to S3, allowing the browser to manage the canary logic.
