@@ -57,8 +57,7 @@ Argo CD itself is a GitOps engine that ensures the Kubernetes cluster state matc
 | **Automation**      | High (GitOps for config; automated execution by Rollouts/Flagger) | Argo CD automates deployment of assets/config from Git             |
 | **Use Cases**       | Critical services, backend APIs, full-stack applications    | UI/UX changes, frontend A/B testing                               |
 | **Rollback**        | Automated by Rollouts/Flagger; or Git revert synced by Argo CD | Update `canary-config.json` in Git (synced by Argo CD)            |
-| **Why Server-Side?**| Robust, automated, metric-driven canary releases via GitOps. Reduces risk for critical updates. Centralizes deployment strategy in Git. |
-| **Why Client-Side?**| Simpler for frontend-only changes if progressive delivery tools are overkill. Argo CD still provides strong GitOps benefits for deploying versions and config. |
+| **Why?**            | Robust, automated, metric-driven canary releases via GitOps. Reduces risk for critical updates. Centralizes deployment strategy in Git. | Simpler for frontend-only changes if progressive delivery tools are overkill. Argo CD still provides strong GitOps benefits for deploying versions and config. |
 
 **Conclusion**:
 Argo CD, when paired with progressive delivery controllers like Argo Rollouts or Flagger, provides a comprehensive GitOps solution for server-side canary deployments in Kubernetes. Argo CD handles the declarative configuration management from Git, while Argo Rollouts/Flagger execute the complex traffic shifting and analysis. For a client-side canary strategy, Argo CD is highly effective for managing the deployment of frontend application versions and the `canary-config.json` (as a ConfigMap) using GitOps principles, even though the canary decision logic itself is client-driven.
