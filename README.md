@@ -206,7 +206,7 @@ While this project facilitates client-side JavaScript-driven canary deployments 
     *   [Flux](./docs/comparisons/flux/README.md)
     *   [PipeCD](./docs/comparisons/pipecd/README.md)
 
-These comparisons aim to clarify how each tool can contribute to a client-side canary setup or how their native canary functionalities differ.
+These comparisons aim to clarify how their canary functionalities differ.
 
 ## Documentation
 
