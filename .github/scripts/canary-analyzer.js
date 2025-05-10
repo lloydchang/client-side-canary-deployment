@@ -177,7 +177,7 @@ function getMockAnalyticsData() {
   }
 
   if (simulateErrors) {
-    console.log('Simulating high error rates in canary version (internal mock)');
+    console.log('[getMockAnalyticsData] Simulating high error rates due to --simulate-errors flag.');
     return {
       stable: { pageviews: 500, errors: 10, errorRate: 0.02 }, // 2% error rate
       canary: { pageviews: 50, errors: 10, errorRate: 0.20 }, // 20% error rate
@@ -207,7 +207,7 @@ function getMockAnalyticsData() {
   const relativeErrorIncrease = canaryErrorRate - stableErrorRate;
   const exceedsThreshold = relativeErrorIncrease > config.errorThreshold;
   
-  console.log('Using default internal mock data (or MOCK_..._ERROR_RATE env vars).');
+  console.log('[getMockAnalyticsData] Using default internal mock data (or MOCK_..._ERROR_RATE env vars).');
   return {
     stable,
     canary,
@@ -222,12 +222,17 @@ function getMockAnalyticsData() {
 
 // Use mock data if specified or if API key is missing
 async function getAnalyticsData() {
-  if (useMockData || forcePercentage !== null) {
-    console.log('Using mock analytics data');
+  if (simulateErrors || useMockData || forcePercentage !== null) {
+    let reason = [];
+    if (simulateErrors) reason.push("--simulate-errors flag is active");
+    if (useMockData) reason.push("USE_MOCK_DATA environment variable is true");
+    if (forcePercentage !== null) reason.push("--percentage flag is set");
+    console.log(`Using mock analytics data because: ${reason.join(', ')}.`);
     return getMockAnalyticsData();
   }
   
   // Otherwise use the real PostHog API
+  console.log('Using real PostHog API for analytics data.');
   return getVersionEvents();
 }
 
