@@ -1,4 +1,4 @@
-#!/bin/bash =x
+#!/bin/bash -x
 # Script to run canary analysis
 
 chmod +x ./.github/scripts/canary-analyzer.js
