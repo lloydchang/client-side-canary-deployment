@@ -122,7 +122,7 @@ graph TD
     end
 
     subgraph "Client-Side Canary Deployment"
-        G[User Request] --> H[Static Web Server or CDN]
+        G[User Request] --> H[Static Web Server or Content Delivery Network]
         H --> I[index.html with JavaScript]
         I --> J{Client-Side Decision Logic}
         J -->|95% of users| K[Load Stable Variant Assets]
