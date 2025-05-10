@@ -48,6 +48,7 @@ const analyzeOnly = args.includes('--analyze-only');
 const percentageArg = args.find(arg => arg.startsWith('--percentage='));
 const forcePercentage = percentageArg ? 
   parseInt(percentageArg.split('=')[1], 10) : null;
+const skipReportFile = args.includes('--skip-report-file');
 
 // Configuration from environment variables or defaults
 const config = {
@@ -487,8 +488,12 @@ async function main() {
     const recommendation = determineCanaryPercentage(analytics, currentPercentage);
     console.log(recommendation.message);
     
-    // Create analysis report
-    createReportFile(analytics, recommendation);
+    // Create analysis report if not skipped
+    if (!skipReportFile) {
+      createReportFile(analytics, recommendation);
+    } else {
+      console.log('Skipping report file generation due to --skip-report-file flag.');
+    }
     
     // Update config if not in analyze-only mode
     if (!analyzeOnly) {

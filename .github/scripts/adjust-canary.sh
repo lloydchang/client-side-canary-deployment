@@ -44,7 +44,8 @@ if [ "$COMMIT_CHANGES" = "true" ]; then
       git rebase --abort
       git reset --hard origin/main
       ./.github/scripts/update-version.sh
-      node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
+      # Run analyzer again, but skip writing the report file to preserve the original one
+      node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE --skip-report-file
       git add frontend/version.json frontend/assets/config/canary-config.json
       
       if ! git diff --staged --quiet; then
