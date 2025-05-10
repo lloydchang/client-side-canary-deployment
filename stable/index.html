@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stable Variant</title>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+  <style>
+    /* Black text on white background for stable version */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: white;
+      color: black;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* Footer styles */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #666;
+      font-size: 14px;
+      border-top: 1px solid #ddd;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 40vh;
+      width: 80vw;
+      max-width: 750px;
+      margin: 20px auto;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+
+  <!-- Load default constants first to establish base config -->
+  <script src="../assets/config/default-constants.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Stable Variant</h1>
+    <p>This is the stable variant of the application with black text on white background.</p>
+    
+    <div class="card">
+      <h2>About This Application</h2>
+      <p>This demonstrates client-side canary deployment functionality. You can switch to the canary variant using the Variant Switcher in the bottom right corner.</p>
+    </div>
+    
+    <div class="card">
+      <div class="chart-container">
+        <canvas id="canaryHistoryChartStable"></canvas>
+      </div>
+    </div>
+    
+    <!-- Add version footer -->
+    <div class="footer">
+      <p>Version: <span id="app-version">Loading...</span> | Last Updated: <span id="last-updated">Loading...</span></p>
+    </div>
+  </div>
+
+  <!-- Core canary functionality -->
+  <script src="../assets/app/canary.js"></script>
+  <script src="../assets/app/analytics.js"></script>
+  
+  <!-- Initialize canary -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        if (window.canary) {
+          // Use the ConfigManager to get the percentage
+          if (window.CanaryConfigManager) {
+            window.CanaryConfigManager.onConfigReady(config => {
+              window.canary.init({
+                initialCanaryPercentage: config.CANARY_PERCENTAGE,
+                posthogEnabled: true,
+                posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+              });
+              // PostHog initialization is now handled by analytics.js
+            });
+          } else {
+            // Legacy fallback
+            const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
+              window.CanaryConfig.distribution.canaryPercentage : 
+              (window.DEFAULT_CONSTANTS ? window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE : 5);
+            
+            window.canary.init({
+              initialCanaryPercentage: percentage,
+              posthogEnabled: true,
+              posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+            });
+            // PostHog initialization is now handled by analytics.js
+          }
+        }
+      } catch (e) {
+        console.error('Error initializing canary:', e);
+      }
+    });
+  </script>
+  
+  <!-- Include variant switcher component LAST -->
+  <script src="../assets/app/variant-switcher.js"></script>
+  <script src="../assets/app/canary-history-graph.js"></script>
+
+  <script>
+    // Initialize variant switcher with correct currentPage
+    if (window.VariantSwitcher && !window.variantSwitcherInitialized) {
+      try {
+        window.variantSwitcher = new VariantSwitcher({
+          currentPage: 'stable',
+          position: 'bottom-right',
+          switcherContainerId: 'variant-switcher'
+        });
+        window.variantSwitcherInitialized = true;
+        console.log('Variant switcher initialized for stable page');
+        
+        // Render canary history graph
+        if (typeof window.renderCanaryHistoryGraph === 'function') {
+          window.renderCanaryHistoryGraph('canaryHistoryChartStable', '../', { variant: 'stable' });
+        }
+      } catch (e) {
+        console.error('Error initializing variant switcher:', e);
+      }
+    }
+
+    // Track stable page view
+    try {
+      if (window.canary && window.canary.trackEvent) {
+        window.canary.trackEvent('page_view', {
+          page: 'stable_home'
+        });
+      } else {
+        console.error('Canary not initialized properly, cannot track page view');
+      }
+    } catch (e) {
+      console.error('Error tracking page view:', e);
+    }
+  </script>
+  
+  <!-- Version checker script - remains at end of body -->
+  <script>
+    (function() {
+      const checkForUpdates = async () => {
+        let data;
+        try {
+          // Add a cache-busting query parameter
+          const response = await fetch('../version.json?nocache=' + new Date().getTime());
+          if (!response.ok) {
+            throw new Error(`Failed to fetch version info: ${response.status}`);
+          }
+          
+          data = await response.json();
+          const currentVersion = localStorage.getItem('app-version');
+          
+          // Update footer version and timestamp display
+          const versionElement = document.getElementById('app-version');
+          const lastUpdatedElement = document.getElementById('last-updated');
+          
+          if (versionElement) {
+            versionElement.textContent = data.version;
+          }
+          
+          if (lastUpdatedElement && data.lastUpdated) {
+            try {
+              // Parse the date and format it in a more compatible way
+              const date = new Date(data.lastUpdated);
+              
+              // Create a more compatible date formatting approach
+              const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+              };
+              
+              lastUpdatedElement.textContent = date.toLocaleString(undefined, options);
+            } catch (err) {
+              console.error('Error formatting date:', err);
+              // Fallback to displaying the raw timestamp
+              lastUpdatedElement.textContent = data.lastUpdated;
+            }
+          }
+          
+          if (currentVersion && currentVersion !== data.version) {
+            console.log('New version detected, refreshing page...');
+            localStorage.setItem('app-version', data.version);
+            window.location.reload(true); // Force reload from server
+          } else {
+            localStorage.setItem('app-version', data.version);
+          }
+        } catch (err) {
+          console.error('Failed to check for updates:', err);
+          // Still attempt to update elements if data was partially received
+          if (data && data.version) {
+            localStorage.setItem('app-version', data.version);
+          }
+        }
+      };
+      
+      // Function to ensure elements exist and are updated
+      const updateVersionDisplay = () => {
+        const versionElement = document.getElementById('app-version');
+        const lastUpdatedElement = document.getElementById('last-updated');
+        
+        // Get data from localStorage as fallback
+        const savedVersion = localStorage.getItem('app-version');
+        
+        if (versionElement && savedVersion) {
+          versionElement.textContent = savedVersion;
+        }
+        
+        // Try to fetch fresh data
+        checkForUpdates().catch(err => {
+          console.warn('Could not fetch version updates, will retry later:', err);
+        });
+      };
+      
+      // Execute immediately since DOM is already loaded at this point
+      updateVersionDisplay();
+      
+      // Set up interval for periodic updates
+      setInterval(updateVersionDisplay, 5 * 60 * 1000);
+    })();
+  </script>
+</body>
+</html>
