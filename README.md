@@ -102,15 +102,6 @@ graph TD
         SSDL -->|95% of users| StablePath[Route to Stable]
         SSDL -->|5% of users| CanaryPath[Route to Canary]
 
-        subgraph "Stable Traffic Flow"
-            StablePath --> RLB1[Regional Load Balancer - Stable]
-            RLB1 --> SM1[Service Mesh - Stable]
-            SM1 --> EP1[Envoy Proxy / Linkerd2-proxy - Stable]
-            EP1 --> C[Stable Variant Server]
-            C --> E[Response with Stable Variant]
-            E --> PSA[PostHog Server SDK]
-        end
-
         subgraph "Canary Traffic Flow"
             CanaryPath --> RLB2[Regional Load Balancer - Canary]
             RLB2 --> SM2[Service Mesh - Canary]
@@ -118,6 +109,15 @@ graph TD
             EP2 --> D[Canary Variant Server]
             D --> F[Response with Canary Variant]
             F --> PSC[PostHog Server SDK]
+        end
+
+        subgraph "Stable Traffic Flow"
+            StablePath --> RLB1[Regional Load Balancer - Stable]
+            RLB1 --> SM1[Service Mesh - Stable]
+            SM1 --> EP1[Envoy Proxy / Linkerd2-proxy - Stable]
+            EP1 --> C[Stable Variant Server]
+            C --> E[Response with Stable Variant]
+            E --> PSA[PostHog Server SDK]
         end
     end
 
