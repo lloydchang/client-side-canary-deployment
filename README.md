@@ -49,7 +49,7 @@ graph TD
         subgraph "File Updates Process"
             F1[Update frontend/assets/config/canary-config.json]
             F1 --> F2[Update frontend/assets/config/canary-config.js]
-            F2 --> V[Update variant.json]
+            F2 --> V[Update version.json]
         end
         
         V --> G[Deploy updated files to GitHub Pages]
@@ -57,7 +57,7 @@ graph TD
 
     subgraph "Client-Side Detection"
         G --> CL[Client browsers]
-        CL --> CL1[Poll variant.json every 5 minutes]
+        CL --> CL1[Poll version.json every 5 minutes]
         CL1 -->|Variant Changed| CL2[Reload page]
         CL2 --> CL3[Load new configuration]
         CL3 --> CL4[Apply new canary distribution percentages]
@@ -69,13 +69,13 @@ graph TD
 The system ensures all clients stay up-to-date with the latest canary configurations:
 
 1. **Server-Side Updates**:
-   - Every deployment updates `variant.json` with an incremented version number
+   - Every deployment updates `version.json` with an incremented version number
    - Configuration changes update `frontend/assets/config/canary-config.json`
    - All changes are deployed to GitHub Pages automatically
 
 2. **Client-Side Detection**:
    - The `CanaryConfigManager` loads configuration from multiple sources with proper precedence
-   - All pages poll for changes to `variant.json` every 5 minutes
+   - All pages poll for changes to `version.json` every 5 minutes
    - When variant changes are detected, the page triggers a hard reload
    - Local variant information is stored in localStorage for comparison
 
