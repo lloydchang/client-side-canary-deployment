@@ -73,67 +73,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # It's good practice to use a specific version
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4 # It's good practice to use a specific version
+        uses: actions/checkout@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm' # Assuming you use npm, adjust if using yarn or pnpm
-
-      - name: Run Canary Analysis
-        id: initial_analysis
-        run: |
-          chmod +x ./.github/scripts/run-analysis.sh
-          ./.github/scripts/run-analysis.sh
+          fetch-depth: 0
       
-      - name: Preserve Initial Analysis for Summary
-        run: cp canary-analysis.json initial_canary_analysis_for_summary.json
-
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Run Canary Analysis
+        id: canary_analysis
+        run: ./.github/scripts/run-analysis.sh
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          POSTHOG_PUBLIC_KEY: ${{ secrets.POSTHOG_PUBLIC_KEY }}
+          POSTHOG_HOST: 'https://us.i.posthog.com'
+          ERROR_THRESHOLD: ${{ vars.ERROR_THRESHOLD || '0.02' }}
+          TIMEFRAME: ${{ vars.TIMEFRAME || '24h' }}
+          INCREMENT_STEP: ${{ vars.INCREMENT_STEP || '5' }}
+          MAX_PERCENTAGE: ${{ vars.MAX_PERCENTAGE || '50' }}
+          SAFETY_THRESHOLD: ${{ vars.SAFETY_THRESHOLD || '2' }}
+      
       - name: Update Configuration and History
-        id: update_config
-        run: |
-          chmod +x ./.github/scripts/update-canary-config.sh
-          ./.github/scripts/update-canary-config.sh
+        run: ./.github/scripts/update-canary-config.sh
+        env:
+          GIT_USER_NAME: ${{ env.GIT_USER_NAME }}
+          GIT_USER_EMAIL: ${{ env.GIT_USER_EMAIL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          POSTHOG_PUBLIC_KEY: ${{ secrets.POSTHOG_PUBLIC_KEY }}
       
       - name: Create summary report
-        run: |
-          # Modify this step to use 'initial_canary_analysis_for_summary.json'
-          # instead of 'canary-analysis.json' when generating the summary.
-          #
-          # For example, if you have a script like ./.github/scripts/generate_summary.sh
-          # that normally reads 'canary-analysis.json', change its invocation:
-          #
-          #   chmod +x ./.github/scripts/generate_summary.sh
-          #   ./.github/scripts/generate_summary.sh initial_canary_analysis_for_summary.json
-          #
-          # Or, if your summary generation involves direct jq parsing and echos:
-          #
-          #   REPORT_FILE="initial_canary_analysis_for_summary.json"
-          #   STABLE_PAGEVIEWS=$(jq -r '.analytics.stable.pageviews' $REPORT_FILE)
-          #   # ... and so on for other values ...
-          #   echo "### Canary Deployment Analysis" >> $GITHUB_STEP_SUMMARY
-          #   echo "Analysis timestamp: $(jq -r '.timestamp' $REPORT_FILE)" >> $GITHUB_STEP_SUMMARY
-          #   # ... format the rest of the summary using data from $REPORT_FILE ...
-          #
-          echo "IMPORTANT: Adapt the 'Create summary report' step above to read from 'initial_canary_analysis_for_summary.json'"
-          echo "This example assumes you will modify your summary generation logic."
-          # As a placeholder, let's cat the initial analysis to the summary if it exists
-          if [ -f initial_canary_analysis_for_summary.json ]; then
-            echo "--- Raw Initial Analysis Data ---" >> $GITHUB_STEP_SUMMARY
-            cat initial_canary_analysis_for_summary.json >> $GITHUB_STEP_SUMMARY
-            echo "---------------------------------" >> $GITHUB_STEP_SUMMARY
-          fi
+        run: ./.github/scripts/generate-analysis-report.sh
       
       - name: Save Analytics Results
-        uses: actions/upload-artifact@v4 # Use an updated version of the action
+        uses: actions/upload-artifact@v4
         with:
           name: analytics-results
-          # This will save the 'canary-analysis.json' that was last written by 
-          # update-canary-config.sh (containing mock data and "manual" reason).
-          # If you want to archive the *initial* (real) analysis data instead,
-          # change 'path' to: initial_canary_analysis_for_summary.json
           path: canary-analysis.json
+          retention-days: 30
+      
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          clean: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          folder: frontend
+          target-folder: frontend
 
   adjust:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'adjust'
