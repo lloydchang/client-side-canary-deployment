@@ -133,7 +133,7 @@ jobs:
           # update-canary-config.sh (containing mock data and "manual" reason).
           # If you want to archive the *initial* (real) analysis data instead,
           # change 'path' to: initial_canary_analysis_for_summary.json
-          path: initial_canary_analysis_for_summary.json
+          path: canary-analysis.json
 
   adjust:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'adjust'
