@@ -49,6 +49,7 @@ const percentageArg = args.find(arg => arg.startsWith('--percentage='));
 const forcePercentage = percentageArg ? 
   parseInt(percentageArg.split('=')[1], 10) : null;
 const skipReportFile = args.includes('--skip-report-file');
+const simulateErrors = args.includes('--simulate-errors');
 
 // Configuration from environment variables or defaults
 const config = {
@@ -78,7 +79,6 @@ if (!useMockData && (!posthogApiKey || !posthogProjectId)) {
   if (!posthogProjectId) {
     console.error('Error: POSTHOG_PROJECT_ID environment variable is required unless USE_MOCK_DATA=true');
   }
-  
   // If we're in percentage setting mode, we can skip the validation
   if (forcePercentage === null) {
     process.exit(1);
@@ -90,36 +90,31 @@ if (!useMockData && (!posthogApiKey || !posthogProjectId)) {
 /**
  * Make a request to the PostHog API
  */
-function queryPostHog(path, options = {}) {
+function queryPostHog(apiPath, options = {}) {
   return new Promise((resolve, reject) => {
     // Parse host to extract hostname without protocol
     let hostname = config.host;
-    let protocol = 'https:';
-    
+    // let protocol = 'https:'; // protocol is part of requestOptions if URL object is used
     // Check if host includes protocol
     if (hostname.includes('://')) {
       const url = new URL(hostname);
-      protocol = url.protocol;
+      // protocol = url.protocol; // Not directly used here, https.request handles it
       hostname = url.hostname;
     }
-    
     const requestOptions = {
       hostname: hostname,
-      path: `/api/projects/${config.projectId}${path}`,
+      path: `/api/projects/${config.projectId}${apiPath}`,
       headers: {
         'Authorization': `Bearer ${config.apiKey}`,
         'Content-Type': 'application/json'
       },
       ...options
     };
-
     const req = https.request(requestOptions, (res) => {
       let data = '';
-      
       res.on('data', (chunk) => {
         data += chunk;
       });
-      
       res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
@@ -131,7 +126,6 @@ function queryPostHog(path, options = {}) {
           // Enhanced error handling for permission issues
           try {
             const errorData = JSON.parse(data);
-            
             // Check for permission denied error
             if (res.statusCode === 403 && errorData.code === 'permission_denied') {
               const scope = errorData.detail?.match(/scope '([^']+)'/) ? errorData.detail.match(/scope '([^']+)'/)[1] : 'unknown';
@@ -150,33 +144,79 @@ function queryPostHog(path, options = {}) {
         }
       });
     });
-    
     req.on('error', (error) => {
       reject(new Error(`Request failed: ${error.message}`));
     });
-    
+    if (options.body) {
+      req.write(options.body);
+    }
     req.end();
   });
 }
 
-// Add mock data function if it doesn't exist
+// Add mock data function
 function getMockAnalyticsData() {
-  return {
-    stable: {
-      pageviews: 500,
-      errors: 10,
-      errorRate: 0.02
-    },
-    canary: {
-      pageviews: 50,
-      errors: 1,
-      errorRate: 0.02
-    },
-    analysis: {
-      relativeErrorIncrease: 0,
-      exceedsThreshold: false,
-      recommendedAction: 'continue'
+  const mockDataPath = process.env.MOCK_DATA_PATH;
+  if (mockDataPath) {
+    try {
+      const resolvedPath = path.resolve(mockDataPath);
+      if (fs.existsSync(resolvedPath)) {
+        const customMockDataModule = require(resolvedPath);
+        if (customMockDataModule && typeof customMockDataModule.getMockAnalyticsData === 'function') {
+          console.log(`Using custom mock data from: ${resolvedPath}`);
+          return customMockDataModule.getMockAnalyticsData();
+        } else {
+          console.warn(`Custom mock data file at ${resolvedPath} does not export getMockAnalyticsData function or the function is not found. Falling back to default mock data.`);
+        }
+      } else {
+        console.warn(`Custom mock data file not found at ${resolvedPath}. Falling back to default mock data.`);
+      }
+    } catch (e) {
+      console.warn(`Error loading custom mock data from ${mockDataPath}: ${e.message}. Falling back to default mock data.`);
     }
+  }
+
+  if (simulateErrors) {
+    console.log('Simulating high error rates in canary version (internal mock)');
+    return {
+      stable: { pageviews: 500, errors: 10, errorRate: 0.02 }, // 2% error rate
+      canary: { pageviews: 50, errors: 10, errorRate: 0.20 }, // 20% error rate
+      analysis: {
+        relativeErrorIncrease: 0.18, // 18% increase
+        exceedsThreshold: true,
+        recommendedAction: 'rollback'
+      },
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  // Default internal mock data (no errors) or from ENV VARS
+  const stableErrorRate = parseFloat(process.env.MOCK_STABLE_ERROR_RATE || 0.02);
+  const canaryErrorRate = parseFloat(process.env.MOCK_CANARY_ERROR_RATE || 0.02);
+
+  const stable = {
+    pageviews: 500,
+    errors: Math.round(500 * stableErrorRate),
+    errorRate: stableErrorRate
+  };
+  const canary = {
+    pageviews: 50,
+    errors: Math.round(50 * canaryErrorRate),
+    errorRate: canaryErrorRate
+  };
+  const relativeErrorIncrease = canaryErrorRate - stableErrorRate;
+  const exceedsThreshold = relativeErrorIncrease > config.errorThreshold;
+  
+  console.log('Using default internal mock data (or MOCK_..._ERROR_RATE env vars).');
+  return {
+    stable,
+    canary,
+    analysis: {
+      relativeErrorIncrease,
+      exceedsThreshold,
+      recommendedAction: exceedsThreshold ? 'rollback' : 'continue'
+    },
+    timestamp: new Date().toISOString()
   };
 }
 
@@ -214,26 +254,13 @@ async function getVersionEvents() {
   if (!config.apiKey) {
     throw new Error('POSTHOG_API_KEY environment variable is required');
   }
-
   if (!config.projectId) {
     throw new Error('POSTHOG_PROJECT_ID environment variable is required');
   }
 
-  // For local development or CI environments without proper PostHog setup,
-  // check for a special environment flag to use mock data
-  if (process.env.USE_MOCK_DATA === 'true') {
-    console.log('Using mock analytics data (USE_MOCK_DATA=true)');
-    return {
-      stable: { pageviews: 1000, errors: 5, errorRate: 0.005 },
-      canary: { pageviews: 100, errors: 1, errorRate: 0.01 },
-      analysis: {
-        relativeErrorIncrease: 0.005,
-        exceedsThreshold: false,
-        recommendedAction: 'continue'
-      },
-      timestamp: new Date().toISOString()
-    };
-  }
+  // This specific check for USE_MOCK_DATA is handled by getAnalyticsData now.
+  // If getAnalyticsData decided not to use mock data, it calls getVersionEvents.
+  // So, if we reach here, we are intended to use the real API.
 
   // Query for pageviews by version
   const pageviewsQuery = {
@@ -291,13 +318,13 @@ function analyzeResults(pageviewsData, errorsData) {
 
   // Default values if no data is found
   versions.stable.pageviews = versions.stable.pageviews || 0;
-  versions.stable.errors = versions.stable.errors || 0;
+  versions.stable.errors = versions.stable.errors || 0;  
   versions.canary.pageviews = versions.canary.pageviews || 0;
   versions.canary.errors = versions.canary.errors || 0;
 
   // Calculate error rates
-  versions.stable.errorRate = versions.stable.errors / (versions.stable.pageviews || 1);
-  versions.canary.errorRate = versions.canary.errors / (versions.canary.pageviews || 1);
+  versions.stable.errorRate = versions.stable.pageviews > 0 ? versions.stable.errors / versions.stable.pageviews : 0;
+  versions.canary.errorRate = versions.canary.pageviews > 0 ? versions.canary.errors / versions.canary.pageviews : 0;
 
   // Determine if canary exceeds error threshold compared to stable
   const relativeErrorIncrease = versions.canary.errorRate - versions.stable.errorRate;
@@ -322,15 +349,16 @@ function readCanaryConfig() {
   try {
     // Check if the main JSON config exists
     if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const loadedConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       return {
         // Read from the correct path in the config structure
-        currentPercentage: config.distribution?.canaryPercentage ?? DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
-        config: config
+        currentPercentage: loadedConfig.distribution?.canaryPercentage ?? DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
+        config: loadedConfig
       };
     }
     
     // Fall back to default config matching the expected structure
+    console.warn(`Config file not found at ${configPath}, using default structure.`);
     return {
       currentPercentage: DEFAULT_CONSTANTS.CANARY_PERCENTAGE,
       config: {
@@ -443,7 +471,6 @@ function updateCanaryConfig(percentage) {
   
   // Ensure directory exists
   const configDir = path.dirname(configPath);
-  
   if (!fs.existsSync(configDir)) {
     fs.mkdirSync(configDir, { recursive: true });
   }
@@ -470,6 +497,7 @@ function createReportFile(analytics, recommendation) {
   };
   
   fs.writeFileSync('canary-analysis.json', JSON.stringify(reportData, null, 2));
+  console.log('Canary analysis report saved to canary-analysis.json');
 }
 
 /**
@@ -498,8 +526,8 @@ async function main() {
     // Update config if not in analyze-only mode
     if (!analyzeOnly) {
       // Only update the JSON config file now - no JS file
-      const { configPath } = updateCanaryConfig(recommendation.percentage);
-      console.log(`Updated config file at ${configPath}`);
+      const { configPath: updatedConfigPath } = updateCanaryConfig(recommendation.percentage);
+      console.log(`Updated config file at ${updatedConfigPath}`);
     }
     
     // Set GitHub Actions outputs using Environment Files
