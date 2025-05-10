@@ -185,7 +185,7 @@ The single consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of 
 
 - **Manual Operations**: Can be manually triggered for:
   - `deploy`: Deploy the latest code to GitHub Pages
-  - `analyze`: Run analytics to evaluate canary performance, then roll out or roll back
+  - `analyze`: Run analytics to evaluate canary performance, then roll out or roll back by updating the canary distribution percentage
   - `adjust`: Update the percentage for canary distribution
 
 ## Comparisons with Other Tools/Services
