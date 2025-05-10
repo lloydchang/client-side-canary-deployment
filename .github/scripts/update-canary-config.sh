@@ -19,7 +19,8 @@ git reset --hard origin/main
 # Run analyzer with the recommended percentage
 chmod +x ./.github/scripts/canary-analyzer.js
 CANARY_PERCENTAGE=$(jq -r '.recommendation.percentage' canary-analysis.json)
-node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
+# Add --skip-report-file to prevent overwriting the original analysis JSON
+node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE --skip-report-file
 
 # Add modified files
 git add frontend/version.json frontend/assets/config/canary-config.json
@@ -46,7 +47,8 @@ if [ "$COMMIT_CHANGES" = "true" ]; then
       git rebase --abort
       git reset --hard origin/main
       ./.github/scripts/update-version.sh
-      node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE
+      # Add --skip-report-file here as well for consistency during conflict resolution
+      node ./.github/scripts/canary-analyzer.js --percentage=$CANARY_PERCENTAGE --skip-report-file
       git add frontend/version.json frontend/assets/config/canary-config.json
       
       if ! git diff --staged --quiet; then
