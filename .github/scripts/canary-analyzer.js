@@ -10,9 +10,11 @@
  * 4. Updates configuration files with new percentages if needed
  * 
  * Usage:
- *   node canary-analyzer.js                  # Analyze and auto-update
- *   node canary-analyzer.js --analyze-only   # Only output analysis without updating
- *   node canary-analyzer.js --percentage=20  # Force set specific percentage
+ *   node canary-analyzer.js # Analyze and auto-update
+ *     --analyze-only        # Only output analysis without updating
+ *     --percentage=20       # Force set specific percentage
+ *     --simulate-errors     # Simulate high error rate
+ *     --skip-report-file    # Skip report file generation
  */
 
 const https = require('https');
