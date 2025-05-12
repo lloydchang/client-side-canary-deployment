@@ -2,7 +2,8 @@
 # Script to run canary analysis
 
 chmod +x ./.github/scripts/canary-analyzer.js
-node ./.github/scripts/canary-analyzer.js --simulate-errors true
+# node ./.github/scripts/canary-analyzer.js --simulate-errors true
+node ./.github/scripts/canary-analyzer.js
 
 # Export percentage to GitHub env
 CANARY_PERCENTAGE=$(jq -r '.recommendation.percentage' canary-analysis.json)
