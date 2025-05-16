@@ -153,7 +153,7 @@ Add the following secrets to your GitHub repository:
 
 The project uses a GitHub Actions workflow to automate analytics collection and decision-making:
 
-#### Primary Workflow (`deploy-gh-pages.yml`)
+#### Primary Workflow (`.github/workflows/deploy-gh-pages.yml`)
 
 This all-in-one workflow handles deployment, analytics, and canary adjustments with several configurable parameters:
 
