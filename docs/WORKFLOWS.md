@@ -8,11 +8,11 @@ The project uses a single GitHub Actions workflow to manage all aspects of canar
 
 | Workflow | File | Purpose |
 |----------|------|---------|
-| Canary Deployment & Analytics | `deploy-gh-pages.yml` | All-in-one workflow for deployment, analytics, and adjustments |
+| Canary Deployment & Analytics | `.github/workflows/deploy-gh-pages.yml` | All-in-one workflow for deployment, analytics, and adjustments |
 
 ## Main Workflow: Canary Deployment & Analytics
 
-This consolidated workflow (`deploy-gh-pages.yml`) handles all aspects of the canary deployment process.
+This consolidated workflow (`.github/workflows/deploy-gh-pages.yml`) handles all aspects of the canary deployment process.
 
 ### Triggers
 - **Push to main branch**: Automatic deployment
@@ -177,7 +177,7 @@ When running `analyze-canary` or `adjust-canary` jobs, only specific files are u
 2. `frontend/assets/config/canary-config.json` - Contains the updated canary percentage
 3. `frontend/assets/config/canary-config.js` - JavaScript version of configuration for client use
 
-This selective deployment is implemented through the GitHub Pages deploy action via `deploy-gh-pages.yml`
+This selective deployment is implemented through the GitHub Pages deploy action via `.github/workflows/deploy-gh-pages.yml`
 
 ## Setting Up GitHub Secrets
 
