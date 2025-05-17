@@ -160,6 +160,9 @@ jobs:
           POSTHOG_PUBLIC_KEY: ${{ secrets.POSTHOG_PUBLIC_KEY }}
           POSTHOG_HOST: 'https://us.i.posthog.com'
 
+      - name: Create summary report
+        run: ./.github/scripts/generate-analysis-report.sh
+      
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
@@ -168,6 +171,3 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           folder: frontend
           target-folder: frontend
-      
-      - name: Create summary report
-        run: ./.github/scripts/generate-analysis-report.sh
