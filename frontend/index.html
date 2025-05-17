@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client-Side Canary Deployment</title>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 40px;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+    
+    .card {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .button-container {
+      margin-top: 30px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: #0366d6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .button:hover {
+      background-color: #0255b3;
+    }
+    
+    .button-outline {
+      background-color: transparent;
+      border: 1px solid #0366d6;
+      color: #0366d6;
+    }
+    
+    .button-outline:hover {
+      background-color: rgba(3, 102, 214, 0.1);
+    }
+
+    .countdown {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 16px;
+      color: #666;
+    }
+    
+    .countdown-number {
+      font-weight: bold;
+      font-size: 18px;
+      color: #0366d6;
+    }
+
+    /* Force version switcher to be visible */
+    #version-switcher.version-switcher {
+      display: block !important;
+      z-index: 9999 !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
+    }
+
+    /* Force variant switcher to be visible */
+    #variant-switcher.variant-switcher {
+      display: block !important;
+      z-index: 9999 !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
+    }
+
+    /* Footer styles */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #666;
+      font-size: 14px;
+      border-top: 1px solid #eaeaea;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 40vh;
+      width: 80vw;
+      max-width: 750px;
+      margin: 20px auto;
+    }
+  </style>
+  
+  <!-- Load default constants first to establish base config -->
+  <script src="assets/config/default-constants.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Client-Side Canary Deployment</h1>
+      <p>Welcome to the demonstration of client-side canary deployment.</p>
+      <p>This system enables you to:</p>
+      <ul>
+        <li>Redirect some users to canary distribution</li>
+        <li>Track errors</li>
+        <li>Periodically adjust canary distribution percentages based on errors</li>
+      </ul>
+    </div>
+    
+    <div class="card">
+      <div class="chart-container">
+        <canvas id="canaryHistoryChart"></canvas>
+      </div>
+    </div>
+    
+    <div id="countdown" class="countdown" style="visibility: hidden;">
+      Redirecting to <span id="assigned-version-text"></span> in <span id="countdown-number" class="countdown-number">10</span> seconds...
+    </div>
+    
+    <!-- Add version footer -->
+    <div class="footer">
+      <p>Version: <span id="app-version">Loading...</span> | Last Updated: <span id="last-updated">Loading...</span></p>
+    </div>
+  </div>
+  
+  <!-- Core canary functionality -->
+  <script src="assets/app/canary.js"></script>
+  
+  <!-- Include the analytics integration -->
+  <script src="assets/app/analytics.js"></script>
+  
+  <!-- Include the variant switcher component LAST -->
+  <script src="assets/app/variant-switcher.js"></script>
+  <script src="assets/app/canary-history-graph.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM fully loaded');
+      
+      // Render canary history graph
+      if (typeof window.renderCanaryHistoryGraph === 'function') {
+        // For the main index.html, the path prefix to assets/data/ is empty or './'
+        window.renderCanaryHistoryGraph('canaryHistoryChart', '', { variant: 'default' }); 
+      }
+      
+      // Add this debug line to check configuration loading
+      if (window.CanaryConfigManager) {
+        console.log('[Debug] CanaryConfigManager config status:', 
+                    window.CanaryConfigManager._configLoaded, 
+                    window.CanaryConfigManager._config);
+                    
+        // Fix path resolution for the home page
+        if (!window.CanaryConfigManager._configLoaded) {
+          console.log('[Debug] Fixing config path for home page');
+          
+          // Add proper frontend prefix for GitHub Pages deployment
+          const configPath = 'frontend/assets/config/canary-config.json';
+          console.log('[Debug] Loading configuration from:', configPath);
+          
+          window.CanaryConfigManager.loadConfig(configPath)
+            .then((config) => {
+              console.log('[Debug] Successfully loaded config with corrected path:', config);
+              
+              // Make the configuration globally available
+              window.canaryConfig = config;
+              
+              // Re-initialize canary with corrected config if needed
+              if (window.canary) {
+                window.canary.init({
+                  initialCanaryPercentage: config.CANARY_PERCENTAGE,
+                  posthogEnabled: true,
+                  posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+                });
+                console.log('Canary re-initialized with corrected path config:', 
+                            config.CANARY_PERCENTAGE);
+              }
+              
+              // Update variant switcher with new percentage if it exists
+              if (window.variantSwitcher && window.variantSwitcher.canaryPercentage) {
+                window.variantSwitcher.canaryPercentage = config.CANARY_PERCENTAGE + '%';
+                window.variantSwitcher.createUI(); // Re-render UI with new percentage
+                console.log('[Debug] Updated variant switcher with new percentage:', config.CANARY_PERCENTAGE);
+              }
+            })
+            .catch(err => {
+              console.error('[Debug] Failed to load config with corrected path:', err);
+            });
+        }
+      }
+      
+      // Initialize canary first - this is now a backup if the head initialization failed
+      if (window.canary && !window.canary._assignment) {
+        try {
+          const percentage = window.CanaryConfig && window.CanaryConfig.distribution ? 
+            window.CanaryConfig.distribution.canaryPercentage : 
+            (window.DEFAULT_CONSTANTS ? window.DEFAULT_CONSTANTS.CANARY_PERCENTAGE : 5);
+
+          window.canary.init({
+            initialCanaryPercentage: percentage,
+            posthogEnabled: true,
+            posthogApiKey: 'phc_dI0DmYHs1qJu7tZRfdaAxw7GqmvUMinb1VHnBnA9LlR'
+          });
+          console.log('Canary initialized successfully with percentage:', percentage);
+        } catch (e) {
+          console.error('Error initializing canary:', e);
+        }
+      }
+      
+      // Initialize variant switcher with explicit config path
+      if (window.VariantSwitcher && !window.variantSwitcherInitialized) {
+        try {
+          window.variantSwitcher = new VariantSwitcher({
+            currentPage: 'home',
+            position: 'bottom-right',
+            switcherContainerId: 'variant-switcher',
+            configPath: 'assets/config/canary-config.json' // Fixed path
+          });
+          window.variantSwitcherInitialized = true;
+          console.log('[Variant Switcher] Initialized for home page');
+          
+          // Force visibility - existing code is fine
+          const switcherElement = document.getElementById('variant-switcher');
+          if (switcherElement) {
+            switcherElement.style.display = 'block';
+            switcherElement.style.visibility = 'visible';
+            switcherElement.style.opacity = '1';
+            console.log('[Variant Switcher] Visibility enforced');  // Updated logging format
+          } else {
+            // Create container if it doesn't exist - existing code is fine
+            const switcherContainer = document.createElement('div');
+            switcherContainer.id = 'variant-switcher';
+            switcherContainer.className = 'variant-switcher';
+            document.body.appendChild(switcherContainer);
+            console.log('[Variant Switcher] Created container manually');  // Updated logging format
+            
+            // Initialize variant switcher again with correct class name
+            new VariantSwitcher({
+              currentPage: 'home',
+              position: 'bottom-right',
+              switcherContainerId: 'variant-switcher'
+            });
+          }
+        } catch (e) {
+          console.error('Error initializing variant switcher:', e);
+        }
+      }
+      
+      // Get countdown element
+      const countdownElement = document.getElementById('countdown-number');
+      const assignedVersionText = document.getElementById('assigned-version-text');
+      const countdownContainer = document.getElementById('countdown');
+      
+      if (!countdownElement) {
+        console.error('Countdown element not found');
+        return;
+      }
+      
+      // Start with 10 seconds
+      let secondsLeft = 10;
+      countdownElement.textContent = secondsLeft;
+      
+      console.log('Starting countdown from', secondsLeft, 'seconds');
+      
+      // Ensure canary is initialized before determining target version
+      function startCountdown() {
+        // Determine the target version immediately and display it
+        let targetVersion = 'stable'; // Default to stable
+        
+        if (window.canary && window.canary._assignment && window.canary._assignment.version) {
+          targetVersion = window.canary._assignment.version;
+          console.log('Using canary assignment:', targetVersion);
+        } else {
+          console.log('No canary assignment found, using default');
+        }
+        
+        // Update version text immediately with proper format
+        if (assignedVersionText) {
+          assignedVersionText.textContent = targetVersion + ' (your assigned variant)';
+        }
+        
+        // Show the countdown now that we have the variant text ready
+        if (countdownContainer) {
+          countdownContainer.style.visibility = 'visible';
+        }
+        
+        // Start the countdown immediately
+        const countdownInterval = setInterval(function() {
+          secondsLeft--;
+          console.log('Countdown:', secondsLeft);
+          
+          // Update the display
+          countdownElement.textContent = secondsLeft.toString();
+          
+          // Check if countdown is complete
+          if (secondsLeft <= 0) {
+            console.log('Countdown complete, redirecting now');
+            
+            // Clear the interval to stop the countdown
+            clearInterval(countdownInterval);
+            
+            // Redirect based on assignment or default
+            window.location.href = targetVersion + '/';
+          }
+        }, 1000);
+      }
+      
+      // Wait a short time to ensure canary initialization is complete
+      setTimeout(startCountdown, 500);
+    });
+  </script>
+  
+  <!-- Version checker script - moved to end of body for guaranteed DOM access -->
+  <script>
+    // Check for updated version and refresh if needed
+    (function() {
+      const checkForUpdates = async () => {
+        let data;
+        try {
+          // Add a cache-busting query parameter
+          const response = await fetch('version.json?nocache=' + new Date().getTime());
+          if (!response.ok) {
+            throw new Error(`Failed to fetch version info: ${response.status}`);
+          }
+          
+          data = await response.json();
+          const currentVersion = localStorage.getItem('app-version');
+          
+          // Update footer version and timestamp display
+          const versionElement = document.getElementById('app-version');
+          const lastUpdatedElement = document.getElementById('last-updated');
+          
+          if (versionElement) {
+            versionElement.textContent = data.version;
+          }
+          
+          if (lastUpdatedElement && data.lastUpdated) {
+            try {
+              // Parse the date and format it in a more compatible way
+              const date = new Date(data.lastUpdated);
+              
+              // Create a more compatible date formatting approach
+              const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+              };
+              
+              lastUpdatedElement.textContent = date.toLocaleString(undefined, options);
+            } catch (err) {
+              console.error('Error formatting date:', err);
+              // Fallback to displaying the raw timestamp
+              lastUpdatedElement.textContent = data.lastUpdated;
+            }
+          }
+          
+          if (currentVersion && currentVersion !== data.version) {
+            console.log('New version detected, refreshing page...');
+            localStorage.setItem('app-version', data.version);
+            window.location.reload(true); // Force reload from server
+          } else {
+            localStorage.setItem('app-version', data.version);
+          }
+        } catch (err) {
+          console.error('Failed to check for updates:', err);
+          // Still attempt to update elements if data was partially received
+          if (data && data.version) {
+            localStorage.setItem('app-version', data.version);
+          }
+        }
+      };
+      
+      // Function to ensure elements exist and are updated
+      const updateVersionDisplay = () => {
+        const versionElement = document.getElementById('app-version');
+        const lastUpdatedElement = document.getElementById('last-updated');
+        
+        // Get data from localStorage as fallback
+        const savedVersion = localStorage.getItem('app-version');
+        
+        if (versionElement && savedVersion) {
+          versionElement.textContent = savedVersion;
+        }
+        
+        // Try to fetch fresh data
+        checkForUpdates().catch(err => {
+          console.warn('Could not fetch version updates, will retry later:', err);
+        });
+      };
+      
+      // Execute immediately since DOM is already loaded at this point
+      updateVersionDisplay();
+      
+      // Set up interval for periodic updates
+      setInterval(updateVersionDisplay, 5 * 60 * 1000);
+    })();
+  </script>
+</body>
+</html>
