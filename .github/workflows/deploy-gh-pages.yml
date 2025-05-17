@@ -130,8 +130,10 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'adjust'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout and setup
-        uses: actions/checkout@v3
+      - name: Checkout repository # Renamed for consistency
+        uses: actions/checkout@v4  # Changed to v4 for consistency
+        with:
+          fetch-depth: 0         # Explicitly ensure full history
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
