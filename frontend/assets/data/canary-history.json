@@ -598,5 +598,17 @@
     "percentage": 5,
     "commit": "8c39445",
     "version": "1.0.380"
+  },
+  {
+    "timestamp": "2025-05-17T20:46:26.040Z",
+    "percentage": 0,
+    "commit": "1264963",
+    "version": "1.0.381"
+  },
+  {
+    "timestamp": "2025-05-17T20:46:27.086Z",
+    "percentage": 0,
+    "commit": "a0e3e66",
+    "version": "1.0.382"
   }
 ]
